@@ -8,6 +8,7 @@
     "jasmine-node": "git://github.com/eventualbuddha/jasmine-node.git#maintenance"
   },
   "scripts": {
-    "test": "jasmine-node --coffee spec"
+    "build": "coffee -o lib/ -c src/",
+    "test": "npm run-script build && jasmine-node --coffee spec"
   }
 }
