@@ -12,16 +12,16 @@ normalize = (input, output, name, options={}) ->
 
 shouldCompileAMD = (input, output, options={}) ->
   name = if options.anonymous then null else 'jquery'
-  [ output, compiler ] = normalize input, output, name
+  [ output, compiler ] = normalize input, output, name, options
   expect(stripTrailingNewlines compiler.toAMD()).toEqual(output)
 
 shouldCompileCJS = (input, output, options={}) ->
   name = if options.anonymous then null else 'jquery'
-  [ output, compiler ] = normalize input, output, name
+  [ output, compiler ] = normalize input, output, name, options
   expect(stripTrailingNewlines compiler.toCJS()).toEqual(output)
 
-shouldRaise = (input, message) ->
-  compiler = new Compiler(input, 'jquery')
+shouldRaise = (input, message, options={}) ->
+  compiler = new Compiler(input, 'jquery', options)
   expect(-> compiler.toAMD()).toThrow(message)
 
 for own name, fn of { normalize, shouldCompileAMD, shouldCompileCJS, shouldRaise }

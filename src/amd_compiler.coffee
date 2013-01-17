@@ -15,9 +15,9 @@ class AMDCompiler extends AbstractCompiler
     else
       output.push "define("
 
-    output.push "  [#{(JSON.stringify(name) for name in @dependencyNames).join(', ')}],"
-    output.push "  function(#{args.join(', ')}) {"
-    output.push "    \"use strict\";"
+    output.push "  #{JSON.stringify(@dependencyNames)},"
+    @emitFunctionHeader output, args
+    output.push "    \"use strict\"#{@eol}"
 
     output.push "    #{line}" for line in preamble
 
@@ -27,13 +27,13 @@ class AMDCompiler extends AbstractCompiler
       else
         output.push "    #{line}"
 
-    for ex in @exports
-      output.push "    __exports__.#{ex} = #{ex};"
+    for export_ in @exports
+      output.push "    __exports__.#{export_} = #{export_}#{@eol}"
 
     if @exportAs
-      output.push "    return #{@exportAs};"
+      output.push "    return #{@exportAs}#{@eol}"
 
-    output.push "  });"
+    output.push "  #{@functionTail})#{@eol}"
 
     return output.join('\n')
 

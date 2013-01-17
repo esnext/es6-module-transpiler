@@ -1,10 +1,10 @@
 AMDCompiler = require './amd_compiler'
 CJSCompiler = require './cjs_compiler'
 
-EXPORT = /^\s*export\s+(.*)\s*;\s*$/
-EXPORT_AS = /^\s*export\s*=\s*(.*)\s*;\s*$/
-IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+)"|'([^']+)')\s*;\s*$/
-IMPORT_AS = /^\s*import\s+(?:"([^"]+)"|'([^']+)')\s*as\s+(.*)\s*;\s*$/
+EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
+EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/
+IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/
+IMPORT_AS = /^\s*import\s+(?:"([^"]+?)"|'([^']+?)')\s*as\s+(.*?)\s*(;)?\s*$/
 
 class Compiler
   constructor: (string, moduleName=null, options={}) ->
@@ -25,16 +25,25 @@ class Compiler
     return null
 
   parseLine: (line) ->
-    if match = line.match EXPORT_AS
+    if match = @matchLine line, EXPORT_AS
       @processExportAs match
-    else if match = line.match EXPORT
+    else if match = @matchLine line, EXPORT
       @processExport match
-    else if match = line.match IMPORT_AS
+    else if match = @matchLine line, IMPORT_AS
       @processImportAs match
-    else if match = line.match IMPORT
+    else if match = @matchLine line, IMPORT
       @processImport match
     else
       @processLine line
+
+  matchLine: (line, pattern) ->
+    match = line.match pattern
+
+    # if not CoffeeScript then we need the semi-colon
+    if match and not @options.coffee and not match[match.length-1]
+      return null
+
+    return match
 
   processExportAs: (match) ->
     @exportAs = match[1]
