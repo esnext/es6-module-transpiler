@@ -1,7 +1,7 @@
-optimist = require 'optimist'
-fs       = require 'fs'
-path     = require 'path'
-Compiler = require './compiler'
+import 'optimist' as optimist
+import 'fs' as fs
+import 'path' as path
+import './compiler' as Compiler
 
 class CLI
   @start: (argv, stdin=process.stdin, stdout=process.stdout, fs_=fs) ->
@@ -107,4 +107,4 @@ class CLI
     @fs.mkdirSync directory
 
 
-module.exports = CLI
+export = CLI

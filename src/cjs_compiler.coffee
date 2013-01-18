@@ -1,4 +1,4 @@
-AbstractCompiler = require './abstract_compiler'
+import './abstract_compiler' as AbstractCompiler
 
 class CJSCompiler extends AbstractCompiler
   stringify: ->
@@ -32,4 +32,4 @@ class CJSCompiler extends AbstractCompiler
 
     return output.join('\n')
 
-module.exports = CJSCompiler
+export = CJSCompiler

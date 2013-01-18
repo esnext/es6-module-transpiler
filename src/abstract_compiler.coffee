@@ -1,4 +1,4 @@
-CompileError = require './compile_error'
+import './compile_error' as CompileError
 
 class AbstractCompiler
   constructor: (compiler, options) ->
@@ -62,4 +62,4 @@ class AbstractCompiler
       line = "  function#{line} {"
     output.push line
 
-module.exports = AbstractCompiler
+export = AbstractCompiler

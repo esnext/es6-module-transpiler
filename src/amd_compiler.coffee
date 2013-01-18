@@ -1,4 +1,4 @@
-AbstractCompiler = require './abstract_compiler'
+import './abstract_compiler' as AbstractCompiler
 
 class AMDCompiler extends AbstractCompiler
   stringify: ->
@@ -37,4 +37,4 @@ class AMDCompiler extends AbstractCompiler
 
     return output.join('\n')
 
-module.exports = AMDCompiler
+export = AMDCompiler

@@ -1,8 +1,8 @@
-vm = require 'vm'
-fs = require 'fs'
-path = require 'path'
-Compiler = require './compiler'
-try CoffeeScript = require 'coffee-script'
+import 'vm' as vm
+import 'fs' as fs
+import 'path' as path
+import './compiler' as Compiler
+import 'coffee-script' as CoffeeScript
 
 enabled = no
 defaultJSHandler = require.extensions['.js']
@@ -12,13 +12,13 @@ enable = ->
   return if enabled
   enabled = yes
   require.extensions['.js'] = es6JSRequireHandler
-  require.extensions['.coffee'] = es6CoffeeRequireHandler if CoffeeScript?
+  require.extensions['.coffee'] = es6CoffeeRequireHandler
 
 disable = ->
   return unless enabled
   enabled = no
   require.extensions['.js'] = defaultJSHandler
-  require.extensions['.coffee'] = defaultCoffeeHandler if CoffeeScript?
+  require.extensions['.coffee'] = defaultCoffeeHandler
 
 es6JSRequireHandler = (module, filename) ->
   module._compile(loadES6Script filename)
@@ -31,4 +31,4 @@ loadES6Script = (filename) ->
   extname = path.extname(filename)
   new Compiler(content, path.basename(filename, extname), coffee: extname is '.coffee').toCJS()
 
-module.exports = { enable, disable }
+export { enable, disable }

@@ -1,5 +1,5 @@
-AMDCompiler = require './amd_compiler'
-CJSCompiler = require './cjs_compiler'
+import './amd_compiler' as AMDCompiler
+import './cjs_compiler' as CJSCompiler
 
 EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
 EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/
@@ -80,4 +80,4 @@ class Compiler
   toCJS: ->
     new CJSCompiler(this, @options).stringify()
 
-module.exports = Compiler
+export = Compiler
