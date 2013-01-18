@@ -6,20 +6,20 @@ class ProcessExitError extends Error
   constructor: (@code) ->
     @message = "exited with code #{@code}"
 
+expectingDirtyExit = no
+
 beforeEach ->
   # protect against optimist exiting
-  verbose = no
-  spyOn(process, 'exit').andCallFake(if verbose then verboseProcessExitFake else processExitFake)
+  expectingDirtyExit = no
+  spyOn(process, 'exit').andCallFake(processExitFake)
   spyOn console, 'error'
 
 processExitFake = (code) ->
+  if not expectingDirtyExit and code? and code isnt 0
+    errorData = []
+    errorData = errorData.concat(call.args).concat(['\n']) for call in console.error.calls
+    console.error.originalValue.apply(console, errorData)
   throw new ProcessExitError(code)
-
-verboseProcessExitFake = (code) ->
-  errorData = []
-  errorData = errorData.concat(call.args).concat(['\n']) for call in console.error.calls
-  console.error.originalValue.apply(console, errorData)
-  processExitFake(code)
 
 stripTrailingNewlines = (string) ->
   string.replace(/\n*\z/, '')
@@ -54,20 +54,28 @@ parseOptions = (args...) ->
   new CLI().parseArgs(args)
 
 optionsShouldBeInvalid = (args...) ->
+  expectingDirtyExit = yes
   expect(-> parseOptions args...).toThrow('exited with code 1')
   expect(console.error).toHaveBeenCalled()
 
 shouldRunCLI = (args, input, output) ->
+  usingStdio = typeof input is 'string' and typeof output is 'string'
+
   stdin  = new ReadableStream()
   stdout = new WritableStream()
+  fs     = new FakeFilesystem(if usingStdio then {} else input)
 
-  cli = new CLI(stdin, stdout)
+  cli = new CLI(stdin, stdout, fs)
   cli.start args
 
-  stdin.emit 'data', unindent(input)
+  if usingStdio
+    stdin.emit 'data', unindent(input)
   stdin.emit 'end'
 
-  expect(stdout.data).toEqual(unindent(output))
+  if usingStdio
+    expect(stdout.data).toEqual(unindent(output))
+  else
+    fs.verify()
 
 class MockStream extends Stream
   resume: ->
@@ -85,6 +93,73 @@ class WritableStream extends MockStream
 
   write: (data) ->
     @data += data
+
+class FakeFilesystem
+  constructor: (@_description) ->
+
+  readFile: (filename, encoding, callback) ->
+    if arguments.length is 2
+      callback = encoding
+      encoding = 'utf8'
+
+    callback null, @readFileSync(filename, encoding)
+    return null
+
+  readFileSync: (filename, encoding) ->
+    if filename of @_description
+      if 'read' of @_description[filename]
+        return @_description[filename].read
+
+    throw new Error("unexpectedly trying to read data from file #{filename}")
+
+  writeFile: (filename, data, encoding, callback) ->
+    if arguments.length is 3
+      callback = encoding
+      encoding = 'utf8'
+
+    @writeFileSync(filename, data, encoding)
+    callback? null
+    return null
+
+  writeFileSync: (filename, data, encoding) ->
+    if filename of @_description
+      fileDescription = @_description[filename]
+      if 'write' of fileDescription
+        expect(data).toEqual(fileDescription.write)
+        delete fileDescription.write
+        return null
+
+    throw new Error("unexpected data written to file #{filename}: #{data}")
+
+  exists: (filename, callback) ->
+    callback null, @existsSync(filename)
+    return null
+
+  existsSync: (filename) ->
+    fileDescription = @_description[filename]
+    return fileDescription?.read or fileDescription?.exists
+
+  mkdir: (dirname, callback) ->
+    @mkdirSync dirname
+    callback? null
+    return null
+
+  mkdirSync: (dirname) ->
+    if dirname of @_description
+      dirDescription = @_description[dirname]
+      if 'mkdir' of dirDescription
+        delete dirDescription.mkdir
+        return null
+
+    throw new Error("unexpectedly trying to make directory #{dirname}")
+
+  verify: ->
+    for own filename, { read, write, mkdir } of @_description
+      if write?
+        throw new Error("expected data to have been written to #{filename}, but was not: #{write}")
+      if mkdir?
+        throw new Error("expected directory to have been made, but was not: #{filename}")
+    return null
 
 
 for own name, fn of { normalize, shouldCompileAMD, shouldCompileCJS, shouldRaise, parseOptions, optionsShouldBeInvalid, shouldRunCLI }
