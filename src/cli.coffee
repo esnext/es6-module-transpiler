@@ -29,7 +29,7 @@ class CLI
 
   argParser: (argv) ->
     optimist(argv)
-      .usage('compile-modules usage:\n\n  Using files:\n    compile-modules --to DIR [--anonymous] [--type TYPE] FILE [FILE2 ...]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] (--module-name MOD|--anonymous)')
+      .usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] (--module-name MOD|--anonymous)')
       .options(
         type:
           default: 'amd'
