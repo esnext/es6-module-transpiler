@@ -2,38 +2,29 @@ import './abstract_compiler' as AbstractCompiler
 
 class AMDCompiler extends AbstractCompiler
   stringify: ->
-    [ args, preamble ] = @buildPreamble(@dependencyNames)
+    @build (s) =>
+      [ wrapperArgs, preamble ] = @buildPreamble(@dependencyNames)
 
-    unless @exports.length is 0
-      @dependencyNames.push 'exports'
-      args.push '__exports__'
+      unless @exports.length is 0
+        @dependencyNames.push 'exports'
+        wrapperArgs.push '__exports__'
 
-    output = []
+      s.line =>
+        s.call 'define', (arg) =>
+          arg s.print(@moduleName) if @moduleName
+          arg s.break
+          arg s.print(@dependencyNames)
+          arg s.break
+          arg =>
+            s.function wrapperArgs, =>
+              s.useStrict()
+              s.append preamble if preamble
+              s.append @lines...
 
-    if @moduleName
-      output.push "define(\"#{@moduleName}\","
-    else
-      output.push "define("
+              for export_ in @exports
+                s.line "__exports__.#{export_} = #{export_}"
 
-    @indent output
-    output.push "#{JSON.stringify(@dependencyNames)},"
-    @emitFunctionHeader output, args
-    @indent output
-    output.push "\"use strict\"#{@eol}"
-
-    output.push preamble...
-    output.push @lines...
-
-    for export_ in @exports
-      output.push "__exports__.#{export_} = #{export_}#{@eol}"
-
-    if @exportAs
-      output.push "return #{@exportAs}#{@eol}"
-
-    @outdent output
-    output.push "#{@functionTail})#{@eol}"
-    @outdent output
-
-    return @buildStringFromLines output
+              if @exportAs
+                s.line "return #{@exportAs}"
 
 export = AMDCompiler

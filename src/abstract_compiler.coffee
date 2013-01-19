@@ -1,7 +1,6 @@
 import './compile_error' as CompileError
-
-INDENT = {}
-OUTDENT = {}
+import './java_script_builder' as JavaScriptBuilder
+import './coffee_script_builder' as CoffeeScriptBuilder
 
 class AbstractCompiler
   constructor: (compiler, options) ->
@@ -21,9 +20,6 @@ class AbstractCompiler
     @dependencyNames.push name for own name of @imports when name not in @dependencyNames
     @dependencyNames.push name for own name of @importAs when name not in @dependencyNames
 
-    @eol = if @options.coffee then '' else ';'
-    @functionTail = if @options.coffee then '' else '}'
-
     @assertValid()
 
   assertValid: ->
@@ -31,59 +27,33 @@ class AbstractCompiler
       throw new CompileError("You cannot use both `export =` and `export` in the same module")
 
   buildPreamble: (names) ->
-    preamble = []
     args = []
-    number = 0
 
-    for name in names
-      if name of @importAs
-        args.push @importAs[name]
-      else
-        dependency = "__dependency#{number++}__"
-        args.push dependency
-        preamble = preamble.concat @importsForPreamble(@imports[name], dependency)
+    preamble = @build (s) =>
+      number = 0
+      deps = s.unique('dependency')
+
+      for name in names
+        if name of @importAs
+          args.push @importAs[name]
+        else
+          dependency = deps.next()
+          args.push dependency
+          @buildImportsForPreamble s, @imports[name], dependency
 
     return [ args, preamble ]
 
-  importsForPreamble: (importNames, dependencyName) ->
-    for importName in importNames
-      "var #{importName} = #{dependencyName}.#{importName};"
-
-  emitVariable: (output, name, value) ->
-    line = "#{name} = #{value}#{@eol}"
-    line = "var #{line}" unless @options.coffee
-    output.push line
-
-  emitFunctionHeader: (output, args) ->
-    line = "(#{args.join(', ')})"
+  build: (fn) ->
     if @options.coffee
-      if args.length is 0
-        line = "->"
-      else
-        line = "#{line} ->"
+      builder = new CoffeeScriptBuilder()
     else
-      line = "function#{line} {"
-    output.push line
+      builder = new JavaScriptBuilder()
+    fn builder
+    return builder.toString()
 
-  indent: (output) ->
-    output.push INDENT
-
-  outdent: (output) ->
-    output.push OUTDENT
-
-  buildStringFromLines: (lines) ->
-    indent = 0
-    result = []
-    for line in lines
-      if line is INDENT
-        indent++
-      else if line is OUTDENT
-        indent--
-      else if /^\s*$/.test line
-        result.push line
-      else
-        result.push (new Array(indent+1)).join('  ') + line
-    return result.join('\n')
+  buildImportsForPreamble: (builder, imports_, dependencyName) ->
+    for import_ in imports_
+      builder.set import_, -> builder.prop dependencyName, import_
 
 
 export = AbstractCompiler

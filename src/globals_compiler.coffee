@@ -2,52 +2,56 @@ import './abstract_compiler' as AbstractCompiler
 
 class GlobalsCompiler extends AbstractCompiler
   stringify: ->
-    passedArgs = []
-    receivedArgs = []
+    @build (s) =>
+      passedArgs = []
+      receivedArgs = []
+      locals = {}
 
-    into = @options.into or @exportAs
+      into = @options.into or @exportAs
 
-    if @exports.length > 0 or @exportAs
-      if @exportAs
-        passedArgs.push "window"
-      else if into
-        passedArgs.push "window.#{into} = {}"
-      else
-        passedArgs.push "window"
+      if @exports.length > 0 or @exportAs
+        passedArgs.push(
+          if @exportAs
+            s.global
+          else if into
+            "#{s.global}.#{into} = {}"
+          else
+            s.global
+        )
 
-      receivedArgs.push "exports"
+        receivedArgs.push 'exports'
 
-    preamble = []
-    preamble.push "\"use strict\"#{@eol}"
+      for name in @dependencyNames
+        globalImport = @options.imports[name]
+        passedArgs.push "#{s.global}.#{globalImport}"
 
-    for name in @dependencyNames
-      globalImports = @options.imports[name]
-      passedArgs.push "window.#{globalImports}"
+        if name of @importAs
+          receivedArgs.push @importAs[name]
+        else
+          receivedArgs.push globalImport
 
-      if name of @importAs
-        receivedArgs.push @importAs[name]
-      else
-        receivedArgs.push globalImports
+          for import_ in @imports[name]
+            locals[import_] = "#{globalImport}.#{import_}"
 
-        for import_ in @imports[name]
-          @emitVariable preamble, import_, "#{globalImports}.#{import_}"
+      wrapper = =>
+        s.function receivedArgs, =>
+          s.useStrict()
 
-    output = []
-    output.push "(function(#{receivedArgs.join(", ")}) {"
-    @indent output
+          # var get = Ember.get;
+          s.var lhs, rhs for own lhs, rhs of locals
 
-    output.push preamble...
-    output.push @lines...
+          # body
+          s.append @lines...
 
-    if @exportAs
-      output.push "exports.#{into} = #{@exportAs};"
-    else
-      for export_ in @exports
-        output.push "exports.#{export_} = #{export_};"
+          if @exportAs
+            s.set "exports.#{into}", @exportAs
+          else
+            for export_ in @exports
+              s.set "exports.#{export_}", export_
 
-    @outdent output
-    output.push "})(#{passedArgs.join(", ")});"
+      args = (arg) =>
+        arg passedArg for passedArg in passedArgs
 
-    @buildStringFromLines output
+      s.line => s.call wrapper, args
 
 export = GlobalsCompiler
