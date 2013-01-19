@@ -174,4 +174,4 @@ describe 'Compiler (toGlobals)', ->
       (function(undy) {
         "use strict";
       })(window._);
-    """,  anonymous: true, imports: { underscore: '_' }
+    """, anonymous: true, imports: { underscore: '_' }
