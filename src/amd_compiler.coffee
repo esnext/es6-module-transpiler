@@ -15,26 +15,25 @@ class AMDCompiler extends AbstractCompiler
     else
       output.push "define("
 
-    output.push "  #{JSON.stringify(@dependencyNames)},"
+    @indent output
+    output.push "#{JSON.stringify(@dependencyNames)},"
     @emitFunctionHeader output, args
-    output.push "    \"use strict\"#{@eol}"
+    @indent output
+    output.push "\"use strict\"#{@eol}"
 
-    output.push "    #{line}" for line in preamble
-
-    for line in @lines
-      if /^\s*$/.test line
-        output.push line
-      else
-        output.push "    #{line}"
+    output.push preamble...
+    output.push @lines...
 
     for export_ in @exports
-      output.push "    __exports__.#{export_} = #{export_}#{@eol}"
+      output.push "__exports__.#{export_} = #{export_}#{@eol}"
 
     if @exportAs
-      output.push "    return #{@exportAs}#{@eol}"
+      output.push "return #{@exportAs}#{@eol}"
 
-    output.push "  #{@functionTail})#{@eol}"
+    @outdent output
+    output.push "#{@functionTail})#{@eol}"
+    @outdent output
 
-    return output.join('\n')
+    return @buildStringFromLines output
 
 export = AMDCompiler

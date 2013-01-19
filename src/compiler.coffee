@@ -1,5 +1,6 @@
 import './amd_compiler' as AMDCompiler
 import './cjs_compiler' as CJSCompiler
+import './globals_compiler' as GlobalsCompiler
 
 EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
 EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/
@@ -79,5 +80,8 @@ class Compiler
 
   toCJS: ->
     new CJSCompiler(this, @options).stringify()
+
+  toGlobals: ->
+    new GlobalsCompiler(this, @options).stringify()
 
 export = Compiler

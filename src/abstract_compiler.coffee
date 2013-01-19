@@ -1,5 +1,8 @@
 import './compile_error' as CompileError
 
+INDENT = {}
+OUTDENT = {}
+
 class AbstractCompiler
   constructor: (compiler, options) ->
     @compiler = compiler
@@ -55,11 +58,32 @@ class AbstractCompiler
     line = "(#{args.join(', ')})"
     if @options.coffee
       if args.length is 0
-        line = "  ->"
+        line = "->"
       else
-        line = "  #{line} ->"
+        line = "#{line} ->"
     else
-      line = "  function#{line} {"
+      line = "function#{line} {"
     output.push line
+
+  indent: (output) ->
+    output.push INDENT
+
+  outdent: (output) ->
+    output.push OUTDENT
+
+  buildStringFromLines: (lines) ->
+    indent = 0
+    result = []
+    for line in lines
+      if line is INDENT
+        indent++
+      else if line is OUTDENT
+        indent--
+      else if /^\s*$/.test line
+        result.push line
+      else
+        result.push (new Array(indent+1)).join('  ') + line
+    return result.join('\n')
+
 
 export = AbstractCompiler
