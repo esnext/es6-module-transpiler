@@ -122,3 +122,38 @@ describe 'CLI', ->
               "use strict"
             )
         """
+
+  it 'recursively processes directories', ->
+    shouldRunCLI ['--to', 'out', 'lib'],
+      'lib':
+        contents: ['a', 'b.js']
+      'lib/a':
+        contents: ['test.js']
+      'lib/b.js':
+        read: ""
+      'lib/a/test.js':
+        read: ""
+      'out':
+        exists: yes
+      'out/lib':
+        exists: yes
+      'out/lib/a':
+        exists: yes
+      'out/lib/b.js':
+        write: """
+          define("lib/b",
+            [],
+            function() {
+              "use strict";
+
+            });
+        """
+      'out/lib/a/test.js':
+        write: """
+          define("lib/a/test",
+            [],
+            function() {
+              "use strict";
+
+            });
+        """

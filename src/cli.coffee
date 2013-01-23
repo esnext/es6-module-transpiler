@@ -20,7 +20,7 @@ class CLI
       @processStdio options
     else
       for filename in options._
-        @processFile(filename, options)
+        @processPath(filename, options)
 
     return null
 
@@ -80,6 +80,25 @@ class CLI
     @stdin.on 'end', =>
       output = @_compile input, options.m, options.type, coffee: options.coffee
       @stdout.write output
+
+  processPath: (filename, options) ->
+    @fs.stat filename, (err, stat) =>
+      if err
+        console.error(err.message)
+        process.exit(1)
+      else if stat.isDirectory()
+        @processDirectory filename, options
+      else
+        @processFile filename, options
+
+  processDirectory: (dirname, options) ->
+    @fs.readdir dirname, (err, children) =>
+      if err
+        console.error(err.message)
+        process.exit(1)
+
+      for child in children
+        @processPath path.join(dirname, child), options
 
   processFile: (filename, options) ->
     @fs.readFile filename, 'utf8', (err, input) =>

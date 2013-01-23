@@ -2,7 +2,7 @@ import 'vm' as vm
 import 'fs' as fs
 import 'path' as path
 import './compiler' as Compiler
-import 'coffee-script' as CoffeeScript
+import { compile } from 'coffee-script'
 
 enabled = no
 defaultJSHandler = require.extensions['.js']
@@ -24,7 +24,7 @@ es6JSRequireHandler = (module, filename) ->
   module._compile(loadES6Script filename)
 
 es6CoffeeRequireHandler = (module, filename) ->
-  module._compile(CoffeeScript.compile(loadES6Script filename))
+  module._compile(compile(loadES6Script filename))
 
 loadES6Script = (filename) ->
   content = fs.readFileSync(filename, 'utf8')

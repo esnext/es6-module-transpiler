@@ -142,7 +142,7 @@ class FakeFilesystem
 
   existsSync: (filename) ->
     fileDescription = @_description[filename]
-    return fileDescription?.read or fileDescription?.exists
+    return fileDescription?.read? or fileDescription?.exists
 
   mkdir: (dirname, callback) ->
     @mkdirSync dirname
@@ -157,6 +157,30 @@ class FakeFilesystem
         return null
 
     throw new Error("unexpectedly trying to make directory #{dirname}")
+
+  stat: (filename, callback) ->
+    result = @statSync filename
+    callback? null, result
+    return null
+
+  statSync: (filename) ->
+    if filename of @_description
+      fileDescription = @_description[filename]
+      {
+        isDirectory: -> fileDescription.contents?
+        isFile: -> not @isDirectory()
+      }
+
+  readdir: (dirname, callback) ->
+    result = @readdirSync dirname
+    callback? null, result
+    return null
+
+  readdirSync: (dirname) ->
+    if dirname of @_description
+      dirDescription = @_description[dirname]
+      if 'contents' of dirDescription
+        return dirDescription.contents
 
   verify: ->
     for own filename, { read, write, mkdir } of @_description
