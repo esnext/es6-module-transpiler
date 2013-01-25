@@ -25,17 +25,26 @@ class CLI
     return null
 
   parseArgs: (argv) ->
-    @argParser(argv).argv
+    args = @argParser(argv).argv
+    if args.imports
+      imports = {}
+      for pair in args.imports.split(',')
+        [requirePath, global] = pair.split(':')
+        imports[requirePath] = global
+      args.imports = imports
+    return args
 
   argParser: (argv) ->
     optimist(argv)
-      .usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] (--module-name MOD|--anonymous)')
+      .usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] [--imports PATH:GLOBAL] (--module-name MOD|--anonymous)')
       .options(
         type:
           default: 'amd'
-          describe: 'The type of output (one of "amd" or "cjs")'
+          describe: 'The type of output (one of "amd", "cjs", or "globals")'
         to:
           describe: 'A directory in which to write the resulting files'
+        imports:
+          describe: 'A list of path:global pairs, comma separated (e.g. jquery:$,ember:Ember)'
         anonymous:
           default: no
           type: 'boolean'
@@ -58,7 +67,7 @@ class CLI
           alias: 'h'
           describe: 'Shows this help message'
       ).check(
-        (args) -> args.type in ['amd', 'cjs']
+        (args) -> args.type in ['amd', 'cjs', 'globals']
       ).check(
         (args) -> not (args.anonymous and args.m)
       ).check(
@@ -67,6 +76,8 @@ class CLI
         (args) -> not (args.coffee and not args.stdio)
       ).check(
         (args) -> args.stdio or args.to or args.help
+      ).check(
+        (args) -> if args.imports then args.type is 'globals' else yes
       )
 
   processStdio: (options) ->
@@ -78,7 +89,7 @@ class CLI
       input += data
 
     @stdin.on 'end', =>
-      output = @_compile input, options.m, options.type, coffee: options.coffee
+      output = @_compile input, options.m, options.type, coffee: options.coffee, imports: options.imports
       @stdout.write output
 
   processPath: (filename, options) ->
@@ -104,7 +115,7 @@ class CLI
     @fs.readFile filename, 'utf8', (err, input) =>
       ext = path.extname(filename)
       moduleName = path.join(path.dirname(filename), path.basename(filename, ext))
-      output = @_compile input, moduleName, options.type, coffee: ext is '.coffee'
+      output = @_compile input, moduleName, options.type, coffee: ext is '.coffee', imports: options.imports
       outputFilename = path.join(options.to, filename)
 
       @_mkdirp path.dirname(outputFilename)
@@ -114,8 +125,9 @@ class CLI
           process.exit(1)
 
   _compile: (input, moduleName, type, options) ->
+    type = {amd: 'AMD', cjs: 'CJS', globals: 'Globals'}[type]
     compiler = new Compiler(input, moduleName, options)
-    method   = "to#{type.toUpperCase()}"
+    method   = "to#{type}"
     return compiler[method]()
 
   _mkdirp: (directory) ->

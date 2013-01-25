@@ -157,3 +157,22 @@ describe 'CLI', ->
 
             });
         """
+
+  it 'can take a map of imports on the command line', ->
+    shouldRunCLI ['--to', 'out', '--type', 'globals', '--imports', 'jquery:jQuery,ember:Ember', 'lib/test.js'],
+      'lib/test.js':
+        read: """
+          import { View } from 'ember';
+          import 'jquery' as $;
+        """
+      'out':
+        mkdir: yes
+      'out/lib':
+        mkdir: yes
+      'out/lib/test.js':
+        write: """
+          (function(Ember, $) {
+            "use strict";
+            var View = Ember.View;
+          })(window.Ember, window.jQuery);
+        """
