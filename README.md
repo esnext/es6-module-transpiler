@@ -52,8 +52,6 @@ NAME
   will use the name of the file (without the ending `.js`/`.coffee`) as the
   module name.  You may not use this option if you provided multiple FILEs.
 
-** NOT YET SUPPORTTED **
-
 GLOBAL
   This option is only supported when the type is `globals`. By default, the
   `globals` option will attach all of the exports to `window`. This option will
@@ -77,8 +75,6 @@ var Compiler = require("node-module-transpiler");
 var compiler = new Compiler(string, name);
 compiler.toAMD(); // AMD output
 ```
-
-** NOT YET SUPPORTED **
 
 If you want to emit globals output, and your module has imports, you must
 supply an `imports` hash. You can also use the `global` option to specify that
