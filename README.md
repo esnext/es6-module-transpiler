@@ -276,6 +276,25 @@ define("app",
   });
 ```
 
+## Using with Node.js
+
+You can use this library to pre-transpiler your browser code or your node packages,
+but when developing a node package this can be painful. To make testing your
+packages easier you can configure node-module-transpiler to auto-transpile your
+JavaScript or CoffeeScript modules on the fly:
+
+```javascript
+// mymodule.js
+import "jquery" as jQuery;
+export jQuery;
+
+// bootstrap.js
+require("node-module-transpiler/require_support").enable();
+var jQuery = require("./mymodule").jQuery;
+
+// …
+```
+
 ## Installation
 
 Add this project to your application's package.json by running this:
