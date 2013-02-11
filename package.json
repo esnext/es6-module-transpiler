@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "node-module-transpiler is an experimental compiler that allows you to write your JavaScript or CoffeeScript using a subset of the current ES6 module syntax, and compile it into AMD modules and CommonJS modules.",
   "homepage": "https://squareup.com",
-  "bin": { "compile-modules": "./bin/compile-modules" },
+  "bin": {
+    "compile-modules": "./bin/compile-modules"
+  },
   "dependencies": {
     "coffee-script": "~1.3.3",
     "jasmine-node": "git://github.com/eventualbuddha/jasmine-node.git#maintenance",
@@ -11,6 +13,11 @@
   },
   "scripts": {
     "build": "bin/compile-modules --to .compiled --type cjs src/* && coffee -o lib/ -c .compiled/src && rm -rf .compiled",
-    "test": "npm run-script build && jasmine-node --coffee spec"
+    "test": "npm run-script build && jasmine-node --coffee spec",
+    "package": "npm run-script test && gluejs --basepath lib --include . --exclude 'require_support' --out ../dist/module-transpiler.js --global ModuleTranspiler && uglifyjs dist/module-transpiler.js > dist/module-transpiler.min.js"
+  },
+  "devDependencies": {
+    "gluejs": "~0.2.0",
+    "uglify-js": "~2.2.4"
   }
 }
