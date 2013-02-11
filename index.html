@@ -1,0 +1,67 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <title>node-module-transpiler demo</title>
+  <script type="text/javascript" charset="utf-8" src="/module-transpiler.js"></script>
+  <script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    jQuery(function($) {
+      var Compiler = ModuleTranspiler.Compiler,
+          $input = $('#input'),
+          $output = $('#output'),
+          waitTimeout;
+
+      $input.keyup(function() {
+        if (waitTimeout) clearTimeout(waitTimeout);
+        waitTimeout = setTimeout(transpile, 100);
+      });
+
+      function transpile() {
+        var output;
+
+        try {
+          output = new Compiler($input.val(), null, {imports: []}).toCJS();
+        } catch (ex) {
+          output = ex.message + "\n" + ex.backtrace.join("\n");
+        }
+
+        $output.val(output);
+      }
+
+      transpile();
+    });
+  </script>
+
+  <style type="text/css">
+    #main-content {
+      width: 900px;
+      margin: auto;
+    }
+
+    .code {
+      font-size: 12px;
+      font-family: Menlo, Monaco, "Courier New";
+    }
+  </style>
+</head>
+<body>
+  <div id="main-content">
+    <textarea id="input" class="code" rows="20" cols="60">
+import { Point, pow, sqrt } from "math";
+
+function Segment(start, end) {
+  this.start = start;
+  this.end = end;
+
+  this.distance = sqrt(
+    pow(start.x - end.x, 2) +
+    pow(start.y - end.y, 2)
+  );
+}
+
+export Segment;</textarea>
+    <textarea id="output" class="code" rows="20" cols="60"></textarea>
+  </div>
+</body>
+</html>
