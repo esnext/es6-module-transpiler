@@ -172,7 +172,7 @@ As you can see, the import and export syntaxes are symmetric.
 
 ### Individual Exports
 
-This input:
+This input (ember.js):
 
 ```javascript
 var get = function(obj, key) {
@@ -278,7 +278,7 @@ define("app",
 
 ## Using with Node.js
 
-You can use this library to pre-transpiler your browser code or your node packages,
+You can use this library to pre-transpile your browser code or your node packages,
 but when developing a node package this can be painful. To make testing your
 packages easier you can configure es6-module-transpiler to auto-transpile your
 JavaScript or CoffeeScript modules on the fly:
