@@ -9,6 +9,10 @@
   "bin": {
     "compile-modules": "./bin/compile-modules"
   },
+  "directories": {
+    "lib": "./lib"
+  },
+  "main": "./lib/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/square/es6-module-transpiler.git"
