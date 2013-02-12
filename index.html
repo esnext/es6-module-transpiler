@@ -36,7 +36,12 @@ h2 {
   font-size: 28px;
 }
 
-h1, h2 {
+h3 {
+  font-weight: 400;
+  font-size: 20px;
+}
+
+h1, h2, h3 {
   font-family: "Yanone Kaffeesatz";
   text-rendering: optimizeLegibility;
 }
@@ -57,9 +62,12 @@ h1, h2 {
   display: inline-block;
 }
 
-.code {
+pre, .code {
   font-size: 12px;
   font-family: Menlo, Monaco, "Courier New";
+}
+
+.code {
   border: 1px solid #ddd;
   width: 300px;
 }
@@ -119,6 +127,17 @@ export Segment;</textarea>
 </div>
 
 <pre id="command"></pre>
+
+<h3>Things to try</h3>
+
+<pre>
+import "jquery" as jQuery;          // Import module as a variable
+import Point from "math";           // Import one part of a module
+import { sqrt, Point } from "math"; // Import multiple parts of a module
+export = jQuery;                    // Export an object as the module
+export Point;                       // Export an object as a module property
+export { sqrt, Point };             // Export multiple objects as module properties
+</pre>
 
 <footer>
   <span style="float:right;">
