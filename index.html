@@ -1,53 +1,84 @@
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ES6 Module Transpiler</title>
+<style>
 
-  <title>node-module-transpiler demo</title>
-  <script type="text/javascript" charset="utf-8" src="/module-transpiler.js"></script>
-  <script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-  <script type="text/javascript" charset="utf-8">
-    jQuery(function($) {
-      var Compiler = ModuleTranspiler.Compiler,
-          $input = $('#input'),
-          $output = $('#output'),
-          waitTimeout;
+@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
 
-      $input.keyup(function() {
-        if (waitTimeout) clearTimeout(waitTimeout);
-        waitTimeout = setTimeout(transpile, 100);
-      });
+body {
+  font-family: "Helvetica Neue";
+  margin: 40px auto;
+  width: 960px;
+  min-height: 2000px;
+}
 
-      function transpile() {
-        var output;
+#body {
+  position: relative;
+}
 
-        try {
-          output = new Compiler($input.val(), null, {imports: []}).toCJS();
-        } catch (ex) {
-          output = ex.message + "\n" + ex.backtrace.join("\n");
-        }
+footer {
+  padding: 2em 0 1em 0;
+  font-size: 12px;
+}
 
-        $output.val(output);
-      }
+h1 {
+  font-size: 96px;
+  margin-top: .3em;
+  margin-bottom: 0;
+}
 
-      transpile();
-    });
-  </script>
+h1 + h2 {
+  margin-top: 0;
+}
 
-  <style type="text/css">
-    #main-content {
-      width: 900px;
-      margin: auto;
-    }
+h2 {
+  font-weight: 400;
+  font-size: 28px;
+}
 
-    .code {
-      font-size: 12px;
-      font-family: Menlo, Monaco, "Courier New";
-    }
-  </style>
-</head>
-<body>
-  <div id="main-content">
-    <textarea id="input" class="code" rows="20" cols="60">
+h1, h2 {
+  font-family: "Yanone Kaffeesatz";
+  text-rendering: optimizeLegibility;
+}
+
+#body > p {
+  line-height: 1.5em;
+  width: 640px;
+  text-rendering: optimizeLegibility;
+}
+
+.code {
+  font-size: 12px;
+  font-family: Menlo, Monaco, "Courier New";
+}
+
+.reset {
+  padding-left: 1em;
+  font-size: smaller;
+  color: #ccc;
+}
+
+aside {
+  position: absolute;
+  left: 740px;
+  font-size: smaller;
+  width: 220px;
+}
+</style>
+
+<div id="body">
+
+<a href="https://github.com/square"><img src="logotype.png" width="122" height="31"></a>
+
+<h1>ES6 Module Transpiler</h1>
+
+<h2>Tomorrow&rsquo;s JavaScript module syntax today</h2>
+
+<p><b>ES6 Module Transpiler</b> is a <a href="https://github.com/square/es6-module-transpiler">JavaScript library</a> for converting JavaScript and CoffeeScript files written using the ES6 draft specification module syntax to existing library-based module systems such as AMD, CommonJS, or simply globals.
+
+<h2>Demo</h2>
+
+<textarea id="input" class="code" rows="20" cols="40">
 import { Point, pow, sqrt } from "math";
 
 function Segment(start, end) {
@@ -61,7 +92,55 @@ function Segment(start, end) {
 }
 
 export Segment;</textarea>
-    <textarea id="output" class="code" rows="20" cols="60"></textarea>
-  </div>
-</body>
-</html>
+<textarea id="output" class="code" rows="20" cols="40" readonly></textarea>
+
+<div>
+  Transpile to <label><input type="radio" name="type" value="cjs" checked /> CommonJS</label>
+  <label><input type="radio" name="type" value="amd" selected /> AMD</label>
+</div>
+
+<footer>
+  <span style="float:right;">
+    Released under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a>.
+  </span>
+  Copyright 2013 <a href="http://squareup.com">Square, Inc.</a>
+</footer>
+
+</div>
+
+<a href="https://github.com/square/es6-module-transpiler"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+<script type="text/javascript" charset="utf-8" src="module-transpiler.js"></script>
+<script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  jQuery(function($) {
+    var Compiler = ModuleTranspiler.Compiler,
+        $input = $('#input'),
+        $output = $('#output'),
+        $types = $('input[type=radio][name=type]'),
+        waitTimeout;
+
+    $input.keyup(function() {
+      if (waitTimeout) clearTimeout(waitTimeout);
+      waitTimeout = setTimeout(transpile, 100);
+    });
+
+    $types.change(transpile);
+
+    function transpile() {
+      var output;
+
+      try {
+        var type = $types.filter(':checked').attr('value'),
+            compiler = new Compiler($input.val(), null, {imports: []});
+        output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
+      } catch (ex) {
+        output = ex.message + "\n" + ex.backtrace.join("\n");
+      }
+
+      $output.val(output);
+    }
+
+    transpile();
+  });
+</script>
