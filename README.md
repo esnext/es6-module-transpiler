@@ -70,7 +70,7 @@ IMPORTS
 You can also use the transpiler as a library:
 
 ```javascript
-var Compiler = require("es6-module-transpiler");
+var Compiler = require("es6-module-transpiler").Compiler;
 
 var compiler = new Compiler(string, name);
 compiler.toAMD(); // AMD output
@@ -81,7 +81,7 @@ supply an `imports` hash. You can also use the `global` option to specify that
 exports should be added to a single global instead of `window`.
 
 ```javascript
-var Compiler = require("es6-module-transpiler");
+var Compiler = require("es6-module-transpiler").Compiler;
 
 var imports = { underscore: "_", ember: "Ember" };
 var options = { imports: imports, global: "RSVP" };
