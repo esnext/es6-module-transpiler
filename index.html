@@ -47,9 +47,21 @@ h1, h2 {
   text-rendering: optimizeLegibility;
 }
 
+#labels {
+  font-weight: bold;
+}
+
+#labels span {
+  width: 304px;
+  margin-left: 2px;
+  display: inline-block;
+}
+
 .code {
   font-size: 12px;
   font-family: Menlo, Monaco, "Courier New";
+  border: 1px solid #ddd;
+  width: 300px;
 }
 
 .reset {
@@ -78,7 +90,14 @@ aside {
 
 <h2>Demo</h2>
 
-<textarea id="input" class="code" rows="20" cols="40">
+<div id="labels">
+  <span class="input">input/segment.js</span>
+  <span class="output">output/segment.js</span>
+</div>
+
+<textarea id="input" class="code" rows="20">
+// Edit me!
+
 import { Point, pow, sqrt } from "math";
 
 function Segment(start, end) {
@@ -92,12 +111,14 @@ function Segment(start, end) {
 }
 
 export Segment;</textarea>
-<textarea id="output" class="code" rows="20" cols="40" readonly></textarea>
+<textarea id="output" class="code" rows="20" readonly></textarea>
 
 <div>
   Transpile to <label><input type="radio" name="type" value="cjs" checked /> CommonJS</label>
   <label><input type="radio" name="type" value="amd" selected /> AMD</label>
 </div>
+
+<pre id="command"></pre>
 
 <footer>
   <span style="float:right;">
@@ -117,6 +138,7 @@ export Segment;</textarea>
     var Compiler = ModuleTranspiler.Compiler,
         $input = $('#input'),
         $output = $('#output'),
+        $command = $('#command'),
         $types = $('input[type=radio][name=type]'),
         waitTimeout;
 
@@ -128,16 +150,17 @@ export Segment;</textarea>
     $types.change(transpile);
 
     function transpile() {
-      var output;
+      var output,
+          type = $types.filter(':checked').attr('value');
 
       try {
-        var type = $types.filter(':checked').attr('value'),
-            compiler = new Compiler($input.val(), null, {imports: []});
+        var compiler = new Compiler($input.val(), null, {imports: []});
         output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
       } catch (ex) {
         output = ex.message + "\n" + ex.backtrace.join("\n");
       }
 
+      $command.text('$ compile-modules --type ' + type + ' --to output input');
       $output.val(output);
     }
 
