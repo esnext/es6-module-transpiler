@@ -1,13 +1,13 @@
-# node-module-transpiler
+# ES6 Module Transpiler
 
-node-module-transpiler is an experimental compiler that allows you to write
+ES6 Module Transpiler is an experimental compiler that allows you to write
 your JavaScript/CoffeeScript using a subset of the current ES6 module syntax,
 and compile it into AMD or CommonJS modules.
 
 **WARNING: The ES6 module syntax is still undergoing a lot of churn,
 and will definitely still change before final approval.**
 
-**node-module-transpiler will track ES6 syntax, and not attempt to
+**ES6 Module Transpiler will track ES6 syntax, and not attempt to
 maintain backwards compatibility with syntax that ultimately did
 not succeed as part of ES6.**
 
@@ -22,7 +22,7 @@ nicer, more declarative way to write AMD (or CommonJS) modules.
 The easiest way to use the transpiler is via the command line:
 
 ```
-$ npm install -g https://git.squareup.com/javascript/node-module-transpiler
+$ npm install -g https://git.squareup.com/javascript/es6-module-transpiler
 $ compile-modules foo.js --to compiled
 ```
 
@@ -70,7 +70,7 @@ IMPORTS
 You can also use the transpiler as a library:
 
 ```javascript
-var Compiler = require("node-module-transpiler");
+var Compiler = require("es6-module-transpiler");
 
 var compiler = new Compiler(string, name);
 compiler.toAMD(); // AMD output
@@ -81,7 +81,7 @@ supply an `imports` hash. You can also use the `global` option to specify that
 exports should be added to a single global instead of `window`.
 
 ```javascript
-var Compiler = require("node-module-transpiler");
+var Compiler = require("es6-module-transpiler");
 
 var imports = { underscore: "_", ember: "Ember" };
 var options = { imports: imports, global: "RSVP" };
@@ -280,7 +280,7 @@ define("app",
 
 You can use this library to pre-transpiler your browser code or your node packages,
 but when developing a node package this can be painful. To make testing your
-packages easier you can configure node-module-transpiler to auto-transpile your
+packages easier you can configure es6-module-transpiler to auto-transpile your
 JavaScript or CoffeeScript modules on the fly:
 
 ```javascript
@@ -289,7 +289,7 @@ import "jquery" as jQuery;
 export jQuery;
 
 // bootstrap.js
-require("node-module-transpiler/require_support").enable();
+require("es6-module-transpiler/require_support").enable();
 var jQuery = require("./mymodule").jQuery;
 
 // …
@@ -299,11 +299,11 @@ var jQuery = require("./mymodule").jQuery;
 
 Add this project to your application's package.json by running this:
 
-    $ npm install --save node-module-transpiler
+    $ npm install --save es6-module-transpiler
 
 Or install it globally:
 
-    $ sudo npm install -g node-module-transpiler
+    $ sudo npm install -g es6-module-transpiler
 
 ## Contributing
 
@@ -313,14 +313,14 @@ Or install it globally:
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-Any contributors to the master node-module-transpiler repository must sign the
+Any contributors to the master es6-module-transpiler repository must sign the
 [Individual Contributor License Agreement (CLA)][cla].  It's a short form that
 covers our bases and makes sure you're eligible to contribute.
 
 [cla]: https://spreadsheets.google.com/spreadsheet/viewform?formkey=dDViT2xzUHAwRkI3X3k5Z0lQM091OGc6MQ&ndplr=1
 
 When you have a change you'd like to see in the master repository, [send a pull
-request](https://github.com/square/node-module-transpiler/pulls). Before we merge
+request](https://github.com/square/es6-module-transpiler/pulls). Before we merge
 your request, we'll make sure you're in the list of people who have signed a
 CLA.
 
