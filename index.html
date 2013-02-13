@@ -173,7 +173,7 @@ export { sqrt, Point };             // Export multiple objects as module propert
           type = $types.filter(':checked').attr('value');
 
       try {
-        var compiler = new Compiler($input.val(), null, {imports: []});
+        var compiler = new Compiler($input.val(), 'segment', {imports: []});
         output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
       } catch (ex) {
         output = ex.message + "\n" + ex.backtrace.join("\n");
