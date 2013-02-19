@@ -305,6 +305,15 @@ Or install it globally:
 
     $ sudo npm install -g es6-module-transpiler
 
+## Acknowledgements
+
+Thanks to Yehuda Katz for
+[js_module_transpiler](https://github.com/wycats/js_module_transpiler), the
+library on which this one is based. Thanks to Dave Herman for his work on ES6
+modules. Thanks to Erik Bryn for providing the initial push to write this
+library. And finally thanks to the JavaScript community at Square for helping
+to write and release this library.
+
 ## Contributing
 
 1. Fork it
