@@ -32,6 +32,8 @@ class CLI
         [requirePath, global] = pair.split(':')
         imports[requirePath] = global
       args.imports = imports
+    if args.global
+      args.into = args.global
     return args
 
   argParser: (argv) ->
@@ -61,6 +63,8 @@ class CLI
           default: no
           type: 'boolean'
           describe: 'Process stdin as CoffeeScript (requires --stdio)'
+        global:
+          describe: 'When the type is `globals`, the name of the global to export into'
         help:
           default: no
           type: 'boolean'
@@ -89,7 +93,7 @@ class CLI
       input += data
 
     @stdin.on 'end', =>
-      output = @_compile input, options.m, options.type, coffee: options.coffee, imports: options.imports
+      output = @_compile input, options.m, options.type, options
       @stdout.write output
 
   processPath: (filename, options) ->

@@ -176,3 +176,16 @@ describe 'CLI', ->
             var View = Ember.View;
           })(window.Ember, window.jQuery);
         """
+
+  it 'can specify the global to use for exports', ->
+    shouldRunCLI ['-s', '--type', 'globals', '--global', 'Ember'], """
+      var get = function(){}, set = function(){};
+      export { get, set };
+    """, """
+      (function(exports) {
+        "use strict";
+        var get = function(){}, set = function(){};
+        exports.get = get;
+        exports.set = set;
+      })(window.Ember = {});
+    """
