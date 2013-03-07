@@ -55,3 +55,15 @@ describe 'Compiler (toAMD)', ->
       export { get, set };
       export = Ember;
     """, "You cannot use both `export =` and `export` in the same module"
+
+  it 'imports using local variables', ->
+    shouldCompileAMD """
+      import { async } from "rsvp";
+    """, """
+      define("jquery",
+        ["rsvp"],
+        function(__dependency1__) {
+          "use strict";
+          var async = __dependency1__.async;
+        });
+    """

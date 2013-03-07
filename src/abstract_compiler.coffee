@@ -53,7 +53,7 @@ class AbstractCompiler
 
   buildImportsForPreamble: (builder, imports_, dependencyName) ->
     for import_ in imports_
-      builder.set import_, -> builder.prop dependencyName, import_
+      builder.var import_, -> builder.prop dependencyName, import_
 
 
 export = AbstractCompiler
