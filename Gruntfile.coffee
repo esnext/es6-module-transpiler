@@ -1,0 +1,72 @@
+module.exports = (grunt) ->
+  path = require('path')
+
+  # Please see the grunt documentation for more information regarding task and
+  # helper creation: https://github.com/cowboy/grunt/blob/master/docs/toc.md
+
+  # ==========================================================================
+  # TASKS
+  # ==========================================================================
+
+  grunt.registerMultiTask 'es6-module-transpile', 'Transpile files from ES6 module syntax', ->
+    dest = @data.dest
+    options = @options()
+
+    @filesSrc.forEach (filepath) ->
+      transpile(filepath, dest, grunt.util._.clone(options))
+
+    if grunt.task.current.errorCount
+      return false
+    else
+      return true
+
+  # ==========================================================================
+  # HELPERS
+  # ==========================================================================
+
+  transpile = (src, dest, options) ->
+    Compiler = require './lib/compiler'
+    coffee   = require 'coffee-script'
+
+    options ||= {}
+    options.coffee = path.extname(src) is '.coffee'
+
+    compileCoffeeScript = options.coffee and (options.compileCoffeeScript isnt false)
+
+    if grunt.file.isDir(dest)
+      # our destination is just a folder, so figure out the real filename
+      ext = if compileCoffeeScript then '.js' else path.extname(src)
+      basename = path.basename(src, path.extname(src))
+      dest = path.join(dest, basename + ext)
+
+    try
+      compiler = new Compiler(grunt.file.read(src), null, options)
+
+      compiled = \
+        switch options.type
+          when 'cjs'
+            compiler.toCJS()
+          when 'amd'
+            compiler.toAMD()
+          when 'globals'
+            compiler.toGlobals()
+          else throw new Error("unknown transpile destination type: #{options.type}")
+
+      if compileCoffeeScript
+        compiled = coffee.compile(compiled)
+
+      grunt.file.write(dest, compiled)
+      return true
+    catch e
+      grunt.log.error("Error in #{src}:\n#{e}")
+      return false
+
+  grunt.initConfig
+    'es6-module-transpile':
+      app:
+        src: ['src/*.coffee']
+        dest: 'lib'
+        options:
+          type: 'cjs'
+
+  grunt.registerTask('default', ['es6-module-transpile'])

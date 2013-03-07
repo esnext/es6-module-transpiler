@@ -3,7 +3,13 @@
   "version": "0.1.1",
   "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript or CoffeeScript using a subset of the current ES6 module syntax, and compile it into AMD, CommonJS, and globals styles.",
   "homepage": "http://square.github.com/es6-module-transpiler",
-  "keywords": ["es6", "module", "transpile", "amd", "commonjs"],
+  "keywords": [
+    "es6",
+    "module",
+    "transpile",
+    "amd",
+    "commonjs"
+  ],
   "bugs": "https://github.com/square/es6-module-transpiler/issues",
   "preferGlobal": true,
   "bin": {
@@ -23,12 +29,12 @@
     "optimist": "~0.3.5"
   },
   "scripts": {
-    "build": "bin/compile-modules --to .compiled --type cjs src/* && coffee -o lib/ -c .compiled/src && rm -rf .compiled",
-    "test": "npm run-script build && jasmine-node --coffee spec",
+    "test": "grunt && jasmine-node --coffee spec",
     "package": "npm run-script test && gluejs --basepath lib --include . --exclude 'require_support' --out ../dist/es6-module-transpiler.js --global ModuleTranspiler && uglifyjs dist/es6-module-transpiler.js > dist/es6-module-transpiler.min.js"
   },
   "devDependencies": {
     "gluejs": "~0.2.0",
-    "uglify-js": "~2.2.4"
+    "uglify-js": "~2.2.4",
+    "grunt": "~0.4.0"
   }
 }
