@@ -1,11 +1,7 @@
 import './compile_error' as CompileError
 import './java_script_builder' as JavaScriptBuilder
 import './coffee_script_builder' as CoffeeScriptBuilder
-
-isEmpty = (object) ->
-  for foo of object
-    return false
-  true
+import { isEmpty } from './utils'
 
 class AbstractCompiler
   constructor: (compiler, options) ->

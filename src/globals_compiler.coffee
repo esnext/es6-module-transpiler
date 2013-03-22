@@ -1,4 +1,5 @@
 import './abstract_compiler' as AbstractCompiler
+import { isEmpty } from './utils'
 
 class GlobalsCompiler extends AbstractCompiler
   stringify: ->
@@ -9,7 +10,7 @@ class GlobalsCompiler extends AbstractCompiler
 
       into = @options.into or @exportAs
 
-      if @exports.length > 0 or @exportAs
+      if !isEmpty(@exports) or @exportAs
         passedArgs.push(
           if @exportAs
             s.global
@@ -46,8 +47,8 @@ class GlobalsCompiler extends AbstractCompiler
           if @exportAs
             s.set "exports.#{into}", @exportAs
           else
-            for export_ in @exports
-              s.set "exports.#{export_}", export_
+            for exportName, exportValue of @exports
+              s.set "exports.#{exportName}", exportValue
 
       args = (arg) =>
         arg passedArg for passedArg in passedArgs
