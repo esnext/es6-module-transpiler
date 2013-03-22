@@ -25,6 +25,15 @@ describe "Compiler (toCJS)", ->
       exports.jQuery = jQuery;
     """
 
+  it 'generates an export object if `export function foo` is used', ->
+    shouldCompileCJS """
+      export function jQuery() { };
+    """, """
+      "use strict";
+      var __export1__ = function jQuery() { };
+      exports.jQuery = __export1__;
+    """
+
   it 'generates an export object if `export { foo, bar }` is used', ->
     shouldCompileCJS """
       var get = function() { };

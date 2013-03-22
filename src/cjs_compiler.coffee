@@ -34,7 +34,7 @@ class CJSCompiler extends AbstractCompiler
       if @exportAs
         s.line "module.exports = #{@exportAs}"
 
-      for export_ in @exports
-        s.line "exports.#{export_} = #{export_}"
+      for exportName, exportValue of @exports
+        s.line "exports.#{exportName} = #{exportValue}"
 
 export = CJSCompiler

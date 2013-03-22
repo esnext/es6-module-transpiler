@@ -2,6 +2,11 @@ import './compile_error' as CompileError
 import './java_script_builder' as JavaScriptBuilder
 import './coffee_script_builder' as CoffeeScriptBuilder
 
+isEmpty = (object) ->
+  for foo of object
+    return false
+  true
+
 class AbstractCompiler
   constructor: (compiler, options) ->
     @compiler = compiler
@@ -23,7 +28,7 @@ class AbstractCompiler
     @assertValid()
 
   assertValid: ->
-    if @exportAs and @exports.length > 0
+    if @exportAs and !isEmpty(@exports)
       throw new CompileError("You cannot use both `export =` and `export` in the same module")
 
   buildPreamble: (names) ->
