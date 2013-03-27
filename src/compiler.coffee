@@ -77,9 +77,8 @@ class Compiler
     name = match[1]
     value = match[2]
 
-    id = "__export#{++@id}__"
-    @lines.push "var #{id} = #{value}"
-    @exports[name] = id
+    @lines.push "var #{name} = #{value}"
+    @exports[name] = name
 
   processImportAs: (match) ->
     @importAs[match[1] or match[2]] = match[3]

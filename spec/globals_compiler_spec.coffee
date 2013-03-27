@@ -38,14 +38,14 @@ describe 'Compiler (toGlobals)', ->
       })(window);
     """
 
-  it 'generates an export object if `export function foo` is used', ->
+  it 'generates an export object if `export var foo` is used', ->
     shouldCompileGlobals """
       export var jQuery = function() { };
     """, """
       (function(exports) {
         "use strict";
-        var __export1__ = function() { };
-        exports.jQuery = __export1__;
+        var jQuery = function() { };
+        exports.jQuery = jQuery;
       })(window);
     """
 
