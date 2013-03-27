@@ -39,8 +39,8 @@ describe 'Compiler (toAMD)', ->
         ["exports"],
         function(__exports__) {
           "use strict";
-          var __export1__ = function jQuery() { };
-          __exports__.jQuery = __export1__;
+          function jQuery() { };
+          __exports__.jQuery = jQuery;
         });
     """
 

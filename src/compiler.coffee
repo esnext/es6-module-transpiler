@@ -67,9 +67,8 @@ class Compiler
     name = match[1]
     body = match[2]
 
-    id = "__export#{++@id}__"
-    @lines.push "var #{id} = function #{name}#{body}"
-    @exports[name] = id
+    @lines.push "function #{name}#{body}"
+    @exports[name] = name
 
   processImportAs: (match) ->
     @importAs[match[1] or match[2]] = match[3]

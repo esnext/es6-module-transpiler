@@ -33,8 +33,8 @@ describe 'Compiler (toGlobals)', ->
     """, """
       (function(exports) {
         "use strict";
-        var __export1__ = function jQuery() { };
-        exports.jQuery = __export1__;
+        function jQuery() { };
+        exports.jQuery = jQuery;
       })(window);
     """
 

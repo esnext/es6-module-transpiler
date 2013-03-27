@@ -30,8 +30,8 @@ describe "Compiler (toCJS)", ->
       export function jQuery() { };
     """, """
       "use strict";
-      var __export1__ = function jQuery() { };
-      exports.jQuery = __export1__;
+      function jQuery() { };
+      exports.jQuery = jQuery;
     """
 
   it 'generates an export object if `export { foo, bar }` is used', ->
