@@ -5,6 +5,7 @@ import './globals_compiler' as GlobalsCompiler
 EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
 EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/
 EXPORT_FUNCTION = /^\s*export\s+function\s+(\w+)\s*(\(.*)$/
+EXPORT_VAR = /^\s*export\s+var\s+(\w+)\s*=\s*(.*)$/
 IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/
 IMPORT_AS = /^\s*import\s+(?:"([^"]+?)"|'([^']+?)')\s*as\s+(.*?)\s*(;)?\s*$/
 
@@ -32,6 +33,8 @@ class Compiler
       @processExportAs match
     else if match = @matchLine line, EXPORT_FUNCTION
       @processExportFunction match
+    else if match = @matchLine line, EXPORT_VAR
+      @processExportVar match
     else if match = @matchLine line, EXPORT
       @processExport match
     else if match = @matchLine line, IMPORT_AS
@@ -68,6 +71,13 @@ class Compiler
     body = match[2]
 
     @lines.push "function #{name}#{body}"
+    @exports[name] = name
+
+  processExportVar: (match) ->
+    name = match[1]
+    value = match[2]
+
+    @lines.push "var #{name} = #{value}"
     @exports[name] = name
 
   processImportAs: (match) ->
