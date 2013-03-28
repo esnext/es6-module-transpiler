@@ -1,11 +1,12 @@
 import './abstract_compiler' as AbstractCompiler
+import { isEmpty } from './utils'
 
 class AMDCompiler extends AbstractCompiler
   stringify: ->
     @build (s) =>
       [ wrapperArgs, preamble ] = @buildPreamble(@dependencyNames)
 
-      unless @exports.length is 0
+      unless isEmpty(@exports)
         @dependencyNames.push 'exports'
         wrapperArgs.push '__exports__'
 
@@ -21,8 +22,8 @@ class AMDCompiler extends AbstractCompiler
               s.append preamble if preamble
               s.append @lines...
 
-              for export_ in @exports
-                s.line "__exports__.#{export_} = #{export_}"
+              for exportName, exportValue of @exports
+                s.line "__exports__.#{exportName} = #{exportValue}"
 
               if @exportAs
                 s.line "return #{@exportAs}"

@@ -31,6 +31,19 @@ describe 'Compiler (toAMD)', ->
         });
     """
 
+  it 'generates an export object if `export function foo` is used', ->
+    shouldCompileAMD """
+      export function jQuery() { };
+    """, """
+      define("jquery",
+        ["exports"],
+        function(__exports__) {
+          "use strict";
+          function jQuery() { };
+          __exports__.jQuery = jQuery;
+        });
+    """
+
   it 'generates an export object if `export { foo, bar }` is used', ->
     shouldCompileAMD """
       var get = function() { };

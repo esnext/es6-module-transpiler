@@ -27,6 +27,17 @@ describe 'Compiler (toGlobals)', ->
       })(window);
     """
 
+  it 'generates an export object if `export function foo` is used', ->
+    shouldCompileGlobals """
+      export function jQuery() { };
+    """, """
+      (function(exports) {
+        "use strict";
+        function jQuery() { };
+        exports.jQuery = jQuery;
+      })(window);
+    """
+
   it "uses a single window export if `export foo` is used with the :into option", ->
     shouldCompileGlobals """
       var get = function() {};
