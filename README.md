@@ -193,6 +193,7 @@ will compile into this AMD output:
 define("ember",
   [],
   function(__exports__) {
+    "use strict";
     var get = function(obj, key) {
       return obj[key];
     };
@@ -230,6 +231,7 @@ will compile into this AMD output:
 define("ember",
   [],
   function() {
+    "use strict";
     var jQuery = function() {};
 
     jQuery.prototype = {
@@ -254,6 +256,7 @@ will compile into this AMD output:
 define("app",
   ["ember"],
   function(__dependency1__) {
+    "use strict";
     var get = __dependency1__.get;
     var set = __dependency1__.set;
   });
@@ -273,6 +276,7 @@ will compile into this AMD output:
 define("app",
   ["jquery"],
   function(jQuery) {
+    "use strict";
   });
 ```
 
