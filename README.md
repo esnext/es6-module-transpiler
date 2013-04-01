@@ -191,7 +191,7 @@ will compile into this AMD output:
 
 ```javascript
 define("ember",
-  [],
+  ["exports"],
   function(__exports__) {
     "use strict";
     var get = function(obj, key) {
