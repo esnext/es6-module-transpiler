@@ -22,7 +22,7 @@ processExitFake = (code) ->
   throw new ProcessExitError(code)
 
 stripTrailingNewlines = (string) ->
-  string.replace(/\n*\z/, '')
+  string.replace(/\n*$/, '')
 
 unindent = (string) ->
   string = stripTrailingNewlines string
