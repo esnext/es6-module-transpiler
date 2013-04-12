@@ -13,7 +13,7 @@ COMMENT_START = new RegExp("/\\*")
 COMMENT_END = new RegExp("\\*/")
 
 # naively-handled block comments: only look for ### at start of line
-# avoids having to track state, since would want to avoid entering comment 
+# avoids having to track state, since would want to avoid entering comment
 # state on ### in other comments (like this one) and in strings
 COMMENT_CS_TOGGLE = /^###/
 

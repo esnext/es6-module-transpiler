@@ -65,7 +65,7 @@ describe 'Compiler (toAMD for CoffeeScript)', ->
       ###
       export { get, set }
       ###
-      
+
       export { get, foo }
     """, """
       define("jquery",

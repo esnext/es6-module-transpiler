@@ -93,7 +93,7 @@ describe 'Compiler (toAMD)', ->
           var async = __dependency1__.async;
         });
     """
-  
+
   it 'ignores import statements within block comments', ->
     shouldCompileAMD """
       import { async } from "rsvp";
