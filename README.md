@@ -299,6 +299,10 @@ var jQuery = require("./mymodule").jQuery;
 // …
 ```
 
+## Using with Grunt
+
+You can install the [grunt-es6-module-transpiler](http://github.com/joefiorini/grunt-es6-module-transpiler) plugin to run the transpiler as part of your [Grunt.js](http://gruntjs.com) build task. See the README on the plugin's Github page for more information.
+
 ## Installation
 
 Add this project to your application's package.json by running this:
