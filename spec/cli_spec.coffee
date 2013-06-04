@@ -1,3 +1,5 @@
+{ parseOptions, optionsShouldBeInvalid, shouldRunCLI } = require './spec_helper'
+
 describe 'CLI', ->
   it 'defaults to using AMD type', ->
     expect(parseOptions('--stdio --anonymous').type).toEqual('amd')

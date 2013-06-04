@@ -15,6 +15,12 @@ module.exports = (grunt) ->
     @filesSrc.forEach (filepath) ->
       transpile(filepath, dest, grunt.util._.clone(options))
 
+    # unload library code so that any subsequent tasks will use the new code
+    libraryPath = path.join(__dirname, 'lib')
+    for own requirePath of require.cache
+      if requirePath.indexOf(libraryPath) is 0
+        delete require.cache[requirePath]
+
     if grunt.task.current.errorCount
       return false
     else
@@ -61,6 +67,8 @@ module.exports = (grunt) ->
       grunt.log.error("Error in #{src}:\n#{e}")
       return false
 
+  grunt.loadNpmTasks 'grunt-jasmine-node'
+
   grunt.initConfig
     'es6-module-transpile':
       app:
@@ -68,5 +76,11 @@ module.exports = (grunt) ->
         dest: 'lib'
         options:
           type: 'cjs'
+    jasmine_node:
+      specNameMatcher: '_spec'
+      projectRoot: '.'
+      requirejs: false
+      extensions: 'js|coffee'
+      forceExit: true
 
-  grunt.registerTask('default', ['es6-module-transpile'])
+  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node'])

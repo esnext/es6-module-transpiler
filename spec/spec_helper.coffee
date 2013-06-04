@@ -1,6 +1,6 @@
 Compiler = require '../lib/compiler'
-CLI = require '../lib/cli'
-Stream = require 'stream'
+CLI      = require '../lib/cli'
+Stream   = require 'stream'
 
 class ProcessExitError extends Error
   constructor: (@code) ->
@@ -191,5 +191,4 @@ class FakeFilesystem
     return null
 
 
-for own name, fn of { normalize, shouldCompileAMD, shouldCompileCJS, shouldCompileGlobals, shouldRaise, parseOptions, optionsShouldBeInvalid, shouldRunCLI }
-  global[name] = fn
+module.exports = { normalize, shouldCompileAMD, shouldCompileCJS, shouldCompileGlobals, shouldRaise, parseOptions, optionsShouldBeInvalid, shouldRunCLI }

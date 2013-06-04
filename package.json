@@ -36,6 +36,7 @@
     "uglify-js": "~2.2.4",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.6",
-    "jasmine-node": "~1.4.0"
+    "jasmine-node": "~1.8.0",
+    "grunt-jasmine-node": "~0.1.0"
   }
 }

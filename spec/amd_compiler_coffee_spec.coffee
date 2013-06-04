@@ -1,3 +1,5 @@
+{ shouldCompileAMD, shouldRaise } = require './spec_helper'
+
 describe 'Compiler (toAMD for CoffeeScript)', ->
   it 'generates a single export if `export = ` is used', ->
     shouldCompileAMD """

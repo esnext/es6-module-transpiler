@@ -1,4 +1,4 @@
-Compiler = require '../lib/compiler'
+{ shouldCompileCJS, shouldRaise } = require './spec_helper'
 
 describe "Compiler (toCJS)", ->
   it 'generates a single export if `export =` is used', ->

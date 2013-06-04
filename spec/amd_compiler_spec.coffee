@@ -1,3 +1,5 @@
+{ shouldCompileAMD, shouldRaise, shouldRunCLI } = require './spec_helper'
+
 describe 'Compiler (toAMD)', ->
   it 'generates a single export if `export = ` is used', ->
     shouldCompileAMD """

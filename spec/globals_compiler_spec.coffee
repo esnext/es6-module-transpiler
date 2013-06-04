@@ -1,3 +1,5 @@
+{ shouldCompileGlobals, shouldRaise } = require './spec_helper'
+
 describe 'Compiler (toGlobals)', ->
   it 'generates a single export if `export =` is used', ->
     shouldCompileGlobals """
