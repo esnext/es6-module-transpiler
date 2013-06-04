@@ -113,3 +113,51 @@ describe 'Compiler (toAMD)', ->
           import { buzz } from "buzz"; */
         });
     """
+
+  it 'names modules and modifies import statements if a relative path is defined', ->
+    shouldRunCLI ['--to', 'out', 'lib'],
+      'lib':
+        contents: ['foo', 'foo.js']
+      'lib/foo':
+        contents: ['bar.js', 'baz.js']
+      'lib/foo.js':
+        read: """
+          import "./foo/bar" as bar;
+        """
+      'lib/foo/bar.js':
+        read: """
+          import "./baz" as baz;
+        """
+      'lib/foo/baz.js':
+        read: ""
+      'out':
+        exists: yes
+      'out/lib':
+        exists: yes
+      'out/lib/foo':
+        exists: yes
+      'out/lib/foo.js':
+        write: """
+          define("lib/foo",
+            ["lib/foo/bar"],
+            function(bar) {
+              "use strict";
+            });
+        """
+      'out/lib/foo/bar.js':
+        write: """
+          define("lib/foo/bar",
+            ["lib/foo/baz"],
+            function(baz) {
+              "use strict";
+            });
+        """
+      'out/lib/foo/baz.js':
+        write: """
+          define("lib/foo/baz",
+            [],
+            function() {
+              "use strict";
+
+            });
+        """
