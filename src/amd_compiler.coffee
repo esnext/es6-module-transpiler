@@ -16,7 +16,7 @@ class AMDCompiler extends AbstractCompiler
         if /^\./.test(dependency)
           # '..' makes up for path.join() treating a module name w/ no extension
           # as a folder
-          @dependencyNames[i] = path.join(@moduleName, '..', dependency)
+          @dependencyNames[i] = path.join(@moduleName, '..', dependency).replace(/[\\]/g, '/')
 
       s.line =>
         s.call 'define', (arg) =>

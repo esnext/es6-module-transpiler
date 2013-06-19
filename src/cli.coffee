@@ -118,9 +118,9 @@ class CLI
   processFile: (filename, options) ->
     @fs.readFile filename, 'utf8', (err, input) =>
       ext = path.extname(filename)
-      moduleName = path.join(path.dirname(filename), path.basename(filename, ext))
+      moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/')
       output = @_compile input, moduleName, options.type, coffee: ext is '.coffee', imports: options.imports
-      outputFilename = path.join(options.to, filename)
+      outputFilename = path.join(options.to, filename).replace(/[\\]/g, '/')
 
       @_mkdirp path.dirname(outputFilename)
       @fs.writeFile outputFilename, output, 'utf8', (err) ->

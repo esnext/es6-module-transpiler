@@ -1,6 +1,7 @@
 Compiler = require '../lib/compiler'
 CLI      = require '../lib/cli'
 Stream   = require 'stream'
+path     = require 'path'
 
 class ProcessExitError extends Error
   constructor: (@code) ->
@@ -101,8 +102,15 @@ class WritableStream extends MockStream
 
 class FakeFilesystem
   constructor: (@_description) ->
+    # convert to windows paths if necessary
+    for eachPath of @_description
+      if eachPath != path.normalize(eachPath)
+        @_description[path.normalize(eachPath)] = @_description[eachPath]
+        delete @_description[eachPath]
 
   readFile: (filename, encoding, callback) ->
+    filename = path.normalize(filename)
+
     if arguments.length is 2
       callback = encoding
       encoding = 'utf8'
@@ -111,6 +119,8 @@ class FakeFilesystem
     return null
 
   readFileSync: (filename, encoding) ->
+    filename = path.normalize(filename)
+
     if filename of @_description
       if 'read' of @_description[filename]
         return @_description[filename].read
@@ -118,6 +128,8 @@ class FakeFilesystem
     throw new Error("unexpectedly trying to read data from file #{filename}")
 
   writeFile: (filename, data, encoding, callback) ->
+    filename = path.normalize(filename)
+
     if arguments.length is 3
       callback = encoding
       encoding = 'utf8'
@@ -127,6 +139,8 @@ class FakeFilesystem
     return null
 
   writeFileSync: (filename, data, encoding) ->
+    filename = path.normalize(filename)
+
     if filename of @_description
       fileDescription = @_description[filename]
       if 'write' of fileDescription
@@ -137,19 +151,27 @@ class FakeFilesystem
     throw new Error("unexpected data written to file #{filename}: #{data}")
 
   exists: (filename, callback) ->
+    filename = path.normalize(filename)
+
     callback null, @existsSync(filename)
     return null
 
   existsSync: (filename) ->
+    filename = path.normalize(filename)
+
     fileDescription = @_description[filename]
     return fileDescription?.read? or fileDescription?.exists
 
   mkdir: (dirname, callback) ->
+    dirname = path.normalize(dirname)
+
     @mkdirSync dirname
     callback? null
     return null
 
   mkdirSync: (dirname) ->
+    dirname = path.normalize(dirname)
+
     if dirname of @_description
       dirDescription = @_description[dirname]
       if 'mkdir' of dirDescription
@@ -159,11 +181,15 @@ class FakeFilesystem
     throw new Error("unexpectedly trying to make directory #{dirname}")
 
   stat: (filename, callback) ->
+    filename = path.normalize(filename)
+
     result = @statSync filename
     callback? null, result
     return null
 
   statSync: (filename) ->
+    filename = path.normalize(filename)
+
     if filename of @_description
       fileDescription = @_description[filename]
       {
@@ -172,11 +198,15 @@ class FakeFilesystem
       }
 
   readdir: (dirname, callback) ->
+    dirname = path.normalize(dirname)
+
     result = @readdirSync dirname
     callback? null, result
     return null
 
   readdirSync: (dirname) ->
+    dirname = path.normalize(dirname)
+
     if dirname of @_description
       dirDescription = @_description[dirname]
       if 'contents' of dirDescription
