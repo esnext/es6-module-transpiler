@@ -120,4 +120,4 @@ class Unique
   next: ->
     "__#{@prefix}#{@index++}__"
 
-export = ScriptBuilder
+export default ScriptBuilder

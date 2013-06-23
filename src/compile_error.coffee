@@ -1,3 +1,3 @@
 class CompileError extends Error
 
-export = CompileError
+export default CompileError

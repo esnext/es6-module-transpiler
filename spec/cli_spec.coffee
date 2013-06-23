@@ -21,7 +21,7 @@ describe 'CLI', ->
 
   it 'can read from stdin and write to stdout', ->
     shouldRunCLI ['-s', '-m', 'mymodule'], """
-      import "jQuery" as $;
+      import $ from "jQuery";
     """, """
       define("mymodule",
         ["jQuery"],
@@ -32,7 +32,7 @@ describe 'CLI', ->
 
   it 'can create anonymous modules if desired', ->
     shouldRunCLI ['-s', '--anonymous'], """
-      import "jQuery" as $;
+      import $ from "jQuery";
     """, """
       define(
         ["jQuery"],
@@ -43,7 +43,7 @@ describe 'CLI', ->
 
   it 'can process CoffeeScript', ->
     shouldRunCLI ['-s', '--coffee', '-m', 'caret'], """
-      import "jQuery" as $
+      import $ from "jQuery";
 
       $.fn.caret = ->
     """, """
@@ -58,7 +58,7 @@ describe 'CLI', ->
 
   it 'can output using a different type', ->
     shouldRunCLI ['-s', '--type', 'cjs'], """
-      import "jQuery" as $;
+      import $ from "jQuery";
 
       $.fn.caret = {};
     """, """
@@ -72,7 +72,7 @@ describe 'CLI', ->
     shouldRunCLI ['--to', 'out', 'lib/test.js'],
       'lib/test.js':
         read: """
-          import "jQuery" as $;
+          import $ from "jQuery";
         """
       'out':
         mkdir: yes
@@ -91,7 +91,7 @@ describe 'CLI', ->
     shouldRunCLI ['--to', 'out', 'lib/test.coffee'],
       'lib/test.coffee':
         read: """
-          import "jQuery" as $
+          import $ from "jQuery";
         """
       'out':
         mkdir: yes
@@ -110,7 +110,7 @@ describe 'CLI', ->
     shouldRunCLI ['--to', 'out', 'lib/test.coffee'],
       'lib/test.coffee':
         read: """
-          import "jQuery" as $
+          import $ from "jQuery";
         """
       'out':
         exists: yes
@@ -165,7 +165,7 @@ describe 'CLI', ->
       'lib/test.js':
         read: """
           import { View } from 'ember';
-          import 'jquery' as $;
+          import $ from "jquery";
         """
       'out':
         mkdir: yes

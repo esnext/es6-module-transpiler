@@ -1,6 +1,6 @@
-import './abstract_compiler' as AbstractCompiler
+import AbstractCompiler from './abstract_compiler'
 import { isEmpty } from './utils'
-import 'path' as path;
+import path from 'path'
 
 class AMDCompiler extends AbstractCompiler
   stringify: ->
@@ -33,7 +33,7 @@ class AMDCompiler extends AbstractCompiler
               for exportName, exportValue of @exports
                 s.line "__exports__.#{exportName} = #{exportValue}"
 
-              if @exportAs
-                s.line "return #{@exportAs}"
+              if @exportDefault
+                s.line "return #{@exportDefault}"
 
-export = AMDCompiler
+export default AMDCompiler

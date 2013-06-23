@@ -1,11 +1,11 @@
 { shouldCompileCJS, shouldRaise } = require './spec_helper'
 
 describe "Compiler (toCJS)", ->
-  it 'generates a single export if `export =` is used', ->
+  it 'generates a single export if `export default` is used', ->
     shouldCompileCJS """
       var jQuery = function() { };
 
-      export = jQuery;
+      export default jQuery;
     """, """
       "use strict";
       var jQuery = function() { };
@@ -58,21 +58,13 @@ describe "Compiler (toCJS)", ->
       exports.set = set;
     """
 
-  it 'raises if both `export =` and `export foo` is used', ->
+  it 'raises if both `export default` and `export foo` is used', ->
     shouldRaise """
       export { get, set };
-      export = Ember;
-    """, "You cannot use both `export =` and `export` in the same module"
+      export default Ember;
+    """, "You cannot use both `export default` and `export` in the same module"
 
-  it 'converts `import foo from "bar"`', ->
-    shouldCompileCJS """
-      import View from "ember";
-    """, """
-      "use strict";
-      var View = require("ember").View;
-    """
-
-  it 'converts `import { get, set } from "ember"', 
+  it 'converts `import { get, set } from "ember"', ->
     shouldCompileCJS """
       import { get, set } from "ember";
     """, """
@@ -82,7 +74,7 @@ describe "Compiler (toCJS)", ->
       var set = __dependency1__.set;
     """
 
-  it 'support single quotes in import from', ->
+  it 'support single quotes in import {x, y} from z', ->
     shouldCompileCJS """
       import { get, set } from 'ember';
     """, """
@@ -92,26 +84,36 @@ describe "Compiler (toCJS)", ->
       var set = __dependency1__.set;
     """
 
-  it 'converts `import "bar" as foo`', ->
+  it 'converts `import foo from "bar"`', ->
     shouldCompileCJS """
-      import "underscore" as _;
+      import _ from "underscore";
     """, """
       "use strict";
       var _ = require("underscore");
     """
 
-  it 'supports single quotes in import as', ->
+  it 'supports single quotes in import x from y', ->
     shouldCompileCJS """
-      import 'underscore' as undy;
+      import undy from 'underscore';
     """, """
       "use strict";
       var undy = require("underscore");
     """
 
-  it 'supports anonymous modules', ->
+  it 'supports import { x as y } from "foo"', ->
     shouldCompileCJS """
-      import "underscore" as undy;
+      import { View as EmView } from 'ember';
     """, """
       "use strict";
-      var undy = require("underscore");
+      var EmView = require("ember").View;
+    """
+
+  it 'supports import { default as foo } from "foo"', ->
+    shouldCompileCJS """
+      import { View as EmView, default as Ember } from 'ember';
+    """, """
+      "use strict";
+      var __dependency1__ = require("ember");
+      var EmView = __dependency1__.View;
+      var Ember = __dependency1__;
     """

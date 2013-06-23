@@ -1,11 +1,11 @@
 { shouldCompileCJS, shouldRaise } = require './spec_helper'
 
 describe "Compiler (toCJS for CoffeeScript)", ->
-  it 'generates a single export if `export =` is used', ->
+  it 'generates a single export if `export default` is used', ->
     shouldCompileCJS """
       class jQuery
 
-      export = jQuery
+      export default jQuery
     """, """
       "use strict"
       class jQuery
@@ -40,21 +40,21 @@ describe "Compiler (toCJS for CoffeeScript)", ->
       exports.set = set
     """, coffee: yes
 
-  it 'raises if both `export =` and `export foo` is used', ->
+  it 'raises if both `export default` and `export foo` is used', ->
     shouldRaise """
       export { get, set }
-      export = Ember
-    """, "You cannot use both `export =` and `export` in the same module", coffee: yes
+      export default Ember
+    """, "You cannot use both `export default` and `export` in the same module", coffee: yes
 
-  it 'converts `import foo from "bar"`', ->
+  it 'converts `import { foo } from "bar"`', ->
     shouldCompileCJS """
-      import View from "ember"
+      import { View } from "ember"
     """, """
       "use strict"
       View = require("ember").View
     """, coffee: yes
 
-  it 'converts `import { get, set } from "ember"', 
+  it 'converts `import { get, set } from "ember"', ->
     shouldCompileCJS """
       import { get, set } from "ember"
     """, """
@@ -74,26 +74,19 @@ describe "Compiler (toCJS for CoffeeScript)", ->
       set = __dependency1__.set
     """, coffee: yes
 
-  it 'converts `import "bar" as foo`', ->
+  it 'converts `import foo from "bar"`', ->
     shouldCompileCJS """
-      import "underscore" as _
+      import _ from "underscore";
     """, """
       "use strict"
       _ = require("underscore")
     """, coffee: yes
 
-  it 'supports single quotes in import as', ->
+  it 'supports single quotes in import x from y', ->
     shouldCompileCJS """
-      import 'underscore' as undy
+      import undy from 'underscore';
     """, """
       "use strict"
       undy = require("underscore")
     """, coffee: yes
 
-  it 'supports anonymous modules', ->
-    shouldCompileCJS """
-      import "underscore" as undy
-    """, """
-      "use strict"
-      undy = require("underscore")
-    """, coffee: yes

@@ -1,11 +1,11 @@
 { shouldCompileAMD, shouldRaise, shouldRunCLI } = require './spec_helper'
 
 describe 'Compiler (toAMD)', ->
-  it 'generates a single export if `export = ` is used', ->
+  it 'generates a single export if `export default` is used', ->
     shouldCompileAMD """
       var jQuery = function() { };
 
-      export = jQuery;
+      export default jQuery;
     """, """
       define("jquery",
         [],
@@ -78,11 +78,11 @@ describe 'Compiler (toAMD)', ->
         });
     """
 
-  it 'raises if both `export =` and `export foo` is used', ->
+  it 'raises if both `export default` and `export foo` is used', ->
     shouldRaise """
       export { get, set };
-      export = Ember;
-    """, "You cannot use both `export =` and `export` in the same module"
+      export default Ember;
+    """, "You cannot use both `export default` and `export` in the same module"
 
   it 'imports using local variables', ->
     shouldCompileAMD """
@@ -124,11 +124,11 @@ describe 'Compiler (toAMD)', ->
         contents: ['bar.js', 'baz.js']
       'lib/foo.js':
         read: """
-          import "./foo/bar" as bar;
+          import bar from "./foo/bar";
         """
       'lib/foo/bar.js':
         read: """
-          import "./baz" as baz;
+          import baz from "./baz";
         """
       'lib/foo/baz.js':
         read: ""

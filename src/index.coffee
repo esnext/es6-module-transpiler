@@ -1,3 +1,3 @@
-import './compiler' as Compiler
+import Compiler from './compiler'
 
 export Compiler

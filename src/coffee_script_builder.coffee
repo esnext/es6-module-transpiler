@@ -1,4 +1,4 @@
-import './script_builder' as ScriptBuilder
+import ScriptBuilder from './script_builder'
 
 class CoffeeScriptBuilder extends ScriptBuilder
   eol: ''
@@ -20,4 +20,4 @@ class CoffeeScriptBuilder extends ScriptBuilder
     else
       '->'
 
-export = CoffeeScriptBuilder
+export default CoffeeScriptBuilder

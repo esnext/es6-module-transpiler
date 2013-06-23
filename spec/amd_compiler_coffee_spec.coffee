@@ -1,11 +1,11 @@
 { shouldCompileAMD, shouldRaise } = require './spec_helper'
 
 describe 'Compiler (toAMD for CoffeeScript)', ->
-  it 'generates a single export if `export = ` is used', ->
+  it 'generates a single export if `export default ` is used', ->
     shouldCompileAMD """
       class jQuery
 
-      export = jQuery
+      export default jQuery
     """, """
       define("jquery",
         [],
@@ -52,11 +52,11 @@ describe 'Compiler (toAMD for CoffeeScript)', ->
         )
     """, coffee: yes
 
-  it 'raises if both `export =` and `export foo` is used', ->
+  it 'raises if both `export default` and `export foo` is used', ->
     shouldRaise """
       export { get, set }
-      export = Ember
-    """, "You cannot use both `export =` and `export` in the same module", coffee: yes
+      export default Ember
+    """, "You cannot use both `export default` and `export` in the same module", coffee: yes
 
   it 'ignores statements within block comments', ->
     shouldCompileAMD """

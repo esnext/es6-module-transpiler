@@ -15,6 +15,8 @@ This compiler provides a way to experiment with ES6 syntax in real
 world scenarios to see how the syntax holds up. It also provides a
 nicer, more declarative way to write AMD (or CommonJS) modules.
 
+See the [CHANGELOG](./CHANGELOG.md) for the latest updates.
+
 ## Usage
 
 ### Executable
@@ -148,7 +150,7 @@ jQuery.prototype = {
   // ...
 };
 
-export = jQuery;
+export default jQuery;
 ```
 
 ### Imports
@@ -160,10 +162,10 @@ use this syntax:
 import { get, set } from "ember";
 ```
 
-To import a module that set its export using `export =`, you use this syntax:
+To import a module that set its export using `export default`, you use this syntax:
 
 ```javascript
-import "jquery" as jQuery;
+import jQuery from "jquery";
 ```
 
 As you can see, the import and export syntaxes are symmetric.
@@ -222,7 +224,7 @@ jQuery.prototype = {
   // ...
 };
 
-export = jQuery;
+export default jQuery;
 ```
 
 will compile into this AMD output:
@@ -267,7 +269,7 @@ define("app",
 This input:
 
 ```javascript
-import "jquery" as jQuery;
+import jQuery from "jquery";
 ```
 
 will compile into this AMD output:
@@ -289,7 +291,7 @@ JavaScript or CoffeeScript modules on the fly:
 
 ```javascript
 // mymodule.js
-import "jquery" as jQuery;
+import jQuery from "jquery";
 export jQuery;
 
 // bootstrap.js
@@ -301,7 +303,10 @@ var jQuery = require("./mymodule").jQuery;
 
 ## Using with Grunt
 
-You can install the [grunt-es6-module-transpiler](http://github.com/joefiorini/grunt-es6-module-transpiler) plugin to run the transpiler as part of your [Grunt.js](http://gruntjs.com) build task. See the README on the plugin's Github page for more information.
+You can install the
+[grunt-es6-module-transpiler](http://github.com/joefiorini/grunt-es6-module-transpiler)
+plugin to run the transpiler as part of your [Grunt.js](http://gruntjs.com)
+build task. See the README on the plugin's Github page for more information.
 
 ## Installation
 
