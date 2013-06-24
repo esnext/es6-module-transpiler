@@ -90,3 +90,20 @@ describe "Compiler (toCJS for CoffeeScript)", ->
       undy = require("underscore")
     """, coffee: yes
 
+  it 'supports anonymous modules', ->
+    shouldCompileCJS """
+      import undy from "underscore"
+    """, """
+      "use strict"
+      undy = require("underscore")
+    """, coffee: yes
+
+  it 'can re-export a subset of another module', ->
+    shouldCompileCJS """
+      export { ajax, makeArray } from "jquery"
+    """, """
+      "use strict"
+      __reexport1__ = require("jquery")
+      exports.ajax = __reexport1__.ajax
+      exports.makeArray = __reexport1__.makeArray
+    """, coffee: yes

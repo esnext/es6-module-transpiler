@@ -86,3 +86,16 @@ describe 'Compiler (toAMD for CoffeeScript)', ->
           __exports__.foo = foo
         )
     """, coffee: yes
+
+  it 'can re-export a subset of another module', ->
+    shouldCompileAMD """
+      export { join, extname } from "path"
+    """, """
+      define("jquery",
+        ["path","exports"],
+        (__reexport1__, __exports__) ->
+          "use strict"
+          __exports__.join = __reexport1__.join
+          __exports__.extname = __reexport1__.extname
+        )
+    """, coffee: yes

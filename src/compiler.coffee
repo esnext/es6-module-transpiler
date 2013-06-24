@@ -1,6 +1,7 @@
 import AMDCompiler from './amd_compiler'
 import CJSCompiler from './cjs_compiler'
 import GlobalsCompiler from './globals_compiler'
+import { Unique } from './utils'
 
 EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
 EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*(;)?\s*$/
@@ -10,6 +11,8 @@ EXPORT_VAR = /^\s*export\s+var\s+(\w+)\s*=\s*(.*)$/
 IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/
 IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/
 
+RE_EXPORT = /^export\s+({.*})\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/
+
 COMMENT_START = new RegExp("/\\*")
 COMMENT_END = new RegExp("\\*/")
 
@@ -17,6 +20,12 @@ COMMENT_END = new RegExp("\\*/")
 # avoids having to track state, since would want to avoid entering comment
 # state on ### in other comments (like this one) and in strings
 COMMENT_CS_TOGGLE = /^###/
+
+getNames = (string) ->
+  if string[0] is '{' and string[string.length-1] is '}'
+    name.trim() for name in string[1...-1].split(',')
+  else
+    [string.trim()]
 
 class Compiler
   constructor: (string, moduleName=null, options={}) ->
@@ -32,6 +41,7 @@ class Compiler
     @id = 0
 
     @inBlockComment = false
+    @reExportUnique = new Unique('reexport')
 
     if not @options.coffee
       @commentStart = COMMENT_START
@@ -54,6 +64,8 @@ class Compiler
         @processExportFunction match
       else if match = @matchLine line, EXPORT_VAR
         @processExportVar match
+      else if match = @matchLine line, RE_EXPORT
+        @processReexport match
       else if match = @matchLine line, EXPORT
         @processExport match
       else if match = @matchLine line, IMPORT
@@ -81,14 +93,7 @@ class Compiler
     @exportDefault = match[1]
 
   processExport: (match) ->
-    exports = match[1]
-
-    if exports[0] is '{' and exports[exports.length-1] is '}'
-      exports = exports[1...-1]
-
-    for ex in exports.split(/\s*,\s*/)
-      ex = ex.trim()
-      @exports[ex] = ex
+    @exports[ex] = ex for ex in getNames(match[1])
 
   processExportFunction: (match) ->
     name = match[1]
@@ -120,6 +125,14 @@ class Compiler
       @imports[match[2] or match[3]] = imports
     else
       @importDefault[match[2] or match[3]] = match[1]
+
+  processReexport: (match) ->
+    names       = getNames(match[1])
+    importPath  = match[2] or match[3]
+    importLocal = @reExportUnique.next()
+
+    @importDefault[importPath] = importLocal
+    @exports[name] = "#{importLocal}.#{name}" for name in names
 
   processLine: (line) ->
     @lines.push line

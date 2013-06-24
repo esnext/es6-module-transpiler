@@ -117,3 +117,13 @@ describe "Compiler (toCJS)", ->
       var EmView = __dependency1__.View;
       var Ember = __dependency1__;
     """
+
+  it 'can re-export a subset of another module', ->
+    shouldCompileCJS """
+      export { ajax, makeArray } from "jquery";
+    """, """
+      "use strict";
+      var __reexport1__ = require("jquery");
+      exports.ajax = __reexport1__.ajax;
+      exports.makeArray = __reexport1__.makeArray;
+    """

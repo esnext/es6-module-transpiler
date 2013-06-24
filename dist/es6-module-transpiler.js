@@ -584,13 +584,15 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 "compiler.js": function(module, exports, require){(function() {
   "use strict";
 
-  var AMDCompiler, CJSCompiler, COMMENT_CS_TOGGLE, COMMENT_END, COMMENT_START, Compiler, EXPORT, EXPORT_DEFAULT, EXPORT_FUNCTION, EXPORT_VAR, GlobalsCompiler, IMPORT, IMPORT_AS;
+  var AMDCompiler, CJSCompiler, COMMENT_CS_TOGGLE, COMMENT_END, COMMENT_START, Compiler, EXPORT, EXPORT_DEFAULT, EXPORT_FUNCTION, EXPORT_VAR, GlobalsCompiler, IMPORT, IMPORT_AS, RE_EXPORT, Unique, getNames;
 
   AMDCompiler = require("./amd_compiler");
 
   CJSCompiler = require("./cjs_compiler");
 
   GlobalsCompiler = require("./globals_compiler");
+
+  Unique = require("./utils").Unique;
 
   EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/;
 
@@ -604,11 +606,28 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
   IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/;
 
+  RE_EXPORT = /^export\s+({.*})\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/;
+
   COMMENT_START = new RegExp("/\\*");
 
   COMMENT_END = new RegExp("\\*/");
 
   COMMENT_CS_TOGGLE = /^###/;
+
+  getNames = function(string) {
+    var name, _i, _len, _ref, _results;
+    if (string[0] === '{' && string[string.length - 1] === '}') {
+      _ref = string.slice(1, -1).split(',');
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        name = _ref[_i];
+        _results.push(name.trim());
+      }
+      return _results;
+    } else {
+      return [string.trim()];
+    }
+  };
 
   Compiler = (function() {
 
@@ -629,6 +648,7 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       this.lines = [];
       this.id = 0;
       this.inBlockComment = false;
+      this.reExportUnique = new Unique('reexport');
       if (!this.options.coffee) {
         this.commentStart = COMMENT_START;
         this.commentEnd = COMMENT_END;
@@ -658,6 +678,8 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
           return this.processExportFunction(match);
         } else if (match = this.matchLine(line, EXPORT_VAR)) {
           return this.processExportVar(match);
+        } else if (match = this.matchLine(line, RE_EXPORT)) {
+          return this.processReexport(match);
         } else if (match = this.matchLine(line, EXPORT)) {
           return this.processExport(match);
         } else if (match = this.matchLine(line, IMPORT)) {
@@ -690,16 +712,11 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     };
 
     Compiler.prototype.processExport = function(match) {
-      var ex, exports, _i, _len, _ref, _results;
-      exports = match[1];
-      if (exports[0] === '{' && exports[exports.length - 1] === '}') {
-        exports = exports.slice(1, -1);
-      }
-      _ref = exports.split(/\s*,\s*/);
+      var ex, _i, _len, _ref, _results;
+      _ref = getNames(match[1]);
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         ex = _ref[_i];
-        ex = ex.trim();
         _results.push(this.exports[ex] = ex);
       }
       return _results;
@@ -749,6 +766,20 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       } else {
         return this.importDefault[match[2] || match[3]] = match[1];
       }
+    };
+
+    Compiler.prototype.processReexport = function(match) {
+      var importLocal, importPath, name, names, _i, _len, _results;
+      names = getNames(match[1]);
+      importPath = match[2] || match[3];
+      importLocal = this.reExportUnique.next();
+      this.importDefault[importPath] = importLocal;
+      _results = [];
+      for (_i = 0, _len = names.length; _i < _len; _i++) {
+        name = names[_i];
+        _results.push(this.exports[name] = "" + importLocal + "." + name);
+      }
+      return _results;
     };
 
     Compiler.prototype.processLine = function(line) {
@@ -999,6 +1030,8 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
   var BREAK, INDENT, OUTDENT, ScriptBuilder, Unique,
     __slice = [].slice;
 
+  Unique = require("./utils").Unique;
+
   INDENT = {
     indent: true
   };
@@ -1183,6 +1216,23 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
   })();
 
+  module.exports = ScriptBuilder;
+
+}).call(this);
+},
+"utils.js": function(module, exports, require){(function() {
+  "use strict";
+
+  var Unique, isEmpty;
+
+  isEmpty = function(object) {
+    var foo;
+    for (foo in object) {
+      return false;
+    }
+    return true;
+  };
+
   Unique = (function() {
 
     function Unique(prefix) {
@@ -1198,24 +1248,9 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
   })();
 
-  module.exports = ScriptBuilder;
-
-}).call(this);
-},
-"utils.js": function(module, exports, require){(function() {
-  "use strict";
-
-  var isEmpty;
-
-  isEmpty = function(object) {
-    var foo;
-    for (foo in object) {
-      return false;
-    }
-    return true;
-  };
-
   exports.isEmpty = isEmpty;
+
+  exports.Unique = Unique;
 
 }).call(this);
 }};

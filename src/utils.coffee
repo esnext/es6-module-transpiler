@@ -3,4 +3,11 @@ isEmpty = (object) ->
     return false
   true
 
-export { isEmpty }
+class Unique
+  constructor: (@prefix) ->
+    @index = 1
+
+  next: ->
+    "__#{@prefix}#{@index++}__"
+
+export { isEmpty, Unique }

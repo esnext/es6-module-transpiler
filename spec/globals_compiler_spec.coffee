@@ -190,3 +190,23 @@ describe 'Compiler (toGlobals)', ->
         "use strict";
       })(window._);
     """, imports: { underscore: '_' }
+
+  it "supports anonymous modules", ->
+    shouldCompileGlobals """
+      import undy from "underscore";
+    """, """
+      (function(undy) {
+        "use strict";
+      })(window._);
+    """, anonymous: true, imports: { underscore: '_' }
+
+  it 'can re-export a subset of another module', ->
+    shouldCompileGlobals """
+      export { join, extname } from "path";
+    """, """
+      (function(exports, __reexport1__) {
+        "use strict";
+        exports.join = __reexport1__.join;
+        exports.extname = __reexport1__.extname;
+      })(window.jQuery = {}, window.path);
+    """, anonymous: true, into: 'jQuery', imports: { path: 'path' }

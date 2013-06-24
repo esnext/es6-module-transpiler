@@ -168,3 +168,23 @@ describe 'Compiler (toGlobals with CoffeeScript)', ->
         "use strict"
       )(window._)
     """, imports: { underscore: '_' }, coffee: yes
+
+  it "supports anonymous modules", ->
+    shouldCompileGlobals """
+      import undy from "underscore"
+    """, """
+      ((undy) ->
+        "use strict"
+      )(window._)
+    """, anonymous: true, imports: { underscore: '_' }, coffee: yes
+
+  it 'can re-export a subset of another module', ->
+    shouldCompileGlobals """
+      export { join, extname } from "path"
+    """, """
+      ((exports, __reexport1__) ->
+        "use strict"
+        exports.join = __reexport1__.join
+        exports.extname = __reexport1__.extname
+      )(window.jQuery = {}, window.path)
+    """, anonymous: true, into: 'jQuery', imports: { path: 'path' }, coffee: yes

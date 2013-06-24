@@ -1,3 +1,5 @@
+import { Unique } from './utils'
+
 INDENT  = indent: yes
 OUTDENT = outdent: yes
 BREAK   = break: yes
@@ -112,12 +114,5 @@ class ScriptBuilder
           else
             result.push (new Array(indent+1)).join('  ') + line
     return result.join('\n')
-
-class Unique
-  constructor: (@prefix) ->
-    @index = 1
-
-  next: ->
-    "__#{@prefix}#{@index++}__"
 
 export default ScriptBuilder
