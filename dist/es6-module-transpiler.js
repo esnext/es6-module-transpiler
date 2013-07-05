@@ -1,9 +1,9 @@
-(function(){function require(e,t){for(var n=[],r=e.split("/"),i,s,o=0;s=r[o++];)".."==s?n.pop():"."!=s&&n.push(s);n=n.join("/"),o=require,s=o.m[t||0],i=s[n+".js"]||s[n+"/index.js"]||s[n];if(s=i.c)i=o.m[t=s][e=i.m];return i.exports||i(i,i.exports={},function(n){return o("."!=n.charAt(0)?n:e+"/../"+n,t)}),i.exports};
+(function(){function require(e,t){for(var n=[],r=e.split("/"),i,s,o=0;(s=r[o++])!=null;)".."==s?n.pop():"."!=s&&n.push(s);n=n.join("/"),o=require,s=o.m[t||0],i=s[n+".js"]||s[n+"/index.js"]||s[n],r='Cannot require("'+n+'")';if(!i)throw Error(r);if(s=i.c)i=o.m[t=s][e=i.m];if(!i)throw Error(r);return i.exports||i(i,i.exports={},function(n){return o("."!=n.charAt(0)?n:e+"/../"+n,t)}),i.exports};
 require.m = [];
 require.m[0] = { "abstract_compiler.js": function(module, exports, require){(function() {
   "use strict";
 
-  var AbstractCompiler, CoffeeScriptBuilder, CompileError, JavaScriptBuilder,
+  var AbstractCompiler, CoffeeScriptBuilder, CompileError, JavaScriptBuilder, isEmpty,
     __hasProp = {}.hasOwnProperty,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -13,15 +13,17 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
   CoffeeScriptBuilder = require("./coffee_script_builder");
 
+  isEmpty = require("./utils").isEmpty;
+
   AbstractCompiler = (function() {
 
     function AbstractCompiler(compiler, options) {
       var name, _ref, _ref1;
       this.compiler = compiler;
       this.exports = compiler.exports;
-      this.exportAs = compiler.exportAs;
+      this.exportDefault = compiler.exportDefault;
       this.imports = compiler.imports;
-      this.importAs = compiler.importAs;
+      this.importDefault = compiler.importDefault;
       this.moduleName = compiler.moduleName;
       this.lines = compiler.lines;
       this.options = options;
@@ -33,7 +35,7 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
           this.dependencyNames.push(name);
         }
       }
-      _ref1 = this.importAs;
+      _ref1 = this.importDefault;
       for (name in _ref1) {
         if (!__hasProp.call(_ref1, name)) continue;
         if (__indexOf.call(this.dependencyNames, name) < 0) {
@@ -44,8 +46,8 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     }
 
     AbstractCompiler.prototype.assertValid = function() {
-      if (this.exportAs && this.exports.length > 0) {
-        throw new CompileError("You cannot use both `export =` and `export` in the same module");
+      if (this.exportDefault && !isEmpty(this.exports)) {
+        throw new CompileError("You cannot use both `export default` and `export` in the same module");
       }
     };
 
@@ -60,8 +62,8 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
         _results = [];
         for (_i = 0, _len = names.length; _i < _len; _i++) {
           name = names[_i];
-          if (name in _this.importAs) {
-            _results.push(args.push(_this.importAs[name]));
+          if (name in _this.importDefault) {
+            _results.push(args.push(_this.importDefault[name]));
           } else {
             dependency = deps.next();
             args.push(dependency);
@@ -85,12 +87,13 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     };
 
     AbstractCompiler.prototype.buildImportsForPreamble = function(builder, imports_, dependencyName) {
-      var import_, _i, _len, _results;
+      var alias, name, _results;
       _results = [];
-      for (_i = 0, _len = imports_.length; _i < _len; _i++) {
-        import_ = imports_[_i];
-        _results.push(builder["var"](import_, function() {
-          return builder.prop(dependencyName, import_);
+      for (name in imports_) {
+        if (!__hasProp.call(imports_, name)) continue;
+        alias = imports_[name];
+        _results.push(builder["var"](alias, function() {
+          return builder.prop(dependencyName, name);
         }));
       }
       return _results;
@@ -107,11 +110,15 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 "amd_compiler.js": function(module, exports, require){(function() {
   "use strict";
 
-  var AMDCompiler, AbstractCompiler,
+  var AMDCompiler, AbstractCompiler, isEmpty, path,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   AbstractCompiler = require("./abstract_compiler");
+
+  path = require("path");
+
+  isEmpty = require("./utils").isEmpty;
 
   AMDCompiler = (function(_super) {
 
@@ -124,11 +131,17 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     AMDCompiler.prototype.stringify = function() {
       var _this = this;
       return this.build(function(s) {
-        var preamble, wrapperArgs, _ref;
+        var dependency, i, preamble, wrapperArgs, _ref;
         _ref = _this.buildPreamble(_this.dependencyNames), wrapperArgs = _ref[0], preamble = _ref[1];
-        if (_this.exports.length !== 0) {
+        if (!isEmpty(_this.exports)) {
           _this.dependencyNames.push('exports');
           wrapperArgs.push('__exports__');
+        }
+        for (i in _this.dependencyNames) {
+          dependency = _this.dependencyNames[i];
+          if (/^\./.test(dependency)) {
+            _this.dependencyNames[i] = path.join(_this.moduleName, '..', dependency).replace(/[\\]/g, '/');
+          }
         }
         return s.line(function() {
           return s.call('define', function(arg) {
@@ -140,19 +153,19 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
             arg(s["break"]);
             return arg(function() {
               return s["function"](wrapperArgs, function() {
-                var export_, _i, _len, _ref1;
+                var exportName, exportValue, _ref1;
                 s.useStrict();
                 if (preamble) {
                   s.append(preamble);
                 }
                 s.append.apply(s, _this.lines);
                 _ref1 = _this.exports;
-                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                  export_ = _ref1[_i];
-                  s.line("__exports__." + export_ + " = " + export_);
+                for (exportName in _ref1) {
+                  exportValue = _ref1[exportName];
+                  s.line("__exports__." + exportName + " = " + exportValue);
                 }
-                if (_this.exportAs) {
-                  return s.line("return " + _this.exportAs);
+                if (_this.exportDefault) {
+                  return s.line("return " + _this.exportDefault);
                 }
               });
             });
@@ -189,7 +202,7 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     CJSCompiler.prototype.stringify = function() {
       var _this = this;
       return this.build(function(s) {
-        var dependency, deps, doImport, export_, import_, name, variables, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+        var alias, dependency, deps, doImport, exportName, exportValue, import_, name, variables, _ref, _ref1, _ref2, _results;
         doImport = function(name, import_, prop) {
           var req, rhs;
           if (prop == null) {
@@ -205,7 +218,7 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
         };
         s.useStrict();
         deps = s.unique('dependency');
-        _ref = _this.importAs;
+        _ref = _this.importDefault;
         for (import_ in _ref) {
           if (!__hasProp.call(_ref, import_)) continue;
           name = _ref[import_];
@@ -215,27 +228,32 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
         for (import_ in _ref1) {
           if (!__hasProp.call(_ref1, import_)) continue;
           variables = _ref1[import_];
-          if (variables.length === 1) {
-            name = variables[0];
-            doImport(name, import_, name);
+          if (Object.keys(variables).length === 1) {
+            name = Object.keys(variables)[0];
+            doImport(variables[name], import_, name);
           } else {
             dependency = deps.next();
             doImport(dependency, import_);
-            for (_i = 0, _len = variables.length; _i < _len; _i++) {
-              name = variables[_i];
-              s["var"](name, "" + dependency + "." + name);
+            for (name in variables) {
+              if (!__hasProp.call(variables, name)) continue;
+              alias = variables[name];
+              if (name === 'default') {
+                s["var"](alias, "" + dependency);
+              } else {
+                s["var"](alias, "" + dependency + "." + name);
+              }
             }
           }
         }
         s.append.apply(s, _this.lines);
-        if (_this.exportAs) {
-          s.line("module.exports = " + _this.exportAs);
+        if (_this.exportDefault) {
+          s.line("module.exports = " + _this.exportDefault);
         }
         _ref2 = _this.exports;
         _results = [];
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          export_ = _ref2[_j];
-          _results.push(s.line("exports." + export_ + " = " + export_));
+        for (exportName in _ref2) {
+          exportValue = _ref2[exportName];
+          _results.push(s.line("exports." + exportName + " = " + exportValue));
         }
         return _results;
       });
@@ -438,12 +456,12 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       return this.fs.readFile(filename, 'utf8', function(err, input) {
         var ext, moduleName, output, outputFilename;
         ext = path.extname(filename);
-        moduleName = path.join(path.dirname(filename), path.basename(filename, ext));
+        moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/');
         output = _this._compile(input, moduleName, options.type, {
           coffee: ext === '.coffee',
           imports: options.imports
         });
-        outputFilename = path.join(options.to, filename);
+        outputFilename = path.join(options.to, filename).replace(/[\\]/g, '/');
         _this._mkdirp(path.dirname(outputFilename));
         return _this.fs.writeFile(outputFilename, output, 'utf8', function(err) {
           if (err) {
@@ -566,8 +584,7 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 "compiler.js": function(module, exports, require){(function() {
   "use strict";
 
-  var AMDCompiler, CJSCompiler, Compiler, EXPORT, EXPORT_AS, GlobalsCompiler, IMPORT, IMPORT_AS,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var AMDCompiler, CJSCompiler, COMMENT_CS_TOGGLE, COMMENT_END, COMMENT_START, Compiler, EXPORT, EXPORT_DEFAULT, EXPORT_FUNCTION, EXPORT_VAR, GlobalsCompiler, IMPORT, IMPORT_AS;
 
   AMDCompiler = require("./amd_compiler");
 
@@ -577,11 +594,21 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
   EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/;
 
-  EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/;
+  EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*(;)?\s*$/;
+
+  EXPORT_FUNCTION = /^\s*export\s+function\s+(\w+)\s*(\(.*)$/;
+
+  EXPORT_VAR = /^\s*export\s+var\s+(\w+)\s*=\s*(.*)$/;
 
   IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/;
 
-  IMPORT_AS = /^\s*import\s+(?:"([^"]+?)"|'([^']+?)')\s*as\s+(.*?)\s*(;)?\s*$/;
+  IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/;
+
+  COMMENT_START = new RegExp("/\\*");
+
+  COMMENT_END = new RegExp("\\*/");
+
+  COMMENT_CS_TOGGLE = /^###/;
 
   Compiler = (function() {
 
@@ -596,10 +623,19 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       this.moduleName = moduleName;
       this.options = options;
       this.imports = {};
-      this.importAs = {};
-      this.exports = [];
-      this.exportAs = null;
+      this.importDefault = {};
+      this.exports = {};
+      this.exportDefault = null;
       this.lines = [];
+      this.id = 0;
+      this.inBlockComment = false;
+      if (!this.options.coffee) {
+        this.commentStart = COMMENT_START;
+        this.commentEnd = COMMENT_END;
+      } else {
+        this.commentStart = COMMENT_CS_TOGGLE;
+        this.commentEnd = COMMENT_CS_TOGGLE;
+      }
       this.parse();
     }
 
@@ -615,16 +651,28 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 
     Compiler.prototype.parseLine = function(line) {
       var match;
-      if (match = this.matchLine(line, EXPORT_AS)) {
-        return this.processExportAs(match);
-      } else if (match = this.matchLine(line, EXPORT)) {
-        return this.processExport(match);
-      } else if (match = this.matchLine(line, IMPORT_AS)) {
-        return this.processImportAs(match);
-      } else if (match = this.matchLine(line, IMPORT)) {
-        return this.processImport(match);
+      if (!this.inBlockComment) {
+        if (match = this.matchLine(line, EXPORT_DEFAULT)) {
+          return this.processExportDefault(match);
+        } else if (match = this.matchLine(line, EXPORT_FUNCTION)) {
+          return this.processExportFunction(match);
+        } else if (match = this.matchLine(line, EXPORT_VAR)) {
+          return this.processExportVar(match);
+        } else if (match = this.matchLine(line, EXPORT)) {
+          return this.processExport(match);
+        } else if (match = this.matchLine(line, IMPORT)) {
+          return this.processImport(match);
+        } else if (match = this.matchLine(line, this.commentStart)) {
+          return this.processEnterComment(line);
+        } else {
+          return this.processLine(line);
+        }
       } else {
-        return this.processLine(line);
+        if (match = this.matchLine(line, this.commentEnd)) {
+          return this.processExitComment(line);
+        } else {
+          return this.processLine(line);
+        }
       }
     };
 
@@ -637,8 +685,8 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       return match;
     };
 
-    Compiler.prototype.processExportAs = function(match) {
-      return this.exportAs = match[1];
+    Compiler.prototype.processExportDefault = function(match) {
+      return this.exportDefault = match[1];
     };
 
     Compiler.prototype.processExport = function(match) {
@@ -652,39 +700,70 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         ex = _ref[_i];
         ex = ex.trim();
-        if (__indexOf.call(this.exports, ex) < 0) {
-          _results.push(this.exports.push(ex));
-        } else {
-          _results.push(void 0);
-        }
+        _results.push(this.exports[ex] = ex);
       }
       return _results;
     };
 
-    Compiler.prototype.processImportAs = function(match) {
-      return this.importAs[match[1] || match[2]] = match[3];
+    Compiler.prototype.processExportFunction = function(match) {
+      var body, name;
+      name = match[1];
+      body = match[2];
+      this.lines.push("function " + name + body);
+      return this.exports[name] = name;
+    };
+
+    Compiler.prototype.processExportVar = function(match) {
+      var name, value;
+      name = match[1];
+      value = match[2];
+      this.lines.push("var " + name + " = " + value);
+      return this.exports[name] = name;
     };
 
     Compiler.prototype.processImport = function(match) {
-      var importNames, name, pattern;
+      var asMatch, importSpecifiers, imports, name, pattern, _i, _len;
       pattern = match[1];
       if (pattern[0] === '{' && pattern[pattern.length - 1] === '}') {
         pattern = pattern.slice(1, -1);
-      }
-      importNames = (function() {
-        var _i, _len, _ref, _results;
-        _ref = pattern.split(/\s*,\s*/);
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          name = _ref[_i];
-          _results.push(name.trim());
+        importSpecifiers = (function() {
+          var _i, _len, _ref, _results;
+          _ref = pattern.split(/\s*,\s*/);
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            name = _ref[_i];
+            _results.push(name.trim());
+          }
+          return _results;
+        })();
+        imports = {};
+        for (_i = 0, _len = importSpecifiers.length; _i < _len; _i++) {
+          name = importSpecifiers[_i];
+          if (asMatch = name.match(IMPORT_AS)) {
+            imports[asMatch[1]] = asMatch[2];
+          } else {
+            imports[name] = name;
+          }
         }
-        return _results;
-      })();
-      return this.imports[match[2] || match[3]] = importNames;
+        return this.imports[match[2] || match[3]] = imports;
+      } else {
+        return this.importDefault[match[2] || match[3]] = match[1];
+      }
     };
 
     Compiler.prototype.processLine = function(line) {
+      return this.lines.push(line);
+    };
+
+    Compiler.prototype.processEnterComment = function(line) {
+      if (!this.matchLine(line, COMMENT_END)) {
+        this.inBlockComment = true;
+      }
+      return this.lines.push(line);
+    };
+
+    Compiler.prototype.processExitComment = function(line) {
+      this.inBlockComment = false;
       return this.lines.push(line);
     };
 
@@ -711,11 +790,13 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
 "globals_compiler.js": function(module, exports, require){(function() {
   "use strict";
 
-  var AbstractCompiler, GlobalsCompiler,
+  var AbstractCompiler, GlobalsCompiler, isEmpty,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   AbstractCompiler = require("./abstract_compiler");
+
+  isEmpty = require("./utils").isEmpty;
 
   GlobalsCompiler = (function(_super) {
 
@@ -728,13 +809,13 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
     GlobalsCompiler.prototype.stringify = function() {
       var _this = this;
       return this.build(function(s) {
-        var args, globalImport, import_, into, locals, name, passedArgs, receivedArgs, wrapper, _i, _j, _len, _len1, _ref, _ref1;
+        var alias, args, globalImport, into, locals, name, passedArgs, receivedArgs, wrapper, _i, _len, _ref, _ref1;
         passedArgs = [];
         receivedArgs = [];
         locals = {};
-        into = _this.options.into || _this.exportAs;
-        if (_this.exports.length > 0 || _this.exportAs) {
-          passedArgs.push(_this.exportAs ? s.global : into ? "" + s.global + "." + into + " = {}" : s.global);
+        into = _this.options.into || _this.exportDefault;
+        if (!isEmpty(_this.exports) || _this.exportDefault) {
+          passedArgs.push(_this.exportDefault ? s.global : into ? "" + s.global + "." + into + " = {}" : s.global);
           receivedArgs.push('exports');
         }
         _ref = _this.dependencyNames;
@@ -742,20 +823,21 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
           name = _ref[_i];
           globalImport = _this.options.imports[name];
           passedArgs.push("" + s.global + "." + globalImport);
-          if (name in _this.importAs) {
-            receivedArgs.push(_this.importAs[name]);
+          if (name in _this.importDefault) {
+            receivedArgs.push(_this.importDefault[name]);
           } else {
             receivedArgs.push(globalImport);
             _ref1 = _this.imports[name];
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              import_ = _ref1[_j];
-              locals[import_] = "" + globalImport + "." + import_;
+            for (name in _ref1) {
+              if (!__hasProp.call(_ref1, name)) continue;
+              alias = _ref1[name];
+              locals[alias] = "" + globalImport + "." + name;
             }
           }
         }
         wrapper = function() {
           return s["function"](receivedArgs, function() {
-            var export_, lhs, rhs, _k, _len2, _ref2, _results;
+            var exportName, exportValue, lhs, rhs, _ref2, _results;
             s.useStrict();
             for (lhs in locals) {
               if (!__hasProp.call(locals, lhs)) continue;
@@ -763,24 +845,24 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
               s["var"](lhs, rhs);
             }
             s.append.apply(s, _this.lines);
-            if (_this.exportAs) {
-              return s.set("exports." + into, _this.exportAs);
+            if (_this.exportDefault) {
+              return s.set("exports." + into, _this.exportDefault);
             } else {
               _ref2 = _this.exports;
               _results = [];
-              for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-                export_ = _ref2[_k];
-                _results.push(s.set("exports." + export_, export_));
+              for (exportName in _ref2) {
+                exportValue = _ref2[exportName];
+                _results.push(s.set("exports." + exportName, exportValue));
               }
               return _results;
             }
           });
         };
         args = function(arg) {
-          var passedArg, _k, _len2, _results;
+          var passedArg, _j, _len1, _results;
           _results = [];
-          for (_k = 0, _len2 = passedArgs.length; _k < _len2; _k++) {
-            passedArg = passedArgs[_k];
+          for (_j = 0, _len1 = passedArgs.length; _j < _len1; _j++) {
+            passedArg = passedArgs[_j];
             _results.push(arg(passedArg));
           }
           return _results;
@@ -846,6 +928,68 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
   })(ScriptBuilder);
 
   module.exports = JavaScriptBuilder;
+
+}).call(this);
+},
+"require_support.js": function(module, exports, require){(function() {
+  "use strict";
+
+  var Compiler, compile, defaultCoffeeHandler, defaultJSHandler, disable, enable, enabled, es6CoffeeRequireHandler, es6JSRequireHandler, fs, loadES6Script, path, vm;
+
+  vm = require("vm");
+
+  fs = require("fs");
+
+  path = require("path");
+
+  Compiler = require("./compiler");
+
+  compile = require("coffee-script").compile;
+
+  enabled = false;
+
+  defaultJSHandler = require.extensions['.js'];
+
+  defaultCoffeeHandler = require.extensions['.coffee'];
+
+  enable = function() {
+    if (enabled) {
+      return;
+    }
+    enabled = true;
+    require.extensions['.js'] = es6JSRequireHandler;
+    return require.extensions['.coffee'] = es6CoffeeRequireHandler;
+  };
+
+  disable = function() {
+    if (!enabled) {
+      return;
+    }
+    enabled = false;
+    require.extensions['.js'] = defaultJSHandler;
+    return require.extensions['.coffee'] = defaultCoffeeHandler;
+  };
+
+  es6JSRequireHandler = function(module, filename) {
+    return module._compile(loadES6Script(filename));
+  };
+
+  es6CoffeeRequireHandler = function(module, filename) {
+    return module._compile(compile(loadES6Script(filename)));
+  };
+
+  loadES6Script = function(filename) {
+    var content, extname;
+    content = fs.readFileSync(filename, 'utf8');
+    extname = path.extname(filename);
+    return new Compiler(content, path.basename(filename, extname), {
+      coffee: extname === '.coffee'
+    }).toCJS();
+  };
+
+  exports.enable = enable;
+
+  exports.disable = disable;
 
 }).call(this);
 },
@@ -1055,6 +1199,23 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
   })();
 
   module.exports = ScriptBuilder;
+
+}).call(this);
+},
+"utils.js": function(module, exports, require){(function() {
+  "use strict";
+
+  var isEmpty;
+
+  isEmpty = function(object) {
+    var foo;
+    for (foo in object) {
+      return false;
+    }
+    return true;
+  };
+
+  exports.isEmpty = isEmpty;
 
 }).call(this);
 }};

@@ -28,15 +28,16 @@
     "optimist": "~0.3.5"
   },
   "scripts": {
-    "test": "grunt && jasmine-node --coffee spec",
-    "package": "npm run-script test && gluejs --basepath lib --include . --exclude 'require_support' --out ../dist/es6-module-transpiler.js --global ModuleTranspiler && uglifyjs dist/es6-module-transpiler.js > dist/es6-module-transpiler.min.js"
+    "test": "grunt"
   },
   "devDependencies": {
-    "gluejs": "~0.2.0",
+    "gluejs": "~0.2.2",
     "uglify-js": "~2.2.4",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.6",
     "jasmine-node": "~1.8.0",
-    "grunt-jasmine-node": "~0.1.0"
+    "grunt-jasmine-node": "~0.1.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-gluejs": "0.0.3"
   }
 }

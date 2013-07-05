@@ -68,6 +68,8 @@ module.exports = (grunt) ->
       return false
 
   grunt.loadNpmTasks 'grunt-jasmine-node'
+  grunt.loadNpmTasks 'grunt-contrib-gluejs'
+  grunt.loadNpmTasks 'grunt-contrib-uglify'
 
   grunt.initConfig
     'es6-module-transpile':
@@ -76,6 +78,7 @@ module.exports = (grunt) ->
         dest: 'lib'
         options:
           type: 'cjs'
+
     jasmine_node:
       specNameMatcher: '_spec'
       projectRoot: '.'
@@ -83,4 +86,17 @@ module.exports = (grunt) ->
       extensions: 'js|coffee'
       forceExit: true
 
-  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node'])
+    gluejs:
+      dist:
+        options:
+          export: 'ModuleTranspiler'
+          basepath: 'lib'
+        src: 'lib/*.js'
+        dest: 'dist/es6-module-transpiler.js'
+
+    uglify:
+      dist:
+        files:
+          'dist/es6-module-transpiler.min.js': ['dist/es6-module-transpiler.js']
+
+  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node', 'gluejs', 'uglify'])
