@@ -1,6 +1,6 @@
-import './compile_error' as CompileError
-import './java_script_builder' as JavaScriptBuilder
-import './coffee_script_builder' as CoffeeScriptBuilder
+import CompileError from './compile_error'
+import JavaScriptBuilder from './java_script_builder'
+import CoffeeScriptBuilder from './coffee_script_builder'
 import { isEmpty } from './utils'
 
 class AbstractCompiler
@@ -8,9 +8,9 @@ class AbstractCompiler
     @compiler = compiler
 
     @exports = compiler.exports
-    @exportAs = compiler.exportAs
+    @exportDefault = compiler.exportDefault
     @imports = compiler.imports
-    @importAs = compiler.importAs
+    @importDefault = compiler.importDefault
 
     @moduleName = compiler.moduleName
     @lines = compiler.lines
@@ -19,13 +19,13 @@ class AbstractCompiler
 
     @dependencyNames = []
     @dependencyNames.push name for own name of @imports when name not in @dependencyNames
-    @dependencyNames.push name for own name of @importAs when name not in @dependencyNames
+    @dependencyNames.push name for own name of @importDefault when name not in @dependencyNames
 
     @assertValid()
 
   assertValid: ->
-    if @exportAs and !isEmpty(@exports)
-      throw new CompileError("You cannot use both `export =` and `export` in the same module")
+    if @exportDefault and !isEmpty(@exports)
+      throw new CompileError("You cannot use both `export default` and `export` in the same module")
 
   buildPreamble: (names) ->
     args = []
@@ -35,8 +35,8 @@ class AbstractCompiler
       deps = s.unique('dependency')
 
       for name in names
-        if name of @importAs
-          args.push @importAs[name]
+        if name of @importDefault
+          args.push @importDefault[name]
         else
           dependency = deps.next()
           args.push dependency
@@ -53,8 +53,8 @@ class AbstractCompiler
     return builder.toString()
 
   buildImportsForPreamble: (builder, imports_, dependencyName) ->
-    for import_ in imports_
-      builder.var import_, -> builder.prop dependencyName, import_
+    for own name, alias of imports_
+      builder.var alias, -> builder.prop dependencyName, name
 
 
-export = AbstractCompiler
+export default AbstractCompiler

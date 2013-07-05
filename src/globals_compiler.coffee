@@ -1,4 +1,4 @@
-import './abstract_compiler' as AbstractCompiler
+import AbstractCompiler from './abstract_compiler'
 import { isEmpty } from './utils'
 
 class GlobalsCompiler extends AbstractCompiler
@@ -8,11 +8,11 @@ class GlobalsCompiler extends AbstractCompiler
       receivedArgs = []
       locals = {}
 
-      into = @options.into or @exportAs
+      into = @options.into or @exportDefault
 
-      if !isEmpty(@exports) or @exportAs
+      if !isEmpty(@exports) or @exportDefault
         passedArgs.push(
-          if @exportAs
+          if @exportDefault
             s.global
           else if into
             "#{s.global}.#{into} = {}"
@@ -26,13 +26,13 @@ class GlobalsCompiler extends AbstractCompiler
         globalImport = @options.imports[name]
         passedArgs.push "#{s.global}.#{globalImport}"
 
-        if name of @importAs
-          receivedArgs.push @importAs[name]
+        if name of @importDefault
+          receivedArgs.push @importDefault[name]
         else
           receivedArgs.push globalImport
 
-          for import_ in @imports[name]
-            locals[import_] = "#{globalImport}.#{import_}"
+          for own name, alias of @imports[name]
+            locals[alias] = "#{globalImport}.#{name}"
 
       wrapper = =>
         s.function receivedArgs, =>
@@ -44,8 +44,8 @@ class GlobalsCompiler extends AbstractCompiler
           # body
           s.append @lines...
 
-          if @exportAs
-            s.set "exports.#{into}", @exportAs
+          if @exportDefault
+            s.set "exports.#{into}", @exportDefault
           else
             for exportName, exportValue of @exports
               s.set "exports.#{exportName}", exportValue
@@ -55,4 +55,4 @@ class GlobalsCompiler extends AbstractCompiler
 
       s.line => s.call wrapper, args
 
-export = GlobalsCompiler
+export default GlobalsCompiler

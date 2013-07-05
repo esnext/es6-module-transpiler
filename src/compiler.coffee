@@ -1,13 +1,14 @@
-import './amd_compiler' as AMDCompiler
-import './cjs_compiler' as CJSCompiler
-import './globals_compiler' as GlobalsCompiler
+import AMDCompiler from './amd_compiler'
+import CJSCompiler from './cjs_compiler'
+import GlobalsCompiler from './globals_compiler'
 
 EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/
-EXPORT_AS = /^\s*export\s*=\s*(.*?)\s*(;)?\s*$/
+EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*(;)?\s*$/
 EXPORT_FUNCTION = /^\s*export\s+function\s+(\w+)\s*(\(.*)$/
 EXPORT_VAR = /^\s*export\s+var\s+(\w+)\s*=\s*(.*)$/
+
 IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/
-IMPORT_AS = /^\s*import\s+(?:"([^"]+?)"|'([^']+?)')\s*as\s+(.*?)\s*(;)?\s*$/
+IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/
 
 COMMENT_START = new RegExp("/\\*")
 COMMENT_END = new RegExp("\\*/")
@@ -24,9 +25,9 @@ class Compiler
     @options = options
 
     @imports = {}
-    @importAs = {}
+    @importDefault = {}
     @exports = {}
-    @exportAs = null
+    @exportDefault = null
     @lines = []
     @id = 0
 
@@ -47,16 +48,14 @@ class Compiler
 
   parseLine: (line) ->
     if not @inBlockComment
-      if match = @matchLine line, EXPORT_AS
-        @processExportAs match
+      if match = @matchLine line, EXPORT_DEFAULT
+        @processExportDefault match
       else if match = @matchLine line, EXPORT_FUNCTION
         @processExportFunction match
       else if match = @matchLine line, EXPORT_VAR
         @processExportVar match
       else if match = @matchLine line, EXPORT
         @processExport match
-      else if match = @matchLine line, IMPORT_AS
-        @processImportAs match
       else if match = @matchLine line, IMPORT
         @processImport match
       else if match = @matchLine line, @commentStart
@@ -78,8 +77,8 @@ class Compiler
 
     return match
 
-  processExportAs: (match) ->
-    @exportAs = match[1]
+  processExportDefault: (match) ->
+    @exportDefault = match[1]
 
   processExport: (match) ->
     exports = match[1]
@@ -105,18 +104,22 @@ class Compiler
     @lines.push "var #{name} = #{value}"
     @exports[name] = name
 
-  processImportAs: (match) ->
-    @importAs[match[1] or match[2]] = match[3]
-
   processImport: (match) ->
     pattern = match[1]
 
     if pattern[0] is '{' and pattern[pattern.length-1] is '}'
       pattern = pattern[1...-1]
+      importSpecifiers = (name.trim() for name in pattern.split(/\s*,\s*/))
 
-    importNames = (name.trim() for name in pattern.split(/\s*,\s*/))
-
-    @imports[match[2] or match[3]] = importNames
+      imports = {}
+      for name in importSpecifiers
+        if asMatch = name.match IMPORT_AS
+          imports[asMatch[1]] = asMatch[2]
+        else
+          imports[name] = name
+      @imports[match[2] or match[3]] = imports
+    else
+      @importDefault[match[2] or match[3]] = match[1]
 
   processLine: (line) ->
     @lines.push line
@@ -139,4 +142,4 @@ class Compiler
   toGlobals: ->
     new GlobalsCompiler(this, @options).stringify()
 
-export = Compiler
+export default Compiler

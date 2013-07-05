@@ -1,4 +1,4 @@
-import './abstract_compiler' as AbstractCompiler
+import AbstractCompiler from './abstract_compiler'
 
 class CJSCompiler extends AbstractCompiler
   stringify: ->
@@ -11,14 +11,14 @@ class CJSCompiler extends AbstractCompiler
       s.useStrict()
       deps = s.unique('dependency')
 
-      for own import_, name of @importAs
+      for own import_, name of @importDefault
         doImport name, import_
 
       for own import_, variables of @imports
-        if variables.length is 1
+        if Object.keys(variables).length is 1
           # var foo = require('./foo').foo;
-          name = variables[0]
-          doImport name, import_, name
+          name = Object.keys(variables)[0]
+          doImport variables[name], import_, name
         else
           # var __dependency1__ = require('./foo');
           dependency = deps.next()
@@ -26,15 +26,18 @@ class CJSCompiler extends AbstractCompiler
 
           # var foo = __dependency1__.foo;
           # var bar = __dependency1__.bar;
-          for name in variables
-            s.var name, "#{dependency}.#{name}"
+          for own name, alias of variables
+            if name == 'default'
+              s.var alias, "#{dependency}"
+            else
+              s.var alias, "#{dependency}.#{name}"
 
       s.append @lines...
 
-      if @exportAs
-        s.line "module.exports = #{@exportAs}"
+      if @exportDefault
+        s.line "module.exports = #{@exportDefault}"
 
       for exportName, exportValue of @exports
         s.line "exports.#{exportName} = #{exportValue}"
 
-export = CJSCompiler
+export default CJSCompiler

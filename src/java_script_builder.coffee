@@ -1,4 +1,4 @@
-import './script_builder' as ScriptBuilder
+import ScriptBuilder from './script_builder'
 
 class JavaScriptBuilder extends ScriptBuilder
   eol: ';'
@@ -12,4 +12,4 @@ class JavaScriptBuilder extends ScriptBuilder
   _functionTail: ->
     '}'
 
-export = JavaScriptBuilder
+export default JavaScriptBuilder

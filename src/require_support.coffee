@@ -1,7 +1,7 @@
-import 'vm' as vm
-import 'fs' as fs
-import 'path' as path
-import './compiler' as Compiler
+import vm from 'vm'
+import fs from 'fs'
+import path from 'path'
+import Compiler from './compiler'
 import { compile } from 'coffee-script'
 
 enabled = no
