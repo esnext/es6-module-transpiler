@@ -119,7 +119,7 @@ describe 'Compiler (toGlobals)', ->
       })(window.Ember = {});
     """, into: 'Ember'
 
-  it "raises if both `export default` and `export foo` is used", ->
+  it "raises if both `export default` and `export foo` are used", ->
     shouldRaise """
       export { get, set };
       export default Ember;
