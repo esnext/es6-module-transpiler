@@ -1,6 +1,6 @@
 {
   "name": "es6-module-transpiler",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript or CoffeeScript using a subset of the current ES6 module syntax, and compile it into AMD, CommonJS, and globals styles.",
   "homepage": "http://square.github.com/es6-module-transpiler",
   "keywords": [
