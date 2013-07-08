@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v0.1.4 (unreleased)
+## v0.1.4 (Monday, July 8th, 2013)
 
 * added support for default export (`export default jQuery`)
 * added support for default import (`import $ from "jquery"`)
