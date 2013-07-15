@@ -160,6 +160,26 @@ describe 'CLI', ->
             });
         """
 
+  it 'supports anonymous modules', ->
+    shouldRunCLI ['--anonymous', '--to', 'out', 'lib'],
+      'lib':
+        contents: ['test.js']
+      'lib/test.js':
+        read: ""
+      'out':
+        exists: yes
+      'out/lib':
+        exists: yes
+      'out/lib/test.js':
+        write: """
+          define(
+            [],
+            function() {
+              "use strict";
+
+            });
+        """
+
   it 'can take a map of imports on the command line', ->
     shouldRunCLI ['--to', 'out', '--type', 'globals', '--imports', 'jquery:jQuery,ember:Ember', 'lib/test.js'],
       'lib/test.js':

@@ -456,7 +456,9 @@ require.m[0] = { "abstract_compiler.js": function(module, exports, require){(fun
       return this.fs.readFile(filename, 'utf8', function(err, input) {
         var ext, moduleName, output, outputFilename;
         ext = path.extname(filename);
-        moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/');
+        if (!options.anonymous) {
+          moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/');
+        }
         output = _this._compile(input, moduleName, options.type, {
           coffee: ext === '.coffee',
           imports: options.imports
