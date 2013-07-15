@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* fixed the `--anonymous` flag with the CLI for recursive transpiling (#20)
+
 ## v0.2.0 (Monday, July 8th, 2013)
 
 * added support for default export (`export default jQuery`)
