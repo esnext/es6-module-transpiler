@@ -1,4 +1,3 @@
-"use strict";
 function isEmpty(object) {
   for (var foo in object) {
     if (Object.prototype.hasOwnProperty.call(object, foo)) {
@@ -17,6 +16,4 @@ Unique.prototype.next = function() {
   return ['__', this.prefix, this.index++, '__'].join('');
 };
 
-
-exports.isEmpty = isEmpty;
-exports.Unique = Unique;
+export { isEmpty, Unique };

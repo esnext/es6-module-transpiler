@@ -1,7 +1,6 @@
-"use strict";
-var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
-var isEmpty = require("./utils").isEmpty;
+import AbstractCompiler from './abstract_compiler';
+import { isEmpty } from './utils';
+import path from 'path';
 
 var AMDCompiler, _ref,
   __hasProp = {}.hasOwnProperty,
@@ -65,5 +64,4 @@ AMDCompiler = (function(_super) {
 
 })(AbstractCompiler);
 
-
-module.exports = AMDCompiler;
+export default AMDCompiler;

@@ -1,8 +1,7 @@
-"use strict";
-var optimist = require("optimist");
-var fs = require("fs");
-var path = require("path");
-var Compiler = require("./compiler");
+import optimist from 'optimist';
+import fs from 'fs';
+import path from 'path';
+import Compiler from './compiler';
 
 var CLI;
 
@@ -228,5 +227,4 @@ CLI = (function() {
 })();
 
 
-
-module.exports = CLI;
+export default CLI;

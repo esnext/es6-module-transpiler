@@ -1,6 +1,5 @@
-"use strict";
-var AbstractCompiler = require("./abstract_compiler");
-var isEmpty = require("./utils").isEmpty;
+import AbstractCompiler from './abstract_compiler';
+import { isEmpty } from './utils';
 
 var GlobalsCompiler,
   __hasProp = {}.hasOwnProperty,
@@ -85,5 +84,4 @@ GlobalsCompiler = (function(_super) {
 
 })(AbstractCompiler);
 
-
-module.exports = GlobalsCompiler;
+export default GlobalsCompiler;

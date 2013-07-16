@@ -1,8 +1,7 @@
-"use strict";
-var AMDCompiler = require("./amd_compiler");
-var CJSCompiler = require("./cjs_compiler");
-var GlobalsCompiler = require("./globals_compiler");
-var Unique = require("./utils").Unique;
+import AMDCompiler from './amd_compiler';
+import CJSCompiler from './cjs_compiler';
+import GlobalsCompiler from './globals_compiler';
+import { Unique } from './utils';
 
 var EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/;
 var EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*(;)?\s*$/;
@@ -203,5 +202,4 @@ Compiler.prototype.toGlobals = function() {
   return new GlobalsCompiler(this, this.options).stringify();
 };
 
-
-module.exports = Compiler;
+export default Compiler;

@@ -1,5 +1,4 @@
-"use strict";
-var ScriptBuilder = require("./script_builder");
+import ScriptBuilder from './script_builder';
 
 var CoffeeScriptBuilder, _ref,
   __hasProp = {}.hasOwnProperty,
@@ -46,5 +45,4 @@ CoffeeScriptBuilder = (function(_super) {
 
 })(ScriptBuilder);
 
-
-module.exports = CoffeeScriptBuilder;
+export default CoffeeScriptBuilder;

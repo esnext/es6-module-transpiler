@@ -1,5 +1,4 @@
-"use strict";
-var ScriptBuilder = require("./script_builder");
+import ScriptBuilder from './script_builder';
 
 var JavaScriptBuilder,
   __hasProp = {}.hasOwnProperty,
@@ -31,5 +30,4 @@ JavaScriptBuilder = (function(_super) {
 
 })(ScriptBuilder);
 
-
-module.exports = JavaScriptBuilder;
+export default JavaScriptBuilder;

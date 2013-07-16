@@ -1,9 +1,8 @@
-"use strict";
-var vm = require("vm");
-var fs = require("fs");
-var path = require("path");
-var Compiler = require("./compiler");
-var compile = require("coffee-script").compile;
+import vm from 'vm';
+import fs from 'fs';
+import path from 'path';
+import Compiler from './compiler';
+import { compile } from 'coffee-script';
 
 var defaultCoffeeHandler, defaultJSHandler, disable, enable, enabled, es6CoffeeRequireHandler, es6JSRequireHandler, loadES6Script;
 
@@ -48,6 +47,4 @@ loadES6Script = function(filename) {
   }).toCJS();
 };
 
-
-exports.enable = enable;
-exports.disable = disable;
+export { enable, disable };

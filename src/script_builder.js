@@ -1,5 +1,4 @@
-"use strict";
-var Unique = require("./utils").Unique;
+import { Unique } from './utils';
 
 var BREAK, INDENT, OUTDENT, ScriptBuilder,
   __slice = [].slice;
@@ -188,5 +187,4 @@ ScriptBuilder = (function() {
 
 })();
 
-
-module.exports = ScriptBuilder;
+export default ScriptBuilder;

@@ -1,5 +1,4 @@
-"use strict";
-var AbstractCompiler = require("./abstract_compiler");
+import AbstractCompiler from './abstract_compiler';
 
 var CJSCompiler, _ref,
   __hasProp = {}.hasOwnProperty,
@@ -77,5 +76,4 @@ CJSCompiler = (function(_super) {
 
 })(AbstractCompiler);
 
-
-module.exports = CJSCompiler;
+export default CJSCompiler;

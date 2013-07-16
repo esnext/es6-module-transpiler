@@ -1,8 +1,7 @@
-"use strict";
-var CompileError = require("./compile_error");
-var JavaScriptBuilder = require("./java_script_builder");
-var CoffeeScriptBuilder = require("./coffee_script_builder");
-var isEmpty = require("./utils").isEmpty;
+import CompileError from './compile_error';
+import JavaScriptBuilder from './java_script_builder';
+import CoffeeScriptBuilder from './coffee_script_builder';
+import { isEmpty } from './utils';
 
 var AbstractCompiler,
   __hasProp = {}.hasOwnProperty,
@@ -96,5 +95,4 @@ AbstractCompiler = (function() {
 })();
 
 
-
-module.exports = AbstractCompiler;
+export default AbstractCompiler;
