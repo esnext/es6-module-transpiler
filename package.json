@@ -31,13 +31,13 @@
     "test": "grunt"
   },
   "devDependencies": {
-    "gluejs": "~0.2.2",
     "uglify-js": "~2.2.4",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.6",
     "jasmine-node": "~1.8.0",
     "grunt-jasmine-node": "~0.1.0",
     "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-gluejs": "0.0.3"
+    "esprima": "git://github.com/ariya/esprima.git#harmony",
+    "grunt-browserify": "~1.2.0"
   }
 }

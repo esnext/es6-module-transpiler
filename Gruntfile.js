@@ -82,7 +82,7 @@ module.exports = function(grunt) {
   }
 
   grunt.loadNpmTasks('grunt-jasmine-node');
-  grunt.loadNpmTasks('grunt-contrib-gluejs');
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.initConfig({
@@ -104,14 +104,13 @@ module.exports = function(grunt) {
       forceExit: true
     },
 
-    gluejs: {
+    browserify: {
       dist: {
+        src: 'lib/index.js',
+        dest: 'dist/es6-module-transpiler.js',
         options: {
-          export: 'ModuleTranspiler',
-          basepath: 'lib'
-        },
-        src: 'lib/*.js',
-        dest: 'dist/es6-module-transpiler.js'
+          standalone: 'ModuleTranspiler'
+        }
       }
     },
 
@@ -124,5 +123,5 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node', 'gluejs', 'uglify']);
+  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node', 'browserify', 'uglify']);
 };

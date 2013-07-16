@@ -1,557 +1,12 @@
-(function(){function require(e,t){for(var n=[],r=e.split("/"),i,s,o=0;(s=r[o++])!=null;)".."==s?n.pop():"."!=s&&n.push(s);n=n.join("/"),o=require,s=o.m[t||0],i=s[n+".js"]||s[n+"/index.js"]||s[n],r='Cannot require("'+n+'")';if(!i)throw Error(r);if(s=i.c)i=o.m[t=s][e=i.m];if(!i)throw Error(r);return i.exports||i(i,i.exports={},function(n){return o("."!=n.charAt(0)?n:e+"/../"+n,t)}),i.exports};
-require.m = [];
-require.m[0] = { "abstract_compiler.js": function(module, exports, require){"use strict";
-var CompileError = require("./compile_error");
-var JavaScriptBuilder = require("./java_script_builder");
-var CoffeeScriptBuilder = require("./coffee_script_builder");
-var isEmpty = require("./utils").isEmpty;
-
-var AbstractCompiler,
-  __hasProp = {}.hasOwnProperty,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-AbstractCompiler = (function() {
-  function AbstractCompiler(compiler, options) {
-    var name, _ref, _ref1;
-    this.compiler = compiler;
-    this.exports = compiler.exports;
-    this.exportDefault = compiler.exportDefault;
-    this.imports = compiler.imports;
-    this.importDefault = compiler.importDefault;
-    this.moduleName = compiler.moduleName;
-    this.lines = compiler.lines;
-    this.options = options;
-    this.dependencyNames = [];
-    _ref = this.imports;
-    for (name in _ref) {
-      if (!__hasProp.call(_ref, name)) continue;
-      if (__indexOf.call(this.dependencyNames, name) < 0) {
-        this.dependencyNames.push(name);
-      }
-    }
-    _ref1 = this.importDefault;
-    for (name in _ref1) {
-      if (!__hasProp.call(_ref1, name)) continue;
-      if (__indexOf.call(this.dependencyNames, name) < 0) {
-        this.dependencyNames.push(name);
-      }
-    }
-    this.assertValid();
-  }
-
-  AbstractCompiler.prototype.assertValid = function() {
-    if (this.exportDefault && !isEmpty(this.exports)) {
-      throw new CompileError("You cannot use both `export default` and `export` in the same module");
-    }
-  };
-
-  AbstractCompiler.prototype.buildPreamble = function(names) {
-    var args, preamble,
-      _this = this;
-    args = [];
-    preamble = this.build(function(s) {
-      var dependency, deps, name, number, _i, _len, _results;
-      number = 0;
-      deps = s.unique('dependency');
-      _results = [];
-      for (_i = 0, _len = names.length; _i < _len; _i++) {
-        name = names[_i];
-        if (name in _this.importDefault) {
-          _results.push(args.push(_this.importDefault[name]));
-        } else {
-          dependency = deps.next();
-          args.push(dependency);
-          _results.push(_this.buildImportsForPreamble(s, _this.imports[name], dependency));
-        }
-      }
-      return _results;
-    });
-    return [args, preamble];
-  };
-
-  AbstractCompiler.prototype.build = function(fn) {
-    var builder;
-    if (this.options.coffee) {
-      builder = new CoffeeScriptBuilder();
-    } else {
-      builder = new JavaScriptBuilder();
-    }
-    fn(builder);
-    return builder.toString();
-  };
-
-  AbstractCompiler.prototype.buildImportsForPreamble = function(builder, imports_, dependencyName) {
-    var alias, name, _results;
-    _results = [];
-    for (name in imports_) {
-      if (!__hasProp.call(imports_, name)) continue;
-      alias = imports_[name];
-      _results.push(builder["var"](alias, function() {
-        return builder.prop(dependencyName, name);
-      }));
-    }
-    return _results;
-  };
-
-  return AbstractCompiler;
-
-})();
-
-
-
-module.exports = AbstractCompiler;},
-"amd_compiler.js": function(module, exports, require){"use strict";
-var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
-var isEmpty = require("./utils").isEmpty;
-
-var AMDCompiler, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AMDCompiler = (function(_super) {
-  __extends(AMDCompiler, _super);
-
-  function AMDCompiler() {
-    _ref = AMDCompiler.__super__.constructor.apply(this, arguments);
-    return _ref;
-  }
-
-  AMDCompiler.prototype.stringify = function() {
-    var _this = this;
-    return this.build(function(s) {
-      var dependency, i, preamble, wrapperArgs, _ref1;
-      _ref1 = _this.buildPreamble(_this.dependencyNames), wrapperArgs = _ref1[0], preamble = _ref1[1];
-      if (!isEmpty(_this.exports)) {
-        _this.dependencyNames.push('exports');
-        wrapperArgs.push('__exports__');
-      }
-      for (i in _this.dependencyNames) {
-        dependency = _this.dependencyNames[i];
-        if (/^\./.test(dependency)) {
-          _this.dependencyNames[i] = path.join(_this.moduleName, '..', dependency).replace(/[\\]/g, '/');
-        }
-      }
-      return s.line(function() {
-        return s.call('define', function(arg) {
-          if (_this.moduleName) {
-            arg(s.print(_this.moduleName));
-          }
-          arg(s["break"]);
-          arg(s.print(_this.dependencyNames));
-          arg(s["break"]);
-          return arg(function() {
-            return s["function"](wrapperArgs, function() {
-              var exportName, exportValue, _ref2;
-              s.useStrict();
-              if (preamble) {
-                s.append(preamble);
-              }
-              s.append.apply(s, _this.lines);
-              _ref2 = _this.exports;
-              for (exportName in _ref2) {
-                exportValue = _ref2[exportName];
-                s.line("__exports__." + exportName + " = " + exportValue);
-              }
-              if (_this.exportDefault) {
-                return s.line("return " + _this.exportDefault);
-              }
-            });
-          });
-        });
-      });
-    });
-  };
-
-  return AMDCompiler;
-
-})(AbstractCompiler);
-
-
-module.exports = AMDCompiler;},
-"cjs_compiler.js": function(module, exports, require){"use strict";
-var AbstractCompiler = require("./abstract_compiler");
-
-var CJSCompiler, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-CJSCompiler = (function(_super) {
-  __extends(CJSCompiler, _super);
-
-  function CJSCompiler() {
-    _ref = CJSCompiler.__super__.constructor.apply(this, arguments);
-    return _ref;
-  }
-
-  CJSCompiler.prototype.stringify = function() {
-    var _this = this;
-    return this.build(function(s) {
-      var alias, dependency, deps, doImport, exportName, exportValue, import_, name, variables, _ref1, _ref2, _ref3, _results;
-      doImport = function(name, import_, prop) {
-        var req, rhs;
-        if (prop == null) {
-          prop = null;
-        }
-        req = function() {
-          return s.call('require', [s.print(import_)]);
-        };
-        rhs = prop ? (function() {
-          return s.prop(req, prop);
-        }) : req;
-        return s["var"](name, rhs);
-      };
-      s.useStrict();
-      deps = s.unique('dependency');
-      _ref1 = _this.importDefault;
-      for (import_ in _ref1) {
-        if (!__hasProp.call(_ref1, import_)) continue;
-        name = _ref1[import_];
-        doImport(name, import_);
-      }
-      _ref2 = _this.imports;
-      for (import_ in _ref2) {
-        if (!__hasProp.call(_ref2, import_)) continue;
-        variables = _ref2[import_];
-        if (Object.keys(variables).length === 1) {
-          name = Object.keys(variables)[0];
-          doImport(variables[name], import_, name);
-        } else {
-          dependency = deps.next();
-          doImport(dependency, import_);
-          for (name in variables) {
-            if (!__hasProp.call(variables, name)) continue;
-            alias = variables[name];
-            if (name === 'default') {
-              s["var"](alias, "" + dependency);
-            } else {
-              s["var"](alias, "" + dependency + "." + name);
-            }
-          }
-        }
-      }
-      s.append.apply(s, _this.lines);
-      if (_this.exportDefault) {
-        s.line("module.exports = " + _this.exportDefault);
-      }
-      _ref3 = _this.exports;
-      _results = [];
-      for (exportName in _ref3) {
-        exportValue = _ref3[exportName];
-        _results.push(s.line("exports." + exportName + " = " + exportValue));
-      }
-      return _results;
-    });
-  };
-
-  return CJSCompiler;
-
-})(AbstractCompiler);
-
-
-module.exports = CJSCompiler;},
-"cli.js": function(module, exports, require){"use strict";
-var optimist = require("optimist");
-var fs = require("fs");
-var path = require("path");
+(function(e){if("function"==typeof bootstrap)bootstrap("moduletranspiler",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeModuleTranspiler=e}else"undefined"!=typeof window?window.ModuleTranspiler=e():global.ModuleTranspiler=e()})(function(){var define,ses,bootstrap,module,exports;
+return (function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
+"use strict";
 var Compiler = require("./compiler");
 
-var CLI;
 
-CLI = (function() {
-  CLI.start = function(argv, stdin, stdout, fs_) {
-    if (stdin == null) {
-      stdin = process.stdin;
-    }
-    if (stdout == null) {
-      stdout = process.stdout;
-    }
-    if (fs_ == null) {
-      fs_ = fs;
-    }
-    return new this(stdin, stdout, fs_).start(argv);
-  };
-
-  function CLI(stdin, stdout, fs_) {
-    this.stdin = stdin != null ? stdin : process.stdin;
-    this.stdout = stdout != null ? stdout : process.stdout;
-    this.fs = fs_ != null ? fs_ : fs;
-  }
-
-  CLI.prototype.start = function(argv) {
-    var filename, options, _i, _len, _ref;
-    options = this.parseArgs(argv);
-    if (options.help) {
-      this.argParser(argv).showHelp();
-      return;
-    }
-    if (options.stdio) {
-      this.processStdio(options);
-    } else {
-      _ref = options._;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        filename = _ref[_i];
-        this.processPath(filename, options);
-      }
-    }
-    return null;
-  };
-
-  CLI.prototype.parseArgs = function(argv) {
-    var args, global, imports, pair, requirePath, _i, _len, _ref, _ref1;
-    args = this.argParser(argv).argv;
-    if (args.imports) {
-      imports = {};
-      _ref = args.imports.split(',');
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pair = _ref[_i];
-        _ref1 = pair.split(':'), requirePath = _ref1[0], global = _ref1[1];
-        imports[requirePath] = global;
-      }
-      args.imports = imports;
-    }
-    if (args.global) {
-      args.into = args.global;
-    }
-    return args;
-  };
-
-  CLI.prototype.argParser = function(argv) {
-    return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] [--imports PATH:GLOBAL] (--module-name MOD|--anonymous)').options({
-      type: {
-        "default": 'amd',
-        describe: 'The type of output (one of "amd", "cjs", or "globals")'
-      },
-      to: {
-        describe: 'A directory in which to write the resulting files'
-      },
-      imports: {
-        describe: 'A list of path:global pairs, comma separated (e.g. jquery:$,ember:Ember)'
-      },
-      anonymous: {
-        "default": false,
-        type: 'boolean',
-        describe: 'Do not include a module name'
-      },
-      'module-name': {
-        describe: 'The name of the outputted module',
-        alias: 'm'
-      },
-      stdio: {
-        "default": false,
-        type: 'boolean',
-        alias: 's',
-        describe: 'Use stdin and stdout to process a file'
-      },
-      coffee: {
-        "default": false,
-        type: 'boolean',
-        describe: 'Process stdin as CoffeeScript (requires --stdio)'
-      },
-      global: {
-        describe: 'When the type is `globals`, the name of the global to export into'
-      },
-      help: {
-        "default": false,
-        type: 'boolean',
-        alias: 'h',
-        describe: 'Shows this help message'
-      }
-    }).check(function(args) {
-      var _ref;
-      return (_ref = args.type) === 'amd' || _ref === 'cjs' || _ref === 'globals';
-    }).check(function(args) {
-      return !(args.anonymous && args.m);
-    }).check(function(args) {
-      if (args.stdio && args.type === 'amd') {
-        return args.anonymous || args.m || false;
-      } else {
-        return true;
-      }
-    }).check(function(args) {
-      return !(args.coffee && !args.stdio);
-    }).check(function(args) {
-      return args.stdio || args.to || args.help;
-    }).check(function(args) {
-      if (args.imports) {
-        return args.type === 'globals';
-      } else {
-        return true;
-      }
-    });
-  };
-
-  CLI.prototype.processStdio = function(options) {
-    var input,
-      _this = this;
-    input = '';
-    this.stdin.resume();
-    this.stdin.setEncoding('utf8');
-    this.stdin.on('data', function(data) {
-      return input += data;
-    });
-    return this.stdin.on('end', function() {
-      var output;
-      output = _this._compile(input, options.m, options.type, options);
-      return _this.stdout.write(output);
-    });
-  };
-
-  CLI.prototype.processPath = function(filename, options) {
-    var _this = this;
-    return this.fs.stat(filename, function(err, stat) {
-      if (err) {
-        console.error(err.message);
-        return process.exit(1);
-      } else if (stat.isDirectory()) {
-        return _this.processDirectory(filename, options);
-      } else {
-        return _this.processFile(filename, options);
-      }
-    });
-  };
-
-  CLI.prototype.processDirectory = function(dirname, options) {
-    var _this = this;
-    return this.fs.readdir(dirname, function(err, children) {
-      var child, _i, _len, _results;
-      if (err) {
-        console.error(err.message);
-        process.exit(1);
-      }
-      _results = [];
-      for (_i = 0, _len = children.length; _i < _len; _i++) {
-        child = children[_i];
-        _results.push(_this.processPath(path.join(dirname, child), options));
-      }
-      return _results;
-    });
-  };
-
-  CLI.prototype.processFile = function(filename, options) {
-    var _this = this;
-    return this.fs.readFile(filename, 'utf8', function(err, input) {
-      var ext, moduleName, output, outputFilename;
-      ext = path.extname(filename);
-      if (!options.anonymous) {
-        moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/');
-      }
-      output = _this._compile(input, moduleName, options.type, {
-        coffee: ext === '.coffee',
-        imports: options.imports
-      });
-      outputFilename = path.join(options.to, filename).replace(/[\\]/g, '/');
-      _this._mkdirp(path.dirname(outputFilename));
-      return _this.fs.writeFile(outputFilename, output, 'utf8', function(err) {
-        if (err) {
-          console.error(err.message);
-          return process.exit(1);
-        }
-      });
-    });
-  };
-
-  CLI.prototype._compile = function(input, moduleName, type, options) {
-    var compiler, method;
-    type = {
-      amd: 'AMD',
-      cjs: 'CJS',
-      globals: 'Globals'
-    }[type];
-    compiler = new Compiler(input, moduleName, options);
-    method = "to" + type;
-    return compiler[method]();
-  };
-
-  CLI.prototype._mkdirp = function(directory) {
-    var prefix;
-    if (this.fs.existsSync(directory)) {
-      return;
-    }
-    prefix = path.dirname(directory);
-    if (prefix !== '.' && prefix !== '/') {
-      this._mkdirp(prefix);
-    }
-    return this.fs.mkdirSync(directory);
-  };
-
-  return CLI;
-
-})();
-
-
-
-module.exports = CLI;},
-"coffee_script_builder.js": function(module, exports, require){"use strict";
-var ScriptBuilder = require("./script_builder");
-
-var CoffeeScriptBuilder, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-CoffeeScriptBuilder = (function(_super) {
-  __extends(CoffeeScriptBuilder, _super);
-
-  function CoffeeScriptBuilder() {
-    _ref = CoffeeScriptBuilder.__super__.constructor.apply(this, arguments);
-    return _ref;
-  }
-
-  CoffeeScriptBuilder.prototype.eol = '';
-
-  CoffeeScriptBuilder.prototype["var"] = function(lhs, rhs) {
-    this.set(lhs, rhs);
-  };
-
-  CoffeeScriptBuilder.prototype._prepareArgsForCall = function(args) {
-    var arg, _i, _len;
-    args = CoffeeScriptBuilder.__super__._prepareArgsForCall.call(this, args).slice();
-    for (_i = 0, _len = args.length; _i < _len; _i++) {
-      arg = args[_i];
-      if (arg === this["break"]) {
-        if (args[args.length - 1] !== this["break"]) {
-          args.push(this["break"]);
-        }
-        break;
-      }
-    }
-    return args;
-  };
-
-  CoffeeScriptBuilder.prototype._functionHeader = function(args) {
-    if (args.length) {
-      return "(" + (args.join(', ')) + ") ->";
-    } else {
-      return '->';
-    }
-  };
-
-  return CoffeeScriptBuilder;
-
-})(ScriptBuilder);
-
-
-module.exports = CoffeeScriptBuilder;},
-"compile_error.js": function(module, exports, require){"use strict";
-var CompileError, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-CompileError = (function(_super) {
-  __extends(CompileError, _super);
-
-  function CompileError() {
-    _ref = CompileError.__super__.constructor.apply(this, arguments);
-    return _ref;
-  }
-
-  return CompileError;
-
-})(Error);
-
-
-module.exports = CompileError;},
-"compiler.js": function(module, exports, require){"use strict";
+exports.Compiler = Compiler;
+},{"./compiler":2}],2:[function(require,module,exports){
+"use strict";
 var AMDCompiler = require("./amd_compiler");
 var CJSCompiler = require("./cjs_compiler");
 var GlobalsCompiler = require("./globals_compiler");
@@ -757,8 +212,416 @@ Compiler.prototype.toGlobals = function() {
 };
 
 
-module.exports = Compiler;},
-"globals_compiler.js": function(module, exports, require){"use strict";
+module.exports = Compiler;
+},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":6,"./utils":5}],5:[function(require,module,exports){
+"use strict";
+function isEmpty(object) {
+  for (var foo in object) {
+    if (Object.prototype.hasOwnProperty.call(object, foo)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function Unique(prefix) {
+  this.prefix = prefix;
+  this.index = 1;
+}
+
+Unique.prototype.next = function() {
+  return ['__', this.prefix, this.index++, '__'].join('');
+};
+
+
+exports.isEmpty = isEmpty;
+exports.Unique = Unique;
+},{}],7:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            if (ev.source === window && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}],8:[function(require,module,exports){
+(function(process){function filter (xs, fn) {
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (fn(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length; i >= 0; i--) {
+    var last = parts[i];
+    if (last == '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Regex to split a filename into [*, dir, basename, ext]
+// posix version
+var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+var resolvedPath = '',
+    resolvedAbsolute = false;
+
+for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
+  var path = (i >= 0)
+      ? arguments[i]
+      : process.cwd();
+
+  // Skip empty and invalid entries
+  if (typeof path !== 'string' || !path) {
+    continue;
+  }
+
+  resolvedPath = path + '/' + resolvedPath;
+  resolvedAbsolute = path.charAt(0) === '/';
+}
+
+// At this point the path should be resolved to a full absolute path, but
+// handle relative paths to be safe (might happen when process.cwd() fails)
+
+// Normalize the path
+resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+var isAbsolute = path.charAt(0) === '/',
+    trailingSlash = path.slice(-1) === '/';
+
+// Normalize the path
+path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+  
+  return (isAbsolute ? '/' : '') + path;
+};
+
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    return p && typeof p === 'string';
+  }).join('/'));
+};
+
+
+exports.dirname = function(path) {
+  var dir = splitPathRe.exec(path)[1] || '';
+  var isWindows = false;
+  if (!dir) {
+    // No dirname
+    return '.';
+  } else if (dir.length === 1 ||
+      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
+    // It is just a slash or a drive letter with a slash
+    return dir;
+  } else {
+    // It is a full dirname, strip trailing slash
+    return dir.substring(0, dir.length - 1);
+  }
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPathRe.exec(path)[2] || '';
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPathRe.exec(path)[3] || '';
+};
+
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+})(require("__browserify_process"))
+},{"__browserify_process":7}],3:[function(require,module,exports){
+"use strict";
+var AbstractCompiler = require("./abstract_compiler");
+var path = require("path");
+var isEmpty = require("./utils").isEmpty;
+
+var AMDCompiler, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AMDCompiler = (function(_super) {
+  __extends(AMDCompiler, _super);
+
+  function AMDCompiler() {
+    _ref = AMDCompiler.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  AMDCompiler.prototype.stringify = function() {
+    var _this = this;
+    return this.build(function(s) {
+      var dependency, i, preamble, wrapperArgs, _ref1;
+      _ref1 = _this.buildPreamble(_this.dependencyNames), wrapperArgs = _ref1[0], preamble = _ref1[1];
+      if (!isEmpty(_this.exports)) {
+        _this.dependencyNames.push('exports');
+        wrapperArgs.push('__exports__');
+      }
+      for (i in _this.dependencyNames) {
+        dependency = _this.dependencyNames[i];
+        if (/^\./.test(dependency)) {
+          _this.dependencyNames[i] = path.join(_this.moduleName, '..', dependency).replace(/[\\]/g, '/');
+        }
+      }
+      return s.line(function() {
+        return s.call('define', function(arg) {
+          if (_this.moduleName) {
+            arg(s.print(_this.moduleName));
+          }
+          arg(s["break"]);
+          arg(s.print(_this.dependencyNames));
+          arg(s["break"]);
+          return arg(function() {
+            return s["function"](wrapperArgs, function() {
+              var exportName, exportValue, _ref2;
+              s.useStrict();
+              if (preamble) {
+                s.append(preamble);
+              }
+              s.append.apply(s, _this.lines);
+              _ref2 = _this.exports;
+              for (exportName in _ref2) {
+                exportValue = _ref2[exportName];
+                s.line("__exports__." + exportName + " = " + exportValue);
+              }
+              if (_this.exportDefault) {
+                return s.line("return " + _this.exportDefault);
+              }
+            });
+          });
+        });
+      });
+    });
+  };
+
+  return AMDCompiler;
+
+})(AbstractCompiler);
+
+
+module.exports = AMDCompiler;
+},{"./abstract_compiler":9,"./utils":5,"path":8}],4:[function(require,module,exports){
+"use strict";
+var AbstractCompiler = require("./abstract_compiler");
+
+var CJSCompiler, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+CJSCompiler = (function(_super) {
+  __extends(CJSCompiler, _super);
+
+  function CJSCompiler() {
+    _ref = CJSCompiler.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  CJSCompiler.prototype.stringify = function() {
+    var _this = this;
+    return this.build(function(s) {
+      var alias, dependency, deps, doImport, exportName, exportValue, import_, name, variables, _ref1, _ref2, _ref3, _results;
+      doImport = function(name, import_, prop) {
+        var req, rhs;
+        if (prop == null) {
+          prop = null;
+        }
+        req = function() {
+          return s.call('require', [s.print(import_)]);
+        };
+        rhs = prop ? (function() {
+          return s.prop(req, prop);
+        }) : req;
+        return s["var"](name, rhs);
+      };
+      s.useStrict();
+      deps = s.unique('dependency');
+      _ref1 = _this.importDefault;
+      for (import_ in _ref1) {
+        if (!__hasProp.call(_ref1, import_)) continue;
+        name = _ref1[import_];
+        doImport(name, import_);
+      }
+      _ref2 = _this.imports;
+      for (import_ in _ref2) {
+        if (!__hasProp.call(_ref2, import_)) continue;
+        variables = _ref2[import_];
+        if (Object.keys(variables).length === 1) {
+          name = Object.keys(variables)[0];
+          doImport(variables[name], import_, name);
+        } else {
+          dependency = deps.next();
+          doImport(dependency, import_);
+          for (name in variables) {
+            if (!__hasProp.call(variables, name)) continue;
+            alias = variables[name];
+            if (name === 'default') {
+              s["var"](alias, "" + dependency);
+            } else {
+              s["var"](alias, "" + dependency + "." + name);
+            }
+          }
+        }
+      }
+      s.append.apply(s, _this.lines);
+      if (_this.exportDefault) {
+        s.line("module.exports = " + _this.exportDefault);
+      }
+      _ref3 = _this.exports;
+      _results = [];
+      for (exportName in _ref3) {
+        exportValue = _ref3[exportName];
+        _results.push(s.line("exports." + exportName + " = " + exportValue));
+      }
+      return _results;
+    });
+  };
+
+  return CJSCompiler;
+
+})(AbstractCompiler);
+
+
+module.exports = CJSCompiler;
+},{"./abstract_compiler":9}],6:[function(require,module,exports){
+(function(){"use strict";
 var AbstractCompiler = require("./abstract_compiler");
 var isEmpty = require("./utils").isEmpty;
 
@@ -846,13 +709,131 @@ GlobalsCompiler = (function(_super) {
 })(AbstractCompiler);
 
 
-module.exports = GlobalsCompiler;},
-"index.js": function(module, exports, require){"use strict";
-var Compiler = require("./compiler");
+module.exports = GlobalsCompiler;
+})()
+},{"./abstract_compiler":9,"./utils":5}],9:[function(require,module,exports){
+"use strict";
+var CompileError = require("./compile_error");
+var JavaScriptBuilder = require("./java_script_builder");
+var CoffeeScriptBuilder = require("./coffee_script_builder");
+var isEmpty = require("./utils").isEmpty;
+
+var AbstractCompiler,
+  __hasProp = {}.hasOwnProperty,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+AbstractCompiler = (function() {
+  function AbstractCompiler(compiler, options) {
+    var name, _ref, _ref1;
+    this.compiler = compiler;
+    this.exports = compiler.exports;
+    this.exportDefault = compiler.exportDefault;
+    this.imports = compiler.imports;
+    this.importDefault = compiler.importDefault;
+    this.moduleName = compiler.moduleName;
+    this.lines = compiler.lines;
+    this.options = options;
+    this.dependencyNames = [];
+    _ref = this.imports;
+    for (name in _ref) {
+      if (!__hasProp.call(_ref, name)) continue;
+      if (__indexOf.call(this.dependencyNames, name) < 0) {
+        this.dependencyNames.push(name);
+      }
+    }
+    _ref1 = this.importDefault;
+    for (name in _ref1) {
+      if (!__hasProp.call(_ref1, name)) continue;
+      if (__indexOf.call(this.dependencyNames, name) < 0) {
+        this.dependencyNames.push(name);
+      }
+    }
+    this.assertValid();
+  }
+
+  AbstractCompiler.prototype.assertValid = function() {
+    if (this.exportDefault && !isEmpty(this.exports)) {
+      throw new CompileError("You cannot use both `export default` and `export` in the same module");
+    }
+  };
+
+  AbstractCompiler.prototype.buildPreamble = function(names) {
+    var args, preamble,
+      _this = this;
+    args = [];
+    preamble = this.build(function(s) {
+      var dependency, deps, name, number, _i, _len, _results;
+      number = 0;
+      deps = s.unique('dependency');
+      _results = [];
+      for (_i = 0, _len = names.length; _i < _len; _i++) {
+        name = names[_i];
+        if (name in _this.importDefault) {
+          _results.push(args.push(_this.importDefault[name]));
+        } else {
+          dependency = deps.next();
+          args.push(dependency);
+          _results.push(_this.buildImportsForPreamble(s, _this.imports[name], dependency));
+        }
+      }
+      return _results;
+    });
+    return [args, preamble];
+  };
+
+  AbstractCompiler.prototype.build = function(fn) {
+    var builder;
+    if (this.options.coffee) {
+      builder = new CoffeeScriptBuilder();
+    } else {
+      builder = new JavaScriptBuilder();
+    }
+    fn(builder);
+    return builder.toString();
+  };
+
+  AbstractCompiler.prototype.buildImportsForPreamble = function(builder, imports_, dependencyName) {
+    var alias, name, _results;
+    _results = [];
+    for (name in imports_) {
+      if (!__hasProp.call(imports_, name)) continue;
+      alias = imports_[name];
+      _results.push(builder["var"](alias, function() {
+        return builder.prop(dependencyName, name);
+      }));
+    }
+    return _results;
+  };
+
+  return AbstractCompiler;
+
+})();
 
 
-exports.Compiler = Compiler;},
-"java_script_builder.js": function(module, exports, require){"use strict";
+
+module.exports = AbstractCompiler;
+},{"./coffee_script_builder":12,"./compile_error":10,"./java_script_builder":11,"./utils":5}],10:[function(require,module,exports){
+"use strict";
+var CompileError, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+CompileError = (function(_super) {
+  __extends(CompileError, _super);
+
+  function CompileError() {
+    _ref = CompileError.__super__.constructor.apply(this, arguments);
+    return _ref;
+  }
+
+  return CompileError;
+
+})(Error);
+
+
+module.exports = CompileError;
+},{}],11:[function(require,module,exports){
+"use strict";
 var ScriptBuilder = require("./script_builder");
 
 var JavaScriptBuilder,
@@ -886,61 +867,60 @@ JavaScriptBuilder = (function(_super) {
 })(ScriptBuilder);
 
 
-module.exports = JavaScriptBuilder;},
-"require_support.js": function(module, exports, require){"use strict";
-var vm = require("vm");
-var fs = require("fs");
-var path = require("path");
-var Compiler = require("./compiler");
-var compile = require("coffee-script").compile;
+module.exports = JavaScriptBuilder;
+},{"./script_builder":13}],12:[function(require,module,exports){
+"use strict";
+var ScriptBuilder = require("./script_builder");
 
-var defaultCoffeeHandler, defaultJSHandler, disable, enable, enabled, es6CoffeeRequireHandler, es6JSRequireHandler, loadES6Script;
+var CoffeeScriptBuilder, _ref,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-enabled = false;
+CoffeeScriptBuilder = (function(_super) {
+  __extends(CoffeeScriptBuilder, _super);
 
-defaultJSHandler = require.extensions['.js'];
-
-defaultCoffeeHandler = require.extensions['.coffee'];
-
-enable = function() {
-  if (enabled) {
-    return;
+  function CoffeeScriptBuilder() {
+    _ref = CoffeeScriptBuilder.__super__.constructor.apply(this, arguments);
+    return _ref;
   }
-  enabled = true;
-  require.extensions['.js'] = es6JSRequireHandler;
-  return require.extensions['.coffee'] = es6CoffeeRequireHandler;
-};
 
-disable = function() {
-  if (!enabled) {
-    return;
-  }
-  enabled = false;
-  require.extensions['.js'] = defaultJSHandler;
-  return require.extensions['.coffee'] = defaultCoffeeHandler;
-};
+  CoffeeScriptBuilder.prototype.eol = '';
 
-es6JSRequireHandler = function(module, filename) {
-  return module._compile(loadES6Script(filename));
-};
+  CoffeeScriptBuilder.prototype["var"] = function(lhs, rhs) {
+    this.set(lhs, rhs);
+  };
 
-es6CoffeeRequireHandler = function(module, filename) {
-  return module._compile(compile(loadES6Script(filename)));
-};
+  CoffeeScriptBuilder.prototype._prepareArgsForCall = function(args) {
+    var arg, _i, _len;
+    args = CoffeeScriptBuilder.__super__._prepareArgsForCall.call(this, args).slice();
+    for (_i = 0, _len = args.length; _i < _len; _i++) {
+      arg = args[_i];
+      if (arg === this["break"]) {
+        if (args[args.length - 1] !== this["break"]) {
+          args.push(this["break"]);
+        }
+        break;
+      }
+    }
+    return args;
+  };
 
-loadES6Script = function(filename) {
-  var content, extname;
-  content = fs.readFileSync(filename, 'utf8');
-  extname = path.extname(filename);
-  return new Compiler(content, path.basename(filename, extname), {
-    coffee: extname === '.coffee'
-  }).toCJS();
-};
+  CoffeeScriptBuilder.prototype._functionHeader = function(args) {
+    if (args.length) {
+      return "(" + (args.join(', ')) + ") ->";
+    } else {
+      return '->';
+    }
+  };
+
+  return CoffeeScriptBuilder;
+
+})(ScriptBuilder);
 
 
-exports.enable = enable;
-exports.disable = disable;},
-"script_builder.js": function(module, exports, require){"use strict";
+module.exports = CoffeeScriptBuilder;
+},{"./script_builder":13}],13:[function(require,module,exports){
+(function(){"use strict";
 var Unique = require("./utils").Unique;
 
 var BREAK, INDENT, OUTDENT, ScriptBuilder,
@@ -1131,28 +1111,8 @@ ScriptBuilder = (function() {
 })();
 
 
-module.exports = ScriptBuilder;},
-"utils.js": function(module, exports, require){"use strict";
-function isEmpty(object) {
-  for (var foo in object) {
-    if (Object.prototype.hasOwnProperty.call(object, foo)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function Unique(prefix) {
-  this.prefix = prefix;
-  this.index = 1;
-}
-
-Unique.prototype.next = function() {
-  return ['__', this.prefix, this.index++, '__'].join('');
-};
-
-
-exports.isEmpty = isEmpty;
-exports.Unique = Unique;}};
-ModuleTranspiler = require('index.js');
-}());
+module.exports = ScriptBuilder;
+})()
+},{"./utils":5}]},{},[1])(1)
+});
+;
