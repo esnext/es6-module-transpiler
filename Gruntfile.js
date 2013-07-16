@@ -88,7 +88,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     'es6-module-transpile': {
       app: {
-        src: ['src/*.coffee'],
+        src: ['src/*.{js,coffee}'],
         dest: 'lib',
         options: {
           type: 'cjs'
