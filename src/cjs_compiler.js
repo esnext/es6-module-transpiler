@@ -1,18 +1,9 @@
 import AbstractCompiler from './abstract_compiler';
 
-var CJSCompiler, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-CJSCompiler = (function(_super) {
-  __extends(CJSCompiler, _super);
-
-  function CJSCompiler() {
-    _ref = CJSCompiler.__super__.constructor.apply(this, arguments);
-    return _ref;
-  }
-
-  CJSCompiler.prototype.stringify = function() {
+class CJSCompiler extends AbstractCompiler {
+  stringify() {
     var _this = this;
     return this.build(function(s) {
       var alias, dependency, deps, doImport, exportName, exportValue, import_, name, variables, _ref1, _ref2, _ref3, _results;
@@ -71,9 +62,6 @@ CJSCompiler = (function(_super) {
       return _results;
     });
   };
-
-  return CJSCompiler;
-
-})(AbstractCompiler);
+}
 
 export default CJSCompiler;

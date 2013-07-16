@@ -1,33 +1,19 @@
 import ScriptBuilder from './script_builder';
 
-var JavaScriptBuilder,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-JavaScriptBuilder = (function(_super) {
-
-  __extends(JavaScriptBuilder, _super);
-
-  function JavaScriptBuilder() {
-    return JavaScriptBuilder.__super__.constructor.apply(this, arguments);
+class JavaScriptBuilder extends ScriptBuilder {
+  constructor() {
+    super();
+    this.eol = ';';
+    this['var'] = (lhs, rhs) => this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
   }
 
-  JavaScriptBuilder.prototype.eol = ';';
-
-  JavaScriptBuilder.prototype["var"] = function(lhs, rhs) {
-    return this.line("var " + (this.capture(lhs)) + " = " + (this.capture(rhs)));
-  };
-
-  JavaScriptBuilder.prototype._functionHeader = function(args) {
+  _functionHeader(args) {
     return "function(" + (args.join(', ')) + ") {";
-  };
+  }
 
-  JavaScriptBuilder.prototype._functionTail = function() {
+  _functionTail() {
     return '}';
-  };
-
-  return JavaScriptBuilder;
-
-})(ScriptBuilder);
+  }
+}
 
 export default JavaScriptBuilder;

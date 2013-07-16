@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
-  var path = require('path');
+  var path   = require('path');
+  var es6ify = require('es6ify');
+  var pkg    = grunt.file.readJSON('./package.json');
 
   // Please see the grunt documentation for more information regarding task and
   // helper creation: https://github.com/cowboy/grunt/blob/master/docs/toc.md
@@ -34,7 +36,7 @@ module.exports = function(grunt) {
   // ==========================================================================
 
   function transpile(src, dest, options) {
-    var Compiler = require('./lib/compiler'),
+    var Compiler = require(pkg.main).Compiler,
         coffee   = require('coffee-script');
 
     if (!options) {
@@ -84,6 +86,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jasmine-node');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   grunt.initConfig({
     'es6-module-transpile': {
@@ -107,10 +110,18 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         src: 'lib/index.js',
-        dest: 'dist/es6-module-transpiler.js',
+        dest: 'tmp/es6-module-transpiler.es5.js',
         options: {
+          transform: [es6ify],
           standalone: 'ModuleTranspiler'
         }
+      }
+    },
+
+    concat: {
+      dist: {
+        src: [es6ify.runtime, 'tmp/es6-module-transpiler.es5.js'],
+        dest: 'dist/es6-module-transpiler.js'
       }
     },
 
@@ -123,5 +134,5 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node', 'browserify', 'uglify']);
+  grunt.registerTask('default', ['es6-module-transpile', 'jasmine_node', 'browserify', 'concat', 'uglify']);
 };

@@ -38,6 +38,8 @@
     "grunt-jasmine-node": "~0.1.0",
     "grunt-contrib-uglify": "~0.2.2",
     "esprima": "git://github.com/ariya/esprima.git#harmony",
-    "grunt-browserify": "~1.2.0"
+    "grunt-browserify": "~1.2.0",
+    "es6ify": "~0.2.0",
+    "grunt-contrib-concat": "~0.3.0"
   }
 }

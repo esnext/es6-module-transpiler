@@ -7,13 +7,15 @@ function isEmpty(object) {
   return true;
 }
 
-function Unique(prefix) {
-  this.prefix = prefix;
-  this.index = 1;
-}
+class Unique {
+  constructor(prefix) {
+    this.prefix = prefix;
+    this.index = 1;
+  }
 
-Unique.prototype.next = function() {
-  return ['__', this.prefix, this.index++, '__'].join('');
-};
+  next() {
+    return ['__', this.prefix, this.index++, '__'].join('');
+  }
+}
 
 export { isEmpty, Unique };

@@ -3,12 +3,10 @@ import JavaScriptBuilder from './java_script_builder';
 import CoffeeScriptBuilder from './coffee_script_builder';
 import { isEmpty } from './utils';
 
-var AbstractCompiler,
-  __hasProp = {}.hasOwnProperty,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-AbstractCompiler = (function() {
-  function AbstractCompiler(compiler, options) {
+class AbstractCompiler {
+  constructor(compiler, options) {
     var name, _ref, _ref1;
     this.compiler = compiler;
     this.exports = compiler.exports;
@@ -36,13 +34,13 @@ AbstractCompiler = (function() {
     this.assertValid();
   }
 
-  AbstractCompiler.prototype.assertValid = function() {
+  assertValid() {
     if (this.exportDefault && !isEmpty(this.exports)) {
       throw new CompileError("You cannot use both `export default` and `export` in the same module");
     }
-  };
+  }
 
-  AbstractCompiler.prototype.buildPreamble = function(names) {
+  buildPreamble(names) {
     var args, preamble,
       _this = this;
     args = [];
@@ -64,9 +62,9 @@ AbstractCompiler = (function() {
       return _results;
     });
     return [args, preamble];
-  };
+  }
 
-  AbstractCompiler.prototype.build = function(fn) {
+  build(fn) {
     var builder;
     if (this.options.coffee) {
       builder = new CoffeeScriptBuilder();
@@ -75,9 +73,9 @@ AbstractCompiler = (function() {
     }
     fn(builder);
     return builder.toString();
-  };
+  }
 
-  AbstractCompiler.prototype.buildImportsForPreamble = function(builder, imports_, dependencyName) {
+  buildImportsForPreamble(builder, imports_, dependencyName) {
     var alias, name, _results;
     _results = [];
     for (name in imports_) {
@@ -88,11 +86,7 @@ AbstractCompiler = (function() {
       }));
     }
     return _results;
-  };
-
-  return AbstractCompiler;
-
-})();
-
+  }
+}
 
 export default AbstractCompiler;

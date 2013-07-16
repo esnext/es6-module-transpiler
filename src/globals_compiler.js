@@ -1,19 +1,10 @@
 import AbstractCompiler from './abstract_compiler';
 import { isEmpty } from './utils';
 
-var GlobalsCompiler,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-GlobalsCompiler = (function(_super) {
-
-  __extends(GlobalsCompiler, _super);
-
-  function GlobalsCompiler() {
-    return GlobalsCompiler.__super__.constructor.apply(this, arguments);
-  }
-
-  GlobalsCompiler.prototype.stringify = function() {
+class GlobalsCompiler extends AbstractCompiler {
+  stringify() {
     var _this = this;
     return this.build(function(s) {
       var alias, args, globalImport, into, locals, name, passedArgs, receivedArgs, wrapper, _i, _len, _ref, _ref1;
@@ -78,10 +69,7 @@ GlobalsCompiler = (function(_super) {
         return s.call(wrapper, args);
       });
     });
-  };
-
-  return GlobalsCompiler;
-
-})(AbstractCompiler);
+  }
+}
 
 export default GlobalsCompiler;
