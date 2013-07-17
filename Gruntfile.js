@@ -30,7 +30,7 @@ module.exports = function(grunt) {
   grunt.registerTask('develop',
     ['build', 'qunit-runner', 'connect', 'watch']);
 
-  grunt.registerTask('test', ['qunit-runner', 'qunit']);
+  grunt.registerTask('test', ['build', 'qunit-runner', 'connect', 'qunit']);
 
   grunt.registerTask('default', ['build']);
 };
