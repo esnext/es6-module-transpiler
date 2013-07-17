@@ -12,6 +12,7 @@ module.exports = function(grunt) {
     clean      : config('clean'),
     transpile  : config('transpile'),
     browserify : config('browserify'),
+    es6ify     : config('es6ify'),
     concat     : config('concat'),
     uglify     : config('uglify'),
 
@@ -23,7 +24,7 @@ module.exports = function(grunt) {
   grunt.task.loadTasks('./tasks');
 
   grunt.registerTask('build',
-    ['clean', 'transpile', 'browserify', 'concat', 'uglify']);
+    ['clean', 'transpile', 'es6ify', 'browserify', 'concat', 'uglify']);
 
   grunt.registerTask('test', ['features', 'simplemocha']);
 
