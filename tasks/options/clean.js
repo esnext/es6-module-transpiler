@@ -1,1 +1,1 @@
-module.exports = ['dist', 'tmp', 'test/.generated'];
+module.exports = ['dist', 'lib', 'tmp', 'test/.generated'];

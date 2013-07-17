@@ -1,10 +1,10 @@
 import optimist from 'optimist';
 import fs from 'fs';
 import path from 'path';
-import Compiler from './compiler';
 
 class CLI {
-  constructor(stdin, stdout, fs_) {
+  constructor(Compiler, stdin, stdout, fs_) {
+    this.Compiler = Compiler;
     this.stdin = stdin != null ? stdin : process.stdin;
     this.stdout = stdout != null ? stdout : process.stdout;
     this.fs = fs_ != null ? fs_ : fs;
@@ -190,7 +190,7 @@ class CLI {
       cjs: 'CJS',
       globals: 'Globals'
     }[type];
-    compiler = new Compiler(input, moduleName, options);
+    compiler = new this.Compiler(input, moduleName, options);
     method = "to" + type;
     return compiler[method]();
   }
@@ -208,7 +208,7 @@ class CLI {
   }
 }
 
-CLI.start = function(argv, stdin, stdout, fs_) {
+CLI.start = function(Compiler, argv, stdin, stdout, fs_) {
   if (stdin == null) {
     stdin = process.stdin;
   }
@@ -218,7 +218,7 @@ CLI.start = function(argv, stdin, stdout, fs_) {
   if (fs_ == null) {
     fs_ = fs;
   }
-  return new this(stdin, stdout, fs_).start(argv);
+  return new CLI(Compiler, stdin, stdout, fs_).start(argv);
 };
 
 export default CLI;

@@ -1,4 +1,16 @@
 #!/usr/bin/env node
 
-var CLI = require('../lib/cli');
-CLI.start(process.argv.slice(2));
+var fs   = require('fs'),
+    path = require('path');
+
+function requireMain() {
+  var root    = path.join(__dirname, '..'),
+      pkgPath = path.join(root, 'package.json'),
+      pkg     = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+  return require(path.join(root, pkg.main));
+}
+
+var CLI = require('../lib/cli'),
+    Compiler = requireMain().Compiler;
+CLI.start(Compiler, process.argv.slice(2));
