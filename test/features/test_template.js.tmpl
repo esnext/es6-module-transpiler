@@ -1,0 +1,30 @@
+<%
+  function compiler(test) {
+    return "var compiler = new Compiler(" +
+      JSON.stringify(test.source) +
+      ", null, " +
+      JSON.stringify(test.options) +
+    ");";
+  }
+%>
+
+var Compiler = require("../../dist/es6-module-transpiler").Compiler;
+
+suite("<%= mod.name %>");
+
+<% _.each(mod.tests, function(test) { %>
+test("<%= test.name %>", function() {
+  <% if (test.invalid) { %>
+try {
+  <%= compiler(test) %>
+  compiler.toAMD();
+  ok(false, "should have raised an error");
+} catch (e) {
+  ok(e, e ? e.message : "expects an error");
+}
+  <% } else { %>
+  <%= compiler(test) %>
+equal(compiler.to<%= test.typeName %>(), <%= JSON.stringify(test.expected) %>);
+  <% } %>
+});
+<% }); %>

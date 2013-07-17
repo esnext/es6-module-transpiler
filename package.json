@@ -36,12 +36,12 @@
     "grunt-browserify": "~1.2.0",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-connect": "~0.3.0",
-    "grunt-contrib-qunit": "~0.2.2",
     "grunt-contrib-uglify": "~0.2.2",
     "grunt-es6-module-transpiler": "~0.4.1",
+    "grunt-simple-mocha": "~0.4.0",
     "matchdep": "~0.1.2",
-    "uglify-js": "~2.2.4",
-    "grunt-contrib-watch": "~0.4.4"
+    "mocha": "~1.12.0",
+    "qunit-mocha-ui": "0.0.1",
+    "uglify-js": "~2.2.4"
   }
 }

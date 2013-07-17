@@ -15,10 +15,8 @@ module.exports = function(grunt) {
     concat     : config('concat'),
     uglify     : config('uglify'),
 
-    'qunit-runner' : config('qunit-runner'),
-    connect        : config('connect'),
-    qunit          : config('qunit'),
-    watch          : config('watch')
+    simplemocha : config('simplemocha'),
+    features    : config('features')
   });
 
   // Load local tasks.
@@ -27,10 +25,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build',
     ['clean', 'transpile', 'browserify', 'concat', 'uglify']);
 
-  grunt.registerTask('develop',
-    ['build', 'qunit-runner', 'connect', 'watch']);
-
-  grunt.registerTask('test', ['build', 'qunit-runner', 'connect', 'qunit']);
+  grunt.registerTask('test', ['features', 'simplemocha']);
 
   grunt.registerTask('default', ['build']);
 };
