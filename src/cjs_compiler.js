@@ -21,7 +21,7 @@ class CJSCompiler extends AbstractCompiler {
         rhs = prop ? (function() {
           s.prop(req, prop);
         }) : req;
-        s['var'](name, rhs);
+        s.variable(name, rhs);
       };
 
       s.useStrict();
@@ -43,9 +43,9 @@ class CJSCompiler extends AbstractCompiler {
           // var bar = __dependency1__.bar;
           forEach(variables, function(alias, name) {
             if (name === 'default') {
-              s['var'](alias, '' + dependency);
+              s.variable(alias, '' + dependency);
             } else {
-              s['var'](alias, '' + dependency + '.' + name);
+              s.variable(alias, '' + dependency + '.' + name);
             }
           });
         }

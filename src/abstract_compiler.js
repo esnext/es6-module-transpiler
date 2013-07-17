@@ -59,7 +59,7 @@ class AbstractCompiler {
 
   buildImportsForPreamble(builder, imports_, dependencyName) {
     forEach(imports_, function(alias, name) {
-      builder["var"](alias, function() {
+      builder.variable(alias, function() {
         return builder.prop(dependencyName, name);
       });
     });

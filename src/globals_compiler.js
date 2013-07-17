@@ -38,12 +38,12 @@ class GlobalsCompiler extends AbstractCompiler {
       });
 
       function wrapper() {
-        s['function'](receivedArgs, function() {
+        s.func(receivedArgs, function() {
           s.useStrict();
 
           // var get = Ember.get;
           forEach(locals, function(rhs, lhs) {
-            s['var'](lhs, rhs);
+            s.variable(lhs, rhs);
           });
 
           // body

@@ -5,7 +5,7 @@ class JavaScriptBuilder extends ScriptBuilder {
     return ';';
   }
 
-  'var'(lhs, rhs) {
+  variable(lhs, rhs) {
     this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
   }
 

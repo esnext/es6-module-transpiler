@@ -36,7 +36,7 @@ class AMDCompiler extends AbstractCompiler {
           arg(s.print(deps));
           arg(s.linebreak);
           arg(function() {
-            s['function'](wrapperArgs, function() {
+            s.func(wrapperArgs, function() {
               s.useStrict();
               if (preamble) {
                 s.append(preamble);

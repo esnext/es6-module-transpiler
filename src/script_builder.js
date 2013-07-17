@@ -7,16 +7,6 @@ var INDENT = {},
 class ScriptBuilder {
   constructor() {
     this.buffer = [];
-
-    this['function'] = function(args, body) {
-      this.append(this._functionHeader(args));
-      this.indent();
-      body();
-      this.outdent();
-      if (this._functionTail != null) {
-        this.append(this._functionTail());
-      }
-    };
   }
 
   get linebreak() {
@@ -33,6 +23,16 @@ class ScriptBuilder {
 
   set(lhs, rhs) {
     this.line("" + (this.capture(lhs)) + " = " + (this.capture(rhs)));
+  }
+
+  func(args, body) {
+    this.append(this._functionHeader(args));
+    this.indent();
+    body();
+    this.outdent();
+    if (this._functionTail != null) {
+      this.append(this._functionTail());
+    }
   }
 
   call(fn, args) {
@@ -86,18 +86,18 @@ class ScriptBuilder {
   _wrapCallable(fn) {
     if (typeof fn !== 'function') { return fn; }
 
-    var functionImpl = this['function'],
+    var functionImpl = this.func,
         functionCalled = false,
         self = this;
 
-    this['function'] = function(...args) {
+    this.func = function(...args) {
       functionCalled = true;
       return functionImpl.apply(self, args);
     };
 
     var result = this.capture(fn);
 
-    this['function'] = functionImpl;
+    this.func = functionImpl;
     if (functionCalled) {
       result = '(' + result + (this._functionTail != null ? '' : '\n') + ')';
     }

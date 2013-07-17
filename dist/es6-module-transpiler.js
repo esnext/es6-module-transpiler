@@ -731,7 +731,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":4,"./cjs_compiler":3,"./globals_compiler":5,"./utils":6}],6:[function(require,module,exports){
+},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":5,"./utils":6}],6:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1086,70 +1086,63 @@ var $__superDescriptor = function(proto, name) {
 };
 var $__1;
 var AbstractCompiler = require("./abstract_compiler");
-var forEach = require("./utils").forEach;
-var CJSCompiler = function($__super) {
+var path = require("path");
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var forEach = __dependency1__.forEach;
+var AMDCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
-  var $CJSCompiler = ($__createClass)({
+  var $AMDCompiler = ($__createClass)({
     constructor: function() {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var imports = this.imports, importDefault = this.importDefault, exports_ = this.exports, exportDefault = this.exportDefault, lines = this.lines;
+      var deps = this.dependencyNames, argsAndPreamble = this.buildPreamble(deps), wrapperArgs = argsAndPreamble[0], preamble = argsAndPreamble[1], exports_ = this.exports, exportDefault = this.exportDefault, moduleName = this.moduleName, lines = this.lines;
       return this.build(function(s) {
-        try {
-          throw undefined;
-        } catch (doImport) {
-          doImport = function(name, import_, prop) {
-            var req, rhs;
-            if (prop == null) {
-              prop = null;
+        if (!isEmpty(exports_)) {
+          deps.push('exports');
+          wrapperArgs.push('__exports__');
+        }
+        forEach(deps, function(dependency, i) {
+          if (/^\./.test(dependency)) {
+            deps[i] = path.join(moduleName, '..', dependency).replace(/[\\]/g, '/');
+          }
+        });
+        s.line(function() {
+          s.call('define', function(arg) {
+            if (moduleName) {
+              arg(s.print(moduleName));
             }
-            req = function() {
-              s.call('require', [s.print(import_)]);
-            };
-            rhs = prop ? (function() {
-              s.prop(req, prop);
-            }): req;
-            s['var'](name, rhs);
-          };
-          ;
-          s.useStrict();
-          var deps = s.unique('dependency');
-          forEach(importDefault, doImport);
-          forEach(imports, function(variables, import_) {
-            if (Object.keys(variables).length === 1) {
-              var name = Object.keys(variables)[0];
-              doImport(variables[name], import_, name);
-            } else {
-              var dependency = deps.next();
-              doImport(dependency, import_);
-              forEach(variables, function(alias, name) {
-                if (name === 'default') {
-                  s['var'](alias, '' + dependency);
-                } else {
-                  s['var'](alias, '' + dependency + '.' + name);
+            arg(s.linebreak);
+            arg(s.print(deps));
+            arg(s.linebreak);
+            arg(function() {
+              s.func(wrapperArgs, function() {
+                s.useStrict();
+                if (preamble) {
+                  s.append(preamble);
+                }
+                ($__1 = s).append.apply($__1, $__toObject(lines));
+                forEach(exports_, function(exportValue, exportName) {
+                  s.line('__exports__.' + exportName + ' = ' + exportValue);
+                });
+                if (exportDefault) {
+                  s.line('return ' + exportDefault);
                 }
               });
-            }
+            });
           });
-          ($__1 = s).append.apply($__1, $__toObject(lines));
-          if (exportDefault) {
-            s.line('module.exports = ' + exportDefault);
-          }
-          forEach(exports_, function(exportValue, exportName) {
-            s.line('exports.' + exportName + ' = ' + exportValue);
-          });
-        }
+        });
       });
     }
   }, {}, $__proto, $__super, false);
-  return $CJSCompiler;
+  return $AMDCompiler;
 }(AbstractCompiler);
-module.exports = CJSCompiler;
+module.exports = AMDCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6}],4:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6,"path":8}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1190,63 +1183,70 @@ var $__superDescriptor = function(proto, name) {
 };
 var $__1;
 var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
-var __dependency1__ = require("./utils");
-var isEmpty = __dependency1__.isEmpty;
-var forEach = __dependency1__.forEach;
-var AMDCompiler = function($__super) {
+var forEach = require("./utils").forEach;
+var CJSCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
-  var $AMDCompiler = ($__createClass)({
+  var $CJSCompiler = ($__createClass)({
     constructor: function() {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var deps = this.dependencyNames, argsAndPreamble = this.buildPreamble(deps), wrapperArgs = argsAndPreamble[0], preamble = argsAndPreamble[1], exports_ = this.exports, exportDefault = this.exportDefault, moduleName = this.moduleName, lines = this.lines;
+      var imports = this.imports, importDefault = this.importDefault, exports_ = this.exports, exportDefault = this.exportDefault, lines = this.lines;
       return this.build(function(s) {
-        if (!isEmpty(exports_)) {
-          deps.push('exports');
-          wrapperArgs.push('__exports__');
-        }
-        forEach(deps, function(dependency, i) {
-          if (/^\./.test(dependency)) {
-            deps[i] = path.join(moduleName, '..', dependency).replace(/[\\]/g, '/');
-          }
-        });
-        s.line(function() {
-          s.call('define', function(arg) {
-            if (moduleName) {
-              arg(s.print(moduleName));
+        try {
+          throw undefined;
+        } catch (doImport) {
+          doImport = function(name, import_, prop) {
+            var req, rhs;
+            if (prop == null) {
+              prop = null;
             }
-            arg(s.linebreak);
-            arg(s.print(deps));
-            arg(s.linebreak);
-            arg(function() {
-              s['function'](wrapperArgs, function() {
-                s.useStrict();
-                if (preamble) {
-                  s.append(preamble);
-                }
-                ($__1 = s).append.apply($__1, $__toObject(lines));
-                forEach(exports_, function(exportValue, exportName) {
-                  s.line('__exports__.' + exportName + ' = ' + exportValue);
-                });
-                if (exportDefault) {
-                  s.line('return ' + exportDefault);
+            req = function() {
+              s.call('require', [s.print(import_)]);
+            };
+            rhs = prop ? (function() {
+              s.prop(req, prop);
+            }): req;
+            s.variable(name, rhs);
+          };
+          ;
+          s.useStrict();
+          var deps = s.unique('dependency');
+          forEach(importDefault, doImport);
+          forEach(imports, function(variables, import_) {
+            if (Object.keys(variables).length === 1) {
+              var name = Object.keys(variables)[0];
+              doImport(variables[name], import_, name);
+            } else {
+              var dependency = deps.next();
+              doImport(dependency, import_);
+              forEach(variables, function(alias, name) {
+                if (name === 'default') {
+                  s.variable(alias, '' + dependency);
+                } else {
+                  s.variable(alias, '' + dependency + '.' + name);
                 }
               });
-            });
+            }
           });
-        });
+          ($__1 = s).append.apply($__1, $__toObject(lines));
+          if (exportDefault) {
+            s.line('module.exports = ' + exportDefault);
+          }
+          forEach(exports_, function(exportValue, exportName) {
+            s.line('exports.' + exportName + ' = ' + exportValue);
+          });
+        }
       });
     }
   }, {}, $__proto, $__super, false);
-  return $AMDCompiler;
+  return $CJSCompiler;
 }(AbstractCompiler);
-module.exports = AMDCompiler;
+module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6,"path":8}],5:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1320,10 +1320,10 @@ var GlobalsCompiler = function($__super) {
               }
             });
             wrapper = function() {
-              s['function'](receivedArgs, function() {
+              s.func(receivedArgs, function() {
                 s.useStrict();
                 forEach(locals, function(rhs, lhs) {
-                  s['var'](lhs, rhs);
+                  s.variable(lhs, rhs);
                 });
                 s.append.apply(s, lines);
                 if (exportDefault) {
@@ -1433,7 +1433,7 @@ var AbstractCompiler = function() {
     },
     buildImportsForPreamble: function(builder, imports_, dependencyName) {
       forEach(imports_, function(alias, name) {
-        builder["var"](alias, function() {
+        builder.variable(alias, function() {
           return builder.prop(dependencyName, name);
         });
       });
@@ -1538,7 +1538,7 @@ var JavaScriptBuilder = function($__super) {
     get eol() {
       return ';';
     },
-    'var': function(lhs, rhs) {
+    variable: function(lhs, rhs) {
       this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
     },
     _functionHeader: function(args) {
@@ -1583,15 +1583,6 @@ var ScriptBuilder = function() {
   var $ScriptBuilder = ($__createClassNoExtends)({
     constructor: function() {
       this.buffer = [];
-      this['function'] = function(args, body) {
-        this.append(this._functionHeader(args));
-        this.indent();
-        body();
-        this.outdent();
-        if (this._functionTail != null) {
-          this.append(this._functionTail());
-        }
-      };
     },
     get linebreak() {
       return BREAK;
@@ -1604,6 +1595,15 @@ var ScriptBuilder = function() {
     },
     set: function(lhs, rhs) {
       this.line("" + (this.capture(lhs)) + " = " + (this.capture(rhs)));
+    },
+    func: function(args, body) {
+      this.append(this._functionHeader(args));
+      this.indent();
+      body();
+      this.outdent();
+      if (this._functionTail != null) {
+        this.append(this._functionTail());
+      }
     },
     call: function(fn, args) {
       var end, indented, result;
@@ -1654,14 +1654,14 @@ var ScriptBuilder = function() {
       if (typeof fn !== 'function') {
         return fn;
       }
-      var functionImpl = this['function'], functionCalled = false, self = this;
-      this['function'] = function() {
+      var functionImpl = this.func, functionCalled = false, self = this;
+      this.func = function() {
         for (var args = [], $__1 = 0; $__1 < arguments.length; $__1++) args[$__1] = arguments[$__1];
         functionCalled = true;
         return functionImpl.apply(self, args);
       };
       var result = this.capture(fn);
-      this['function'] = functionImpl;
+      this.func = functionImpl;
       if (functionCalled) {
         result = '(' + result + (this._functionTail != null ? '': '\n') + ')';
       }
