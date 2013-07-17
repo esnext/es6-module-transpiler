@@ -1,7 +1,6 @@
-Compiler = require '../lib/compiler'
-CLI      = require '../lib/cli'
-Stream   = require 'stream'
-path     = require 'path'
+{ Compiler, CLI } = require '../dist/es6-module-transpiler'
+Stream            = require 'stream'
+path              = require 'path'
 
 class ProcessExitError extends Error
   constructor: (@code) ->
@@ -71,6 +70,7 @@ shouldRunCLI = (args, input, output) ->
   stdout = new WritableStream()
   fs     = new FakeFilesystem(if usingStdio then {} else input)
 
+  console.log { CLI }
   cli = new CLI(stdin, stdout, fs)
   cli.start args
 

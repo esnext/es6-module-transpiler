@@ -3,29 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import Compiler from './compiler';
 
-var CLI;
-
-CLI = (function() {
-  CLI.start = function(argv, stdin, stdout, fs_) {
-    if (stdin == null) {
-      stdin = process.stdin;
-    }
-    if (stdout == null) {
-      stdout = process.stdout;
-    }
-    if (fs_ == null) {
-      fs_ = fs;
-    }
-    return new this(stdin, stdout, fs_).start(argv);
-  };
-
-  function CLI(stdin, stdout, fs_) {
+class CLI {
+  constructor(stdin, stdout, fs_) {
     this.stdin = stdin != null ? stdin : process.stdin;
     this.stdout = stdout != null ? stdout : process.stdout;
     this.fs = fs_ != null ? fs_ : fs;
   }
 
-  CLI.prototype.start = function(argv) {
+  start(argv) {
     var filename, options, _i, _len, _ref;
     options = this.parseArgs(argv);
     if (options.help) {
@@ -42,9 +27,9 @@ CLI = (function() {
       }
     }
     return null;
-  };
+  }
 
-  CLI.prototype.parseArgs = function(argv) {
+  parseArgs(argv) {
     var args, global, imports, pair, requirePath, _i, _len, _ref, _ref1;
     args = this.argParser(argv).argv;
     if (args.imports) {
@@ -61,9 +46,9 @@ CLI = (function() {
       args.into = args.global;
     }
     return args;
-  };
+  }
 
-  CLI.prototype.argParser = function(argv) {
+  argParser(argv) {
     return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] [--imports PATH:GLOBAL] (--module-name MOD|--anonymous)').options({
       type: {
         "default": 'amd',
@@ -126,9 +111,9 @@ CLI = (function() {
         return true;
       }
     });
-  };
+  }
 
-  CLI.prototype.processStdio = function(options) {
+  processStdio(options) {
     var input,
       _this = this;
     input = '';
@@ -142,9 +127,9 @@ CLI = (function() {
       output = _this._compile(input, options.m, options.type, options);
       return _this.stdout.write(output);
     });
-  };
+  }
 
-  CLI.prototype.processPath = function(filename, options) {
+  processPath(filename, options) {
     var _this = this;
     return this.fs.stat(filename, function(err, stat) {
       if (err) {
@@ -156,9 +141,9 @@ CLI = (function() {
         return _this.processFile(filename, options);
       }
     });
-  };
+  }
 
-  CLI.prototype.processDirectory = function(dirname, options) {
+  processDirectory(dirname, options) {
     var _this = this;
     return this.fs.readdir(dirname, function(err, children) {
       var child, _i, _len, _results;
@@ -173,9 +158,9 @@ CLI = (function() {
       }
       return _results;
     });
-  };
+  }
 
-  CLI.prototype.processFile = function(filename, options) {
+  processFile(filename, options) {
     var _this = this;
     return this.fs.readFile(filename, 'utf8', function(err, input) {
       var ext, moduleName, output, outputFilename;
@@ -196,9 +181,9 @@ CLI = (function() {
         }
       });
     });
-  };
+  }
 
-  CLI.prototype._compile = function(input, moduleName, type, options) {
+  _compile(input, moduleName, type, options) {
     var compiler, method;
     type = {
       amd: 'AMD',
@@ -208,9 +193,9 @@ CLI = (function() {
     compiler = new Compiler(input, moduleName, options);
     method = "to" + type;
     return compiler[method]();
-  };
+  }
 
-  CLI.prototype._mkdirp = function(directory) {
+  _mkdirp(directory) {
     var prefix;
     if (this.fs.existsSync(directory)) {
       return;
@@ -220,11 +205,20 @@ CLI = (function() {
       this._mkdirp(prefix);
     }
     return this.fs.mkdirSync(directory);
-  };
+  }
+}
 
-  return CLI;
-
-})();
-
+CLI.start = function(argv, stdin, stdout, fs_) {
+  if (stdin == null) {
+    stdin = process.stdin;
+  }
+  if (stdout == null) {
+    stdout = process.stdout;
+  }
+  if (fs_ == null) {
+    fs_ = fs;
+  }
+  return new this(stdin, stdout, fs_).start(argv);
+};
 
 export default CLI;
