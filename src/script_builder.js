@@ -1,8 +1,8 @@
 import { Unique, forEach, string } from './utils';
 
-var INDENT = { indent: true },
-    OUTDENT = { outdent: true },
-    BREAK = { "break": true };
+var INDENT = {},
+    OUTDENT = {},
+    BREAK = {};
 
 class ScriptBuilder {
   constructor() {
@@ -19,7 +19,7 @@ class ScriptBuilder {
     };
   }
 
-  get 'break'() {
+  get linebreak() {
     return BREAK;
   }
 

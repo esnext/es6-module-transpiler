@@ -731,7 +731,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":5,"./utils":6}],6:[function(require,module,exports){
+},{"./amd_compiler":4,"./cjs_compiler":3,"./globals_compiler":5,"./utils":6}],6:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1045,7 +1045,7 @@ exports.relative = function(from, to) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":7}],4:[function(require,module,exports){
+},{"__browserify_process":7}],3:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1149,7 +1149,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6}],3:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1218,9 +1218,9 @@ var AMDCompiler = function($__super) {
             if (moduleName) {
               arg(s.print(moduleName));
             }
-            arg(s['break']);
+            arg(s.linebreak);
             arg(s.print(deps));
-            arg(s['break']);
+            arg(s.linebreak);
             arg(function() {
               s['function'](wrapperArgs, function() {
                 s.useStrict();
@@ -1444,7 +1444,7 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./compile_error":11,"./java_script_builder":10,"./utils":6}],11:[function(require,module,exports){
+},{"./compile_error":10,"./java_script_builder":11,"./utils":6}],10:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1491,7 +1491,7 @@ var CompileError = function($__super) {
 module.exports = CompileError;
 
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1577,7 +1577,7 @@ var __dependency1__ = require("./utils");
 var Unique = __dependency1__.Unique;
 var forEach = __dependency1__.forEach;
 var string = __dependency1__.string;
-var INDENT = {indent: true}, OUTDENT = {outdent: true}, BREAK = {"break": true};
+var INDENT = {}, OUTDENT = {}, BREAK = {};
 var ScriptBuilder = function() {
   'use strict';
   var $ScriptBuilder = ($__createClassNoExtends)({
@@ -1593,7 +1593,7 @@ var ScriptBuilder = function() {
         }
       };
     },
-    get'break'() {
+    get linebreak() {
       return BREAK;
     },
     get global() {

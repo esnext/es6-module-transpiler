@@ -32,9 +32,9 @@ class AMDCompiler extends AbstractCompiler {
           if (moduleName) {
             arg(s.print(moduleName));
           }
-          arg(s['break']);
+          arg(s.linebreak);
           arg(s.print(deps));
-          arg(s['break']);
+          arg(s.linebreak);
           arg(function() {
             s['function'](wrapperArgs, function() {
               s.useStrict();
