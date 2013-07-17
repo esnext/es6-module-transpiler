@@ -32,32 +32,45 @@ module.exports = function(grunt) {
         if (match) {
           var optsString = match[1];
 
-          optsString.split(/\s+/).forEach(function(pairString) {
-            var pair  = pairString.split('='),
-                key   = pair[0],
-                value = pair[1];
+          if (optsString === 'INVALID') {
+            options.invalid = true;
+          } else {
+            optsString.split(/\s+/).forEach(function(pairString) {
+              var pair  = pairString.split('='),
+                  key   = pair[0],
+                  value = pair[1];
 
-            switch (key) {
-              case 'imports':
-                var imports = {};
-                value.split(',').forEach(function(importPairString) {
-                  var importPair   = importPairString.split(':'),
-                      importPath   = importPair[0],
-                      importGlobal = importPair[1];
-                  imports[importPath] = importGlobal;
-                });
-                options[key] = imports;
-                break;
+              switch (key) {
+                case 'imports':
+                  var imports = {};
+                  value.split(',').forEach(function(importPairString) {
+                    var importPair   = importPairString.split(':'),
+                        importPath   = importPair[0],
+                        importGlobal = importPair[1];
+                    imports[importPath] = importGlobal;
+                  });
+                  options[key] = imports;
+                  break;
 
-              default:
-                options[key] = value;
-            }
-          });
+                default:
+                  options[key] = value;
+              }
+            });
+          }
           return false;
         } else {
           return true;
         }
       }).join('\n'));
+
+      if (options.invalid) {
+        mod.tests.push({
+          name    : "does not parse",
+          source  : source,
+          options : options,
+          invalid : true
+        });
+      }
 
       ['amd', 'cjs', 'globals'].forEach(function(type) {
         var typedExt  = '.'+type+'.js',
