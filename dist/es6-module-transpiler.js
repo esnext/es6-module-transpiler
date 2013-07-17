@@ -547,6 +547,20 @@ exports.Compiler = Compiler;
 
 },{"./compiler":2}],2:[function(require,module,exports){
 "use strict";
+var $__getDescriptors = function(object) {
+  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
+  }
+  return descriptors;
+}, $__createClassNoExtends = function(object, staticObject) {
+  var ctor = object.constructor;
+  Object.defineProperty(object, 'constructor', {enumerable: false});
+  ctor.prototype = object;
+  Object.defineProperties(ctor, $__getDescriptors(staticObject));
+  return ctor;
+};
 var AMDCompiler = require("./amd_compiler");
 var CJSCompiler = require("./cjs_compiler");
 var GlobalsCompiler = require("./globals_compiler");
@@ -562,153 +576,158 @@ var COMMENT_START = new RegExp("/\\*");
 var COMMENT_END = new RegExp("\\*/");
 var COMMENT_CS_TOGGLE = /^###/;
 function getNames(string) {
-  var name, _i, _len, _ref, _results;
   if (string[0] === '{' && string[string.length - 1] === '}') {
-    return string.slice(1, - 1).split(',').map(function(name) {
+    return string.slice(1, - 1).split(',').map((function(name) {
       return name.trim();
-    });
+    }));
   } else {
     return [string.trim()];
   }
 }
-function Compiler(string, moduleName, options) {
-  if (moduleName == null) {
-    moduleName = null;
-  }
-  if (options == null) {
-    options = {};
-  }
-  this.string = string;
-  this.moduleName = moduleName;
-  this.options = options;
-  this.imports = {};
-  this.importDefault = {};
-  this.exports = {};
-  this.exportDefault = null;
-  this.lines = [];
-  this.id = 0;
-  this.inBlockComment = false;
-  this.reExportUnique = new Unique('reexport');
-  if (!this.options.coffee) {
-    this.commentStart = COMMENT_START;
-    this.commentEnd = COMMENT_END;
-  } else {
-    this.commentStart = COMMENT_CS_TOGGLE;
-    this.commentEnd = COMMENT_CS_TOGGLE;
-  }
-  this.parse();
-}
-Compiler.prototype.parse = function() {
-  this.string.split('\n').forEach(this.parseLine.bind(this));
-};
-Compiler.prototype.parseLine = function(line) {
-  var match;
-  if (!this.inBlockComment) {
-    if (match = this.matchLine(line, EXPORT_DEFAULT)) {
-      this.processExportDefault(match);
-    } else if (match = this.matchLine(line, EXPORT_FUNCTION)) {
-      this.processExportFunction(match);
-    } else if (match = this.matchLine(line, EXPORT_VAR)) {
-      this.processExportVar(match);
-    } else if (match = this.matchLine(line, RE_EXPORT)) {
-      this.processReexport(match);
-    } else if (match = this.matchLine(line, EXPORT)) {
-      this.processExport(match);
-    } else if (match = this.matchLine(line, IMPORT)) {
-      this.processImport(match);
-    } else if (match = this.matchLine(line, this.commentStart)) {
-      this.processEnterComment(line);
-    } else {
-      this.processLine(line);
-    }
-  } else {
-    if (match = this.matchLine(line, this.commentEnd)) {
-      this.processExitComment(line);
-    } else {
-      this.processLine(line);
-    }
-  }
-};
-Compiler.prototype.matchLine = function(line, pattern) {
-  var match = line.match(pattern);
-  if (match && !this.options.coffee && !match[match.length - 1]) {
-    return null;
-  }
-  return match;
-};
-Compiler.prototype.processExportDefault = function(match) {
-  this.exportDefault = match[1];
-};
-Compiler.prototype.processExport = function(match) {
-  var self = this;
-  getNames(match[1]).forEach(function(ex) {
-    self.exports[ex] = ex;
-  });
-};
-Compiler.prototype.processExportFunction = function(match) {
-  var body, name;
-  name = match[1];
-  body = match[2];
-  this.lines.push('function ' + name + body);
-  this.exports[name] = name;
-};
-Compiler.prototype.processExportVar = function(match) {
-  var name, value;
-  name = match[1];
-  value = match[2];
-  this.lines.push('var ' + name + ' = ' + value);
-  this.exports[name] = name;
-};
-Compiler.prototype.processImport = function(match) {
-  var asMatch, importSpecifiers, imports, name, pattern;
-  pattern = match[1];
-  if (pattern[0] === '{' && pattern[pattern.length - 1] === '}') {
-    pattern = pattern.slice(1, - 1);
-    importSpecifiers = pattern.split(/\s*,\s*/).map(function(name) {
-      return name.trim();
-    });
-    imports = {};
-    importSpecifiers.forEach(function(name) {
-      if (asMatch = name.match(IMPORT_AS)) {
-        imports[asMatch[1]] = asMatch[2];
-      } else {
-        imports[name] = name;
+var Compiler = function() {
+  'use strict';
+  var $Compiler = ($__createClassNoExtends)({
+    constructor: function(string, moduleName, options) {
+      if (moduleName == null) {
+        moduleName = null;
       }
-    });
-    this.imports[match[2] || match[3]] = imports;
-  } else {
-    this.importDefault[match[2] || match[3]] = match[1];
-  }
-};
-Compiler.prototype.processReexport = function(match) {
-  var names = getNames(match[1]), importPath = match[2] || match[3], importLocal = this.reExportUnique.next(), self = this;
-  this.importDefault[importPath] = importLocal;
-  names.forEach(function(name) {
-    self.exports[name] = "" + importLocal + "." + name;
-  });
-};
-Compiler.prototype.processLine = function(line) {
-  this.lines.push(line);
-};
-Compiler.prototype.processEnterComment = function(line) {
-  if (!this.matchLine(line, COMMENT_END)) {
-    this.inBlockComment = true;
-  }
-  this.lines.push(line);
-};
-Compiler.prototype.processExitComment = function(line) {
-  this.inBlockComment = false;
-  this.lines.push(line);
-};
-Compiler.prototype.toAMD = function() {
-  return new AMDCompiler(this, this.options).stringify();
-};
-Compiler.prototype.toCJS = function() {
-  return new CJSCompiler(this, this.options).stringify();
-};
-Compiler.prototype.toGlobals = function() {
-  return new GlobalsCompiler(this, this.options).stringify();
-};
+      if (options == null) {
+        options = {};
+      }
+      this.string = string;
+      this.moduleName = moduleName;
+      this.options = options;
+      this.imports = {};
+      this.importDefault = {};
+      this.exports = {};
+      this.exportDefault = null;
+      this.lines = [];
+      this.id = 0;
+      this.inBlockComment = false;
+      this.reExportUnique = new Unique('reexport');
+      if (!this.options.coffee) {
+        this.commentStart = COMMENT_START;
+        this.commentEnd = COMMENT_END;
+      } else {
+        this.commentStart = COMMENT_CS_TOGGLE;
+        this.commentEnd = COMMENT_CS_TOGGLE;
+      }
+      this.parse();
+    },
+    parse: function() {
+      this.string.split('\n').forEach(this.parseLine.bind(this));
+    },
+    parseLine: function(line) {
+      var match;
+      if (!this.inBlockComment) {
+        if (match = this.matchLine(line, EXPORT_DEFAULT)) {
+          this.processExportDefault(match);
+        } else if (match = this.matchLine(line, EXPORT_FUNCTION)) {
+          this.processExportFunction(match);
+        } else if (match = this.matchLine(line, EXPORT_VAR)) {
+          this.processExportVar(match);
+        } else if (match = this.matchLine(line, RE_EXPORT)) {
+          this.processReexport(match);
+        } else if (match = this.matchLine(line, EXPORT)) {
+          this.processExport(match);
+        } else if (match = this.matchLine(line, IMPORT)) {
+          this.processImport(match);
+        } else if (match = this.matchLine(line, this.commentStart)) {
+          this.processEnterComment(line);
+        } else {
+          this.processLine(line);
+        }
+      } else {
+        if (match = this.matchLine(line, this.commentEnd)) {
+          this.processExitComment(line);
+        } else {
+          this.processLine(line);
+        }
+      }
+    },
+    matchLine: function(line, pattern) {
+      var match = line.match(pattern);
+      if (match && !this.options.coffee && !match[match.length - 1]) {
+        return null;
+      }
+      return match;
+    },
+    processExportDefault: function(match) {
+      this.exportDefault = match[1];
+    },
+    processExport: function(match) {
+      var self = this;
+      getNames(match[1]).forEach(function(ex) {
+        self.exports[ex] = ex;
+      });
+    },
+    processExportFunction: function(match) {
+      var body, name;
+      name = match[1];
+      body = match[2];
+      this.lines.push('function ' + name + body);
+      this.exports[name] = name;
+    },
+    processExportVar: function(match) {
+      var name, value;
+      name = match[1];
+      value = match[2];
+      this.lines.push('var ' + name + ' = ' + value);
+      this.exports[name] = name;
+    },
+    processImport: function(match) {
+      var asMatch, importSpecifiers, imports, name, pattern;
+      pattern = match[1];
+      if (pattern[0] === '{' && pattern[pattern.length - 1] === '}') {
+        pattern = pattern.slice(1, - 1);
+        importSpecifiers = pattern.split(/\s*,\s*/).map(function(name) {
+          return name.trim();
+        });
+        imports = {};
+        importSpecifiers.forEach(function(name) {
+          if (asMatch = name.match(IMPORT_AS)) {
+            imports[asMatch[1]] = asMatch[2];
+          } else {
+            imports[name] = name;
+          }
+        });
+        this.imports[match[2] || match[3]] = imports;
+      } else {
+        this.importDefault[match[2] || match[3]] = match[1];
+      }
+    },
+    processReexport: function(match) {
+      var names = getNames(match[1]), importPath = match[2] || match[3], importLocal = this.reExportUnique.next(), self = this;
+      this.importDefault[importPath] = importLocal;
+      names.forEach(function(name) {
+        self.exports[name] = "" + importLocal + "." + name;
+      });
+    },
+    processLine: function(line) {
+      this.lines.push(line);
+    },
+    processEnterComment: function(line) {
+      if (!this.matchLine(line, COMMENT_END)) {
+        this.inBlockComment = true;
+      }
+      this.lines.push(line);
+    },
+    processExitComment: function(line) {
+      this.inBlockComment = false;
+      this.lines.push(line);
+    },
+    toAMD: function() {
+      return new AMDCompiler(this, this.options).stringify();
+    },
+    toCJS: function() {
+      return new CJSCompiler(this, this.options).stringify();
+    },
+    toGlobals: function() {
+      return new GlobalsCompiler(this, this.options).stringify();
+    }
+  }, {});
+  return $Compiler;
+}();
 module.exports = Compiler;
 
 
@@ -728,6 +747,7 @@ var $__getDescriptors = function(object) {
   Object.defineProperties(ctor, $__getDescriptors(staticObject));
   return ctor;
 };
+var hasOwnProp = {}.hasOwnProperty;
 function isEmpty(object) {
   for (var foo in object) {
     if (Object.prototype.hasOwnProperty.call(object, foo)) {
@@ -736,6 +756,43 @@ function isEmpty(object) {
   }
   return true;
 }
+function uniq(array) {
+  var result = [];
+  for (var i = 0; i < array.length; i++) {
+    var item = array[i];
+    if (result.indexOf(item) === - 1) {
+      result.push(item);
+    }
+  }
+  return result;
+}
+var array = {uniq: uniq};
+function forEach(enumerable, callback) {
+  if (enumerable !== null && enumerable !== undefined && typeof enumerable.forEach === 'function') {
+    enumerable.forEach(callback);
+    return;
+  }
+  for (var key in enumerable) {
+    if (hasOwnProp.call(enumerable, key)) {
+      callback(enumerable[key], key);
+    }
+  }
+}
+function isWhitespace(str) {
+  return !str || /^\s*$/.test(str);
+}
+function indent(lines, level) {
+  var indentString = arguments[2] !== (void 0) ? arguments[2]: '  ';
+  return lines.map(function(line) {
+    if (!isWhitespace(line)) {
+      for (var i = 0; i < level; i++) {
+        line = indentString + line;
+      }
+    }
+    return line;
+  });
+}
+var string = {indent: indent};
 var Unique = function() {
   'use strict';
   var $Unique = ($__createClassNoExtends)({
@@ -751,6 +808,9 @@ var Unique = function() {
 }();
 exports.isEmpty = isEmpty;
 exports.Unique = Unique;
+exports.array = array;
+exports.forEach = forEach;
+exports.string = string;
 
 
 },{}],7:[function(require,module,exports){
@@ -985,7 +1045,7 @@ exports.relative = function(from, to) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":7}],3:[function(require,module,exports){
+},{"__browserify_process":7}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1020,10 +1080,120 @@ var $__superDescriptor = function(proto, name) {
   ctor.prototype = Object.create(protoParent, descriptors);
   Object.defineProperties(ctor, $__getDescriptors(staticObject));
   return ctor;
+}, $__toObject = function(value) {
+  if (value == null) throw TypeError();
+  return Object(value);
 };
+var $__1;
+var AbstractCompiler = require("./abstract_compiler");
+var forEach = require("./utils").forEach;
+var CJSCompiler = function($__super) {
+  'use strict';
+  var $__proto = $__getProtoParent($__super);
+  var $CJSCompiler = ($__createClass)({
+    constructor: function() {
+      $__superCall(this, $__proto, "constructor", arguments);
+    },
+    stringify: function() {
+      var imports = this.imports, importDefault = this.importDefault, exports_ = this.exports, exportDefault = this.exportDefault, lines = this.lines;
+      return this.build(function(s) {
+        try {
+          throw undefined;
+        } catch (doImport) {
+          doImport = function(name, import_, prop) {
+            var req, rhs;
+            if (prop == null) {
+              prop = null;
+            }
+            req = function() {
+              s.call('require', [s.print(import_)]);
+            };
+            rhs = prop ? (function() {
+              s.prop(req, prop);
+            }): req;
+            s['var'](name, rhs);
+          };
+          ;
+          s.useStrict();
+          var deps = s.unique('dependency');
+          forEach(importDefault, doImport);
+          forEach(imports, function(variables, import_) {
+            if (Object.keys(variables).length === 1) {
+              var name = Object.keys(variables)[0];
+              doImport(variables[name], import_, name);
+            } else {
+              var dependency = deps.next();
+              doImport(dependency, import_);
+              forEach(variables, function(alias, name) {
+                if (name === 'default') {
+                  s['var'](alias, '' + dependency);
+                } else {
+                  s['var'](alias, '' + dependency + '.' + name);
+                }
+              });
+            }
+          });
+          ($__1 = s).append.apply($__1, $__toObject(lines));
+          if (exportDefault) {
+            s.line('module.exports = ' + exportDefault);
+          }
+          forEach(exports_, function(exportValue, exportName) {
+            s.line('exports.' + exportName + ' = ' + exportValue);
+          });
+        }
+      });
+    }
+  }, {}, $__proto, $__super, false);
+  return $CJSCompiler;
+}(AbstractCompiler);
+module.exports = CJSCompiler;
+
+
+},{"./abstract_compiler":9,"./utils":6}],3:[function(require,module,exports){
+"use strict";
+var $__superDescriptor = function(proto, name) {
+  if (!proto) throw new TypeError('super is null');
+  return Object.getPropertyDescriptor(proto, name);
+}, $__superCall = function(self, proto, name, args) {
+  var descriptor = $__superDescriptor(proto, name);
+  if (descriptor) {
+    if ('value'in descriptor) return descriptor.value.apply(self, args);
+    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
+  }
+  throw new TypeError("Object has no method '" + name + "'.");
+}, $__getProtoParent = function(superClass) {
+  if (typeof superClass === 'function') {
+    var prototype = superClass.prototype;
+    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
+  }
+  if (superClass === null) return null;
+  throw new TypeError();
+}, $__getDescriptors = function(object) {
+  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
+  }
+  return descriptors;
+}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
+  var ctor = object.constructor;
+  if (typeof superClass === 'function') ctor.__proto__ = superClass;
+  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
+  var descriptors = $__getDescriptors(object);
+  descriptors.constructor.enumerable = false;
+  ctor.prototype = Object.create(protoParent, descriptors);
+  Object.defineProperties(ctor, $__getDescriptors(staticObject));
+  return ctor;
+}, $__toObject = function(value) {
+  if (value == null) throw TypeError();
+  return Object(value);
+};
+var $__1;
 var AbstractCompiler = require("./abstract_compiler");
 var path = require("path");
-var isEmpty = require("./utils").isEmpty;
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var forEach = __dependency1__.forEach;
 var AMDCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
@@ -1032,43 +1202,37 @@ var AMDCompiler = function($__super) {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var _this = this;
+      var deps = this.dependencyNames, argsAndPreamble = this.buildPreamble(deps), wrapperArgs = argsAndPreamble[0], preamble = argsAndPreamble[1], exports_ = this.exports, exportDefault = this.exportDefault, moduleName = this.moduleName, lines = this.lines;
       return this.build(function(s) {
-        var dependency, i, preamble, wrapperArgs, _ref1;
-        _ref1 = _this.buildPreamble(_this.dependencyNames), wrapperArgs = _ref1[0], preamble = _ref1[1];
-        if (!isEmpty(_this.exports)) {
-          _this.dependencyNames.push('exports');
+        if (!isEmpty(exports_)) {
+          deps.push('exports');
           wrapperArgs.push('__exports__');
         }
-        for (i in _this.dependencyNames) {
-          dependency = _this.dependencyNames[i];
+        forEach(deps, function(dependency, i) {
           if (/^\./.test(dependency)) {
-            _this.dependencyNames[i] = path.join(_this.moduleName, '..', dependency).replace(/[\\]/g, '/');
+            deps[i] = path.join(moduleName, '..', dependency).replace(/[\\]/g, '/');
           }
-        }
-        return s.line(function() {
-          return s.call('define', function(arg) {
-            if (_this.moduleName) {
-              arg(s.print(_this.moduleName));
+        });
+        s.line(function() {
+          s.call('define', function(arg) {
+            if (moduleName) {
+              arg(s.print(moduleName));
             }
-            arg(s["break"]);
-            arg(s.print(_this.dependencyNames));
-            arg(s["break"]);
-            return arg(function() {
-              return s["function"](wrapperArgs, function() {
-                var exportName, exportValue, _ref2;
+            arg(s['break']);
+            arg(s.print(deps));
+            arg(s['break']);
+            arg(function() {
+              s['function'](wrapperArgs, function() {
                 s.useStrict();
                 if (preamble) {
                   s.append(preamble);
                 }
-                s.append.apply(s, _this.lines);
-                _ref2 = _this.exports;
-                for (exportName in _ref2) {
-                  exportValue = _ref2[exportName];
-                  s.line("__exports__." + exportName + " = " + exportValue);
-                }
-                if (_this.exportDefault) {
-                  return s.line("return " + _this.exportDefault);
+                ($__1 = s).append.apply($__1, $__toObject(lines));
+                forEach(exports_, function(exportValue, exportName) {
+                  s.line('__exports__.' + exportName + ' = ' + exportValue);
+                });
+                if (exportDefault) {
+                  s.line('return ' + exportDefault);
                 }
               });
             });
@@ -1082,122 +1246,7 @@ var AMDCompiler = function($__super) {
 module.exports = AMDCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6,"path":8}],4:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-};
-var AbstractCompiler = require("./abstract_compiler");
-var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) {
-  for (var i = 0, l = this.length; i < l; i++) {
-    if (i in this && this[i] === item) return i;
-  }
-  return - 1;
-};
-var CJSCompiler = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $CJSCompiler = ($__createClass)({
-    constructor: function() {
-      $__superCall(this, $__proto, "constructor", arguments);
-    },
-    stringify: function() {
-      var _this = this;
-      return this.build(function(s) {
-        var alias, dependency, deps, doImport, exportName, exportValue, import_, name, variables, _ref1, _ref2, _ref3, _results;
-        doImport = function(name, import_, prop) {
-          var req, rhs;
-          if (prop == null) {
-            prop = null;
-          }
-          req = function() {
-            return s.call('require', [s.print(import_)]);
-          };
-          rhs = prop ? (function() {
-            return s.prop(req, prop);
-          }): req;
-          return s["var"](name, rhs);
-        };
-        s.useStrict();
-        deps = s.unique('dependency');
-        _ref1 = _this.importDefault;
-        for (import_ in _ref1) {
-          if (!__hasProp.call(_ref1, import_)) continue;
-          name = _ref1[import_];
-          doImport(name, import_);
-        }
-        _ref2 = _this.imports;
-        for (import_ in _ref2) {
-          if (!__hasProp.call(_ref2, import_)) continue;
-          variables = _ref2[import_];
-          if (Object.keys(variables).length === 1) {
-            name = Object.keys(variables)[0];
-            doImport(variables[name], import_, name);
-          } else {
-            dependency = deps.next();
-            doImport(dependency, import_);
-            for (name in variables) {
-              if (!__hasProp.call(variables, name)) continue;
-              alias = variables[name];
-              if (name === 'default') {
-                s["var"](alias, "" + dependency);
-              } else {
-                s["var"](alias, "" + dependency + "." + name);
-              }
-            }
-          }
-        }
-        s.append.apply(s, _this.lines);
-        if (_this.exportDefault) {
-          s.line("module.exports = " + _this.exportDefault);
-        }
-        _ref3 = _this.exports;
-        _results = [];
-        for (exportName in _ref3) {
-          exportValue = _ref3[exportName];
-          _results.push(s.line("exports." + exportName + " = " + exportValue));
-        }
-        return _results;
-      });
-    }
-  }, {}, $__proto, $__super, false);
-  return $CJSCompiler;
-}(AbstractCompiler);
-module.exports = CJSCompiler;
-
-
-},{"./abstract_compiler":9}],5:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6,"path":8}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1234,13 +1283,9 @@ var $__superDescriptor = function(proto, name) {
   return ctor;
 };
 var AbstractCompiler = require("./abstract_compiler");
-var isEmpty = require("./utils").isEmpty;
-var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) {
-  for (var i = 0, l = this.length; i < l; i++) {
-    if (i in this && this[i] === item) return i;
-  }
-  return - 1;
-};
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var forEach = __dependency1__.forEach;
 var GlobalsCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
@@ -1249,69 +1294,57 @@ var GlobalsCompiler = function($__super) {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var _this = this;
+      var options = this.options, deps = this.dependencyNames, exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, importDefault = this.importDefault, lines = this.lines;
       return this.build(function(s) {
-        var alias, args, globalImport, into, locals, name, passedArgs, receivedArgs, wrapper, _i, _len, _ref, _ref1;
-        passedArgs = [];
-        receivedArgs = [];
-        locals = {};
-        into = _this.options.into || _this.exportDefault;
-        if (!isEmpty(_this.exports) || _this.exportDefault) {
-          passedArgs.push(_this.exportDefault ? s.global: into ? "" + s.global + "." + into + " = {}": s.global);
-          receivedArgs.push('exports');
-        }
-        _ref = _this.dependencyNames;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          name = _ref[_i];
-          globalImport = _this.options.imports[name];
-          passedArgs.push("" + s.global + "." + globalImport);
-          if (name in _this.importDefault) {
-            receivedArgs.push(_this.importDefault[name]);
-          } else {
-            receivedArgs.push(globalImport);
-            _ref1 = _this.imports[name];
-            for (name in _ref1) {
-              if (!__hasProp.call(_ref1, name)) continue;
-              alias = _ref1[name];
-              locals[alias] = "" + globalImport + "." + name;
+        try {
+          throw undefined;
+        } catch (args) {
+          try {
+            throw undefined;
+          } catch (wrapper) {
+            var passedArgs = [], receivedArgs = [], locals = {}, into = options.into || exportDefault;
+            if (!isEmpty(exports_) || exportDefault) {
+              passedArgs.push(exportDefault ? s.global: into ? '' + s.global + '.' + into + ' = {}': s.global);
+              receivedArgs.push('exports');
             }
-          }
-        }
-        wrapper = function() {
-          return s["function"](receivedArgs, function() {
-            var exportName, exportValue, lhs, rhs, _ref2, _results;
-            s.useStrict();
-            for (lhs in locals) {
-              if (!__hasProp.call(locals, lhs)) continue;
-              rhs = locals[lhs];
-              s["var"](lhs, rhs);
-            }
-            s.append.apply(s, _this.lines);
-            if (_this.exportDefault) {
-              return s.set("exports." + into, _this.exportDefault);
-            } else {
-              _ref2 = _this.exports;
-              _results = [];
-              for (exportName in _ref2) {
-                exportValue = _ref2[exportName];
-                _results.push(s.set("exports." + exportName, exportValue));
+            forEach(deps, function(name) {
+              var globalImport = options.imports[name];
+              passedArgs.push([s.global, globalImport].join('.'));
+              if (name in importDefault) {
+                receivedArgs.push(importDefault[name]);
+              } else {
+                receivedArgs.push(globalImport);
+                forEach(imports[name], function(alias, name) {
+                  locals[alias] = [globalImport, name].join('.');
+                });
               }
-              return _results;
-            }
-          });
-        };
-        args = function(arg) {
-          var passedArg, _j, _len1, _results;
-          _results = [];
-          for (_j = 0, _len1 = passedArgs.length; _j < _len1; _j++) {
-            passedArg = passedArgs[_j];
-            _results.push(arg(passedArg));
+            });
+            wrapper = function() {
+              s['function'](receivedArgs, function() {
+                s.useStrict();
+                forEach(locals, function(rhs, lhs) {
+                  s['var'](lhs, rhs);
+                });
+                s.append.apply(s, lines);
+                if (exportDefault) {
+                  s.set('exports.' + into, exportDefault);
+                } else {
+                  forEach(exports_, function(exportValue, exportName) {
+                    s.set('exports.' + exportName, exportValue);
+                  });
+                }
+              });
+            };
+            ;
+            args = function(arg) {
+              forEach(passedArgs, arg);
+            };
+            ;
+            s.line(function() {
+              s.call(wrapper, args);
+            });
           }
-          return _results;
-        };
-        return s.line(function() {
-          return s.call(wrapper, args);
-        });
+        }
       });
     }
   }, {}, $__proto, $__super, false);
@@ -1336,22 +1369,29 @@ var $__getDescriptors = function(object) {
   ctor.prototype = object;
   Object.defineProperties(ctor, $__getDescriptors(staticObject));
   return ctor;
+}, $__toObject = function(value) {
+  if (value == null) throw TypeError();
+  return Object(value);
+}, $__spread = function() {
+  var rv = [], k = 0;
+  for (var i = 0; i < arguments.length; i++) {
+    var value = $__toObject(arguments[i]);
+    for (var j = 0; j < value.length; j++) {
+      rv[k++] = value[j];
+    }
+  }
+  return rv;
 };
 var CompileError = require("./compile_error");
 var JavaScriptBuilder = require("./java_script_builder");
-var CoffeeScriptBuilder = require("./coffee_script_builder");
-var isEmpty = require("./utils").isEmpty;
-var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) {
-  for (var i = 0, l = this.length; i < l; i++) {
-    if (i in this && this[i] === item) return i;
-  }
-  return - 1;
-};
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var array = __dependency1__.array;
+var forEach = __dependency1__.forEach;
 var AbstractCompiler = function() {
   'use strict';
   var $AbstractCompiler = ($__createClassNoExtends)({
     constructor: function(compiler, options) {
-      var name, _ref, _ref1;
       this.compiler = compiler;
       this.exports = compiler.exports;
       this.exportDefault = compiler.exportDefault;
@@ -1360,21 +1400,7 @@ var AbstractCompiler = function() {
       this.moduleName = compiler.moduleName;
       this.lines = compiler.lines;
       this.options = options;
-      this.dependencyNames = [];
-      _ref = this.imports;
-      for (name in _ref) {
-        if (!__hasProp.call(_ref, name)) continue;
-        if (__indexOf.call(this.dependencyNames, name) < 0) {
-          this.dependencyNames.push(name);
-        }
-      }
-      _ref1 = this.importDefault;
-      for (name in _ref1) {
-        if (!__hasProp.call(_ref1, name)) continue;
-        if (__indexOf.call(this.dependencyNames, name) < 0) {
-          this.dependencyNames.push(name);
-        }
-      }
+      this.dependencyNames = array.uniq($__spread(Object.getOwnPropertyNames(this.imports), Object.getOwnPropertyNames(this.importDefault)));
       this.assertValid();
     },
     assertValid: function() {
@@ -1383,48 +1409,34 @@ var AbstractCompiler = function() {
       }
     },
     buildPreamble: function(names) {
-      var args, preamble, _this = this;
-      args = [];
+      var args = [], preamble;
       preamble = this.build(function(s) {
-        var dependency, deps, name, number, _i, _len, _results;
-        number = 0;
-        deps = s.unique('dependency');
-        _results = [];
-        for (_i = 0, _len = names.length; _i < _len; _i++) {
-          name = names[_i];
-          if (name in _this.importDefault) {
-            _results.push(args.push(_this.importDefault[name]));
+        var deps = s.unique('dependency');
+        for (var i = 0; i < names.length; i++) {
+          var name = names[i];
+          if (name in this.importDefault) {
+            args.push(this.importDefault[name]);
           } else {
-            dependency = deps.next();
+            var dependency = deps.next();
             args.push(dependency);
-            _results.push(_this.buildImportsForPreamble(s, _this.imports[name], dependency));
+            this.buildImportsForPreamble(s, this.imports[name], dependency);
           }
         }
-        return _results;
-      });
+        ;
+      }.bind(this));
       return [args, preamble];
     },
     build: function(fn) {
-      var builder;
-      if (this.options.coffee) {
-        builder = new CoffeeScriptBuilder();
-      } else {
-        builder = new JavaScriptBuilder();
-      }
+      var builder = new JavaScriptBuilder();
       fn(builder);
       return builder.toString();
     },
     buildImportsForPreamble: function(builder, imports_, dependencyName) {
-      var alias, name, _results;
-      _results = [];
-      for (name in imports_) {
-        if (!__hasProp.call(imports_, name)) continue;
-        alias = imports_[name];
-        _results.push(builder["var"](alias, function() {
+      forEach(imports_, function(alias, name) {
+        builder["var"](alias, function() {
           return builder.prop(dependencyName, name);
-        }));
-      }
-      return _results;
+        });
+      });
     }
   }, {});
   return $AbstractCompiler;
@@ -1432,7 +1444,7 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./coffee_script_builder":12,"./compile_error":10,"./java_script_builder":11,"./utils":6}],10:[function(require,module,exports){
+},{"./compile_error":11,"./java_script_builder":10,"./utils":6}],11:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1479,94 +1491,7 @@ var CompileError = function($__super) {
 module.exports = CompileError;
 
 
-},{}],12:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-}, $__toObject = function(value) {
-  if (value == null) throw TypeError();
-  return Object(value);
-}, $__spread = function() {
-  var rv = [], k = 0;
-  for (var i = 0; i < arguments.length; i++) {
-    var value = $__toObject(arguments[i]);
-    for (var j = 0; j < value.length; j++) {
-      rv[k++] = value[j];
-    }
-  }
-  return rv;
-};
-var ScriptBuilder = require("./script_builder");
-var CoffeeScriptBuilder = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $CoffeeScriptBuilder = ($__createClass)({
-    constructor: function() {
-      $__superCall(this, $__proto, "constructor", []);
-      this.eol = '';
-      this['var'] = (function(lhs, rhs) {
-        return this.set(lhs, rhs);
-      }).bind(this);
-    },
-    _prepareArgsForCall: function(args) {
-      var arg, _i, _len;
-      args = $__superCall(this, $__proto, "_prepareArgsForCall", $__spread(args)).slice();
-      for (_i = 0, _len = args.length; _i < _len; _i++) {
-        arg = args[_i];
-        if (arg === this["break"]) {
-          if (args[args.length - 1] !== this["break"]) {
-            args.push(this["break"]);
-          }
-          break;
-        }
-      }
-      return args;
-    },
-    _functionHeader: function(args) {
-      if (args.length) {
-        return "(" + (args.join(', ')) + ") ->";
-      } else {
-        return '->';
-      }
-    }
-  }, {}, $__proto, $__super, true);
-  return $CoffeeScriptBuilder;
-}(ScriptBuilder);
-module.exports = CoffeeScriptBuilder;
-
-
-},{"./script_builder":13}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1608,11 +1533,13 @@ var JavaScriptBuilder = function($__super) {
   var $__proto = $__getProtoParent($__super);
   var $JavaScriptBuilder = ($__createClass)({
     constructor: function() {
-      $__superCall(this, $__proto, "constructor", []);
-      this.eol = ';';
-      this['var'] = (function(lhs, rhs) {
-        return this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
-      }).bind(this);
+      $__superCall(this, $__proto, "constructor", arguments);
+    },
+    get eol() {
+      return ';';
+    },
+    'var': function(lhs, rhs) {
+      this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
     },
     _functionHeader: function(args) {
       return "function(" + (args.join(', ')) + ") {";
@@ -1620,13 +1547,13 @@ var JavaScriptBuilder = function($__super) {
     _functionTail: function() {
       return '}';
     }
-  }, {}, $__proto, $__super, true);
+  }, {}, $__proto, $__super, false);
   return $JavaScriptBuilder;
 }(ScriptBuilder);
 module.exports = JavaScriptBuilder;
 
 
-},{"./script_builder":13}],13:[function(require,module,exports){
+},{"./script_builder":12}],12:[function(require,module,exports){
 (function(){"use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1645,19 +1572,17 @@ var $__getDescriptors = function(object) {
   if (value == null) throw TypeError();
   return Object(value);
 };
-var $__2;
-var Unique = require("./utils").Unique;
-var BREAK, INDENT, OUTDENT, ScriptBuilder, __slice = [].slice;
-INDENT = {indent: true};
-OUTDENT = {outdent: true};
-BREAK = {"break": true};
+var $__3, $__4;
+var __dependency1__ = require("./utils");
+var Unique = __dependency1__.Unique;
+var forEach = __dependency1__.forEach;
+var string = __dependency1__.string;
+var INDENT = {indent: true}, OUTDENT = {outdent: true}, BREAK = {"break": true};
 var ScriptBuilder = function() {
   'use strict';
   var $ScriptBuilder = ($__createClassNoExtends)({
     constructor: function() {
       this.buffer = [];
-      this['break'] = BREAK;
-      this.global = 'window';
       this['function'] = function(args, body) {
         this.append(this._functionHeader(args));
         this.indent();
@@ -1668,6 +1593,12 @@ var ScriptBuilder = function() {
         }
       };
     },
+    get'break'() {
+      return BREAK;
+    },
+    get global() {
+      return 'window';
+    },
     useStrict: function() {
       this.line('"use strict"');
     },
@@ -1675,7 +1606,7 @@ var ScriptBuilder = function() {
       this.line("" + (this.capture(lhs)) + " = " + (this.capture(rhs)));
     },
     call: function(fn, args) {
-      var arg, end, i, indented, result, _i, _len;
+      var end, indented, result;
       fn = this._wrapCallable(fn);
       args = this._prepareArgsForCall(args);
       end = args.length - 1;
@@ -1684,8 +1615,8 @@ var ScriptBuilder = function() {
       }
       result = "" + fn + "(";
       indented = false;
-      for (i = _i = 0, _len = args.length; _i < _len; i = ++_i) {
-        arg = args[i];
+      for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
         if (arg === BREAK) {
           this.append(result);
           if (!indented) {
@@ -1706,37 +1637,33 @@ var ScriptBuilder = function() {
       result += ')';
       this.append(result);
       if (indented) {
-        return this.outdent();
+        this.outdent();
       }
     },
     _prepareArgsForCall: function(args) {
-      var result, _this = this;
       if (typeof args === 'function') {
-        result = [];
-        args(function(arg) {
-          return result.push(_this.capture(arg));
-        });
+        var result = [];
+        args((function(arg) {
+          return result.push(this.capture(arg));
+        }).bind(this));
         args = result;
       }
       return args;
     },
     _wrapCallable: function(fn) {
-      var functionCalled, functionImpl, result, _this = this;
       if (typeof fn !== 'function') {
         return fn;
       }
-      functionImpl = this["function"];
-      functionCalled = false;
-      this["function"] = function() {
-        var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0): [];
+      var functionImpl = this['function'], functionCalled = false, self = this;
+      this['function'] = function() {
+        for (var args = [], $__1 = 0; $__1 < arguments.length; $__1++) args[$__1] = arguments[$__1];
         functionCalled = true;
-        return functionImpl.call.apply(functionImpl, [_this].concat(__slice.call(args)));
+        return functionImpl.apply(self, args);
       };
-      result = this.capture(fn);
-      this["function"] = functionImpl;
+      var result = this.capture(fn);
+      this['function'] = functionImpl;
       if (functionCalled) {
-        result = "(" + result + (this._functionTail != null ? '': '\n') + ")";
+        result = '(' + result + (this._functionTail != null ? '': '\n') + ')';
       }
       return result;
     },
@@ -1753,8 +1680,8 @@ var ScriptBuilder = function() {
       this.append(this.capture(code) + this.eol);
     },
     append: function() {
-      for (var code = [], $__1 = 0; $__1 < arguments.length; $__1++) code[$__1] = arguments[$__1];
-      ($__2 = this.buffer).push.apply($__2, $__toObject(code));
+      for (var code = [], $__2 = 0; $__2 < arguments.length; $__2++) code[$__2] = arguments[$__2];
+      ($__3 = this.buffer).push.apply($__3, $__toObject(code));
     },
     indent: function() {
       this.buffer.push(INDENT);
@@ -1763,40 +1690,27 @@ var ScriptBuilder = function() {
       this.buffer.push(OUTDENT);
     },
     capture: function(fn) {
-      var buffer, result;
       if (typeof fn !== 'function') {
         return fn;
       }
-      buffer = this.buffer;
+      var buffer = this.buffer;
       this.buffer = [];
       fn();
-      result = this.toString();
+      var result = this.toString();
       this.buffer = buffer;
       return result;
     },
     toString: function() {
-      var chunk, indent, line, result, _i, _j, _len, _len1, _ref, _ref1;
-      indent = 0;
-      result = [];
-      _ref = this.buffer;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        chunk = _ref[_i];
+      var indent = 0, result = [];
+      forEach(this.buffer, function(chunk) {
         if (chunk === INDENT) {
           indent++;
         } else if (chunk === OUTDENT) {
           indent--;
         } else {
-          _ref1 = chunk.split('\n');
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            line = _ref1[_j];
-            if (/^\s*$/.test(line)) {
-              result.push(line);
-            } else {
-              result.push((new Array(indent + 1)).join('  ') + line);
-            }
-          }
+          ($__4 = result).push.apply($__4, $__toObject(string.indent(chunk.split('\n'), indent)));
         }
-      }
+      });
       return result.join('\n');
     }
   }, {});

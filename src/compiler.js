@@ -22,184 +22,183 @@ var COMMENT_END = new RegExp("\\*/");
 var COMMENT_CS_TOGGLE = /^###/;
 
 function getNames(string) {
-  var name, _i, _len, _ref, _results;
   if (string[0] === '{' && string[string.length - 1] === '}') {
-    return string.slice(1, -1).split(',').map(function(name) {
-      return name.trim();
-    });
+    return string.slice(1, -1).split(',').map(name => name.trim());
   } else {
     return [string.trim()];
   }
 }
 
-function Compiler(string, moduleName, options) {
-  if (moduleName == null) {
-    moduleName = null;
-  }
-
-  if (options == null) {
-    options = {};
-  }
-
-  this.string = string;
-  this.moduleName = moduleName;
-  this.options = options;
-
-  this.imports = {};
-  this.importDefault = {};
-  this.exports = {};
-  this.exportDefault = null;
-  this.lines = [];
-  this.id = 0;
-
-  this.inBlockComment = false;
-  this.reExportUnique = new Unique('reexport');
-
-  if (!this.options.coffee) {
-    this.commentStart = COMMENT_START;
-    this.commentEnd = COMMENT_END;
-  } else {
-    this.commentStart = COMMENT_CS_TOGGLE;
-    this.commentEnd = COMMENT_CS_TOGGLE;
-  }
-
-  this.parse();
-}
-
-Compiler.prototype.parse = function() {
-  this.string.split('\n').forEach(this.parseLine.bind(this));
-};
-
-Compiler.prototype.parseLine = function(line) {
-  var match;
-
-  if (!this.inBlockComment) {
-    if (match = this.matchLine(line, EXPORT_DEFAULT)) {
-      this.processExportDefault(match);
-    } else if (match = this.matchLine(line, EXPORT_FUNCTION)) {
-      this.processExportFunction(match);
-    } else if (match = this.matchLine(line, EXPORT_VAR)) {
-      this.processExportVar(match);
-    } else if (match = this.matchLine(line, RE_EXPORT)) {
-      this.processReexport(match);
-    } else if (match = this.matchLine(line, EXPORT)) {
-      this.processExport(match);
-    } else if (match = this.matchLine(line, IMPORT)) {
-      this.processImport(match);
-    } else if (match = this.matchLine(line, this.commentStart)) {
-      this.processEnterComment(line);
-    } else {
-      this.processLine(line);
+class Compiler {
+  constructor(string, moduleName, options) {
+    if (moduleName == null) {
+      moduleName = null;
     }
-  } else {
-    if (match = this.matchLine(line, this.commentEnd)) {
-      this.processExitComment(line);
-    } else {
-      this.processLine(line);
+
+    if (options == null) {
+      options = {};
     }
+
+    this.string = string;
+    this.moduleName = moduleName;
+    this.options = options;
+
+    this.imports = {};
+    this.importDefault = {};
+    this.exports = {};
+    this.exportDefault = null;
+    this.lines = [];
+    this.id = 0;
+
+    this.inBlockComment = false;
+    this.reExportUnique = new Unique('reexport');
+
+    if (!this.options.coffee) {
+      this.commentStart = COMMENT_START;
+      this.commentEnd = COMMENT_END;
+    } else {
+      this.commentStart = COMMENT_CS_TOGGLE;
+      this.commentEnd = COMMENT_CS_TOGGLE;
+    }
+
+    this.parse();
   }
-};
 
-Compiler.prototype.matchLine = function(line, pattern) {
-  var match = line.match(pattern);
-
-  // if not CoffeeScript then we need the semi-colon
-  if (match && !this.options.coffee && !match[match.length - 1]) {
-    return null;
+  parse() {
+    this.string.split('\n').forEach(this.parseLine.bind(this));
   }
 
-  return match;
-};
+  parseLine(line) {
+    var match;
 
-Compiler.prototype.processExportDefault = function(match) {
-  this.exportDefault = match[1];
-};
-
-Compiler.prototype.processExport = function(match) {
-  var self = this;
-  getNames(match[1]).forEach(function(ex) {
-    self.exports[ex] = ex;
-  });
-};
-
-Compiler.prototype.processExportFunction = function(match) {
-  var body, name;
-  name = match[1];
-  body = match[2];
-
-  this.lines.push('function ' + name + body);
-  this.exports[name] = name;
-};
-
-Compiler.prototype.processExportVar = function(match) {
-  var name, value;
-  name = match[1];
-  value = match[2];
-
-  this.lines.push('var ' + name + ' = ' + value);
-  this.exports[name] = name;
-};
-
-Compiler.prototype.processImport = function(match) {
-  var asMatch, importSpecifiers, imports, name, pattern;
-  pattern = match[1];
-  if (pattern[0] === '{' && pattern[pattern.length - 1] === '}') {
-    pattern = pattern.slice(1, -1);
-    importSpecifiers = pattern.split(/\s*,\s*/).map(function(name) {
-      return name.trim();
-    });
-    imports = {};
-    importSpecifiers.forEach(function(name) {
-      if (asMatch = name.match(IMPORT_AS)) {
-        imports[asMatch[1]] = asMatch[2];
+    if (!this.inBlockComment) {
+      if (match = this.matchLine(line, EXPORT_DEFAULT)) {
+        this.processExportDefault(match);
+      } else if (match = this.matchLine(line, EXPORT_FUNCTION)) {
+        this.processExportFunction(match);
+      } else if (match = this.matchLine(line, EXPORT_VAR)) {
+        this.processExportVar(match);
+      } else if (match = this.matchLine(line, RE_EXPORT)) {
+        this.processReexport(match);
+      } else if (match = this.matchLine(line, EXPORT)) {
+        this.processExport(match);
+      } else if (match = this.matchLine(line, IMPORT)) {
+        this.processImport(match);
+      } else if (match = this.matchLine(line, this.commentStart)) {
+        this.processEnterComment(line);
       } else {
-        imports[name] = name;
+        this.processLine(line);
       }
+    } else {
+      if (match = this.matchLine(line, this.commentEnd)) {
+        this.processExitComment(line);
+      } else {
+        this.processLine(line);
+      }
+    }
+  }
+
+  matchLine(line, pattern) {
+    var match = line.match(pattern);
+
+    // if not CoffeeScript then we need the semi-colon
+    if (match && !this.options.coffee && !match[match.length - 1]) {
+      return null;
+    }
+
+    return match;
+  }
+
+  processExportDefault(match) {
+    this.exportDefault = match[1];
+  }
+
+  processExport(match) {
+    var self = this;
+    getNames(match[1]).forEach(function(ex) {
+      self.exports[ex] = ex;
     });
-    this.imports[match[2] || match[3]] = imports;
-  } else {
-    this.importDefault[match[2] || match[3]] = match[1];
   }
-};
 
-Compiler.prototype.processReexport = function(match) {
-  var names = getNames(match[1]),
-      importPath = match[2] || match[3],
-      importLocal = this.reExportUnique.next(),
-      self = this;
+  processExportFunction(match) {
+    var body, name;
+    name = match[1];
+    body = match[2];
 
-  this.importDefault[importPath] = importLocal;
-  names.forEach(function(name) {
-    self.exports[name] = "" + importLocal + "." + name;
-  });
-};
-
-Compiler.prototype.processLine = function(line) {
-  this.lines.push(line);
-};
-
-Compiler.prototype.processEnterComment = function(line) {
-  if (!this.matchLine(line, COMMENT_END)) {
-    this.inBlockComment = true;
+    this.lines.push('function ' + name + body);
+    this.exports[name] = name;
   }
-  this.lines.push(line);
-};
 
-Compiler.prototype.processExitComment = function(line) {
-  this.inBlockComment = false;
-  this.lines.push(line);
-};
+  processExportVar(match) {
+    var name, value;
+    name = match[1];
+    value = match[2];
 
-Compiler.prototype.toAMD = function() {
-  return new AMDCompiler(this, this.options).stringify();
-};
+    this.lines.push('var ' + name + ' = ' + value);
+    this.exports[name] = name;
+  }
 
-Compiler.prototype.toCJS = function() {
-  return new CJSCompiler(this, this.options).stringify();
-};
+  processImport(match) {
+    var asMatch, importSpecifiers, imports, name, pattern;
+    pattern = match[1];
+    if (pattern[0] === '{' && pattern[pattern.length - 1] === '}') {
+      pattern = pattern.slice(1, -1);
+      importSpecifiers = pattern.split(/\s*,\s*/).map(function(name) {
+        return name.trim();
+      });
+      imports = {};
+      importSpecifiers.forEach(function(name) {
+        if (asMatch = name.match(IMPORT_AS)) {
+          imports[asMatch[1]] = asMatch[2];
+        } else {
+          imports[name] = name;
+        }
+      });
+      this.imports[match[2] || match[3]] = imports;
+    } else {
+      this.importDefault[match[2] || match[3]] = match[1];
+    }
+  }
 
-Compiler.prototype.toGlobals = function() {
-  return new GlobalsCompiler(this, this.options).stringify();
-};
+  processReexport(match) {
+    var names = getNames(match[1]),
+        importPath = match[2] || match[3],
+        importLocal = this.reExportUnique.next(),
+        self = this;
+
+    this.importDefault[importPath] = importLocal;
+    names.forEach(function(name) {
+      self.exports[name] = "" + importLocal + "." + name;
+    });
+  }
+
+  processLine(line) {
+    this.lines.push(line);
+  }
+
+  processEnterComment(line) {
+    if (!this.matchLine(line, COMMENT_END)) {
+      this.inBlockComment = true;
+    }
+    this.lines.push(line);
+  }
+
+  processExitComment(line) {
+    this.inBlockComment = false;
+    this.lines.push(line);
+  }
+
+  toAMD() {
+    return new AMDCompiler(this, this.options).stringify();
+  }
+
+  toCJS() {
+    return new CJSCompiler(this, this.options).stringify();
+  }
+
+  toGlobals() {
+    return new GlobalsCompiler(this, this.options).stringify();
+  }
+}
 
 export default Compiler;

@@ -4,47 +4,32 @@ import path from 'path';
 import Compiler from './compiler';
 import { compile } from 'coffee-script';
 
-var defaultCoffeeHandler, defaultJSHandler, disable, enable, enabled, es6CoffeeRequireHandler, es6JSRequireHandler, loadES6Script;
+var enabled = false,
+    defaultJSHandler = require.extensions['.js'];
 
-enabled = false;
+function enable() {
+  if (enabled) { return; }
 
-defaultJSHandler = require.extensions['.js'];
-
-defaultCoffeeHandler = require.extensions['.coffee'];
-
-enable = function() {
-  if (enabled) {
-    return;
-  }
   enabled = true;
   require.extensions['.js'] = es6JSRequireHandler;
-  return require.extensions['.coffee'] = es6CoffeeRequireHandler;
-};
+}
 
-disable = function() {
-  if (!enabled) {
-    return;
-  }
+function disable() {
+  if (!enabled) { return; }
+
   enabled = false;
   require.extensions['.js'] = defaultJSHandler;
-  return require.extensions['.coffee'] = defaultCoffeeHandler;
-};
+}
 
-es6JSRequireHandler = function(module, filename) {
+function es6JSRequireHandler(module, filename) {
   return module._compile(loadES6Script(filename));
-};
+}
 
-es6CoffeeRequireHandler = function(module, filename) {
-  return module._compile(compile(loadES6Script(filename)));
-};
+function loadES6Script(filename) {
+  var content = fs.readFileSync(filename, 'utf8'),
+      extname = path.extname(filename);
 
-loadES6Script = function(filename) {
-  var content, extname;
-  content = fs.readFileSync(filename, 'utf8');
-  extname = path.extname(filename);
-  return new Compiler(content, path.basename(filename, extname), {
-    coffee: extname === '.coffee'
-  }).toCJS();
-};
+  return new Compiler(content, path.basename(filename, extname)).toCJS();
+}
 
 export { enable, disable };

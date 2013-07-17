@@ -1,72 +1,70 @@
 import AbstractCompiler from './abstract_compiler';
-import { isEmpty } from './utils';
-
-var __hasProp = {}.hasOwnProperty, __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+import { isEmpty, forEach } from './utils';
 
 class GlobalsCompiler extends AbstractCompiler {
   stringify() {
-    var _this = this;
+    var options       = this.options,
+        deps          = this.dependencyNames,
+        exports_      = this.exports,
+        exportDefault = this.exportDefault,
+        imports       = this.imports,
+        importDefault = this.importDefault,
+        lines         = this.lines;
+
     return this.build(function(s) {
-      var alias, args, globalImport, into, locals, name, passedArgs, receivedArgs, wrapper, _i, _len, _ref, _ref1;
-      passedArgs = [];
-      receivedArgs = [];
-      locals = {};
-      into = _this.options.into || _this.exportDefault;
-      if (!isEmpty(_this.exports) || _this.exportDefault) {
-        passedArgs.push(_this.exportDefault ? s.global : into ? "" + s.global + "." + into + " = {}" : s.global);
+      var passedArgs   = [],
+          receivedArgs = [],
+          locals       = {},
+          into         = options.into || exportDefault;
+
+      if (!isEmpty(exports_) || exportDefault) {
+        passedArgs.push(exportDefault ? s.global : into ? '' + s.global + '.' + into + ' = {}' : s.global);
         receivedArgs.push('exports');
       }
-      _ref = _this.dependencyNames;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        name = _ref[_i];
-        globalImport = _this.options.imports[name];
-        passedArgs.push("" + s.global + "." + globalImport);
-        if (name in _this.importDefault) {
-          receivedArgs.push(_this.importDefault[name]);
+
+      forEach(deps, function(name) {
+        var globalImport = options.imports[name];
+        passedArgs.push([s.global, globalImport].join('.'));
+
+        if (name in importDefault) {
+          receivedArgs.push(importDefault[name]);
         } else {
           receivedArgs.push(globalImport);
-          _ref1 = _this.imports[name];
-          for (name in _ref1) {
-            if (!__hasProp.call(_ref1, name)) continue;
-            alias = _ref1[name];
-            locals[alias] = "" + globalImport + "." + name;
-          }
+
+          forEach(imports[name], function(alias, name) {
+            locals[alias] = [globalImport, name].join('.');
+          });
         }
-      }
-      wrapper = function() {
-        return s["function"](receivedArgs, function() {
-          var exportName, exportValue, lhs, rhs, _ref2, _results;
+      });
+
+      function wrapper() {
+        s['function'](receivedArgs, function() {
           s.useStrict();
-          for (lhs in locals) {
-            if (!__hasProp.call(locals, lhs)) continue;
-            rhs = locals[lhs];
-            s["var"](lhs, rhs);
-          }
-          s.append.apply(s, _this.lines);
-          if (_this.exportDefault) {
-            return s.set("exports." + into, _this.exportDefault);
+
+          // var get = Ember.get;
+          forEach(locals, function(rhs, lhs) {
+            s['var'](lhs, rhs);
+          });
+
+          // body
+          s.append.apply(s, lines);
+
+          if (exportDefault) {
+            s.set('exports.' + into, exportDefault);
           } else {
-            _ref2 = _this.exports;
-            _results = [];
-            for (exportName in _ref2) {
-              exportValue = _ref2[exportName];
-              _results.push(s.set("exports." + exportName, exportValue));
-            }
-            return _results;
+            forEach(exports_, function(exportValue, exportName) {
+              s.set('exports.' + exportName, exportValue);
+            });
           }
         });
       };
-      args = function(arg) {
-        var passedArg, _j, _len1, _results;
-        _results = [];
-        for (_j = 0, _len1 = passedArgs.length; _j < _len1; _j++) {
-          passedArg = passedArgs[_j];
-          _results.push(arg(passedArg));
-        }
-        return _results;
+
+      function args(arg) {
+        forEach(passedArgs, arg);
       };
-      return s.line(function() {
-        return s.call(wrapper, args);
+
+      s.line(function() {
+        s.call(wrapper, args);
       });
     });
   }

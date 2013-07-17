@@ -1,10 +1,12 @@
 import ScriptBuilder from './script_builder';
 
 class JavaScriptBuilder extends ScriptBuilder {
-  constructor() {
-    super();
-    this.eol = ';';
-    this['var'] = (lhs, rhs) => this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
+  get eol() {
+    return ';';
+  }
+
+  'var'(lhs, rhs) {
+    this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
   }
 
   _functionHeader(args) {

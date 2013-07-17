@@ -1,25 +1,12 @@
-import { Unique } from './utils';
+import { Unique, forEach, string } from './utils';
 
-var BREAK, INDENT, OUTDENT, ScriptBuilder,
-  __slice = [].slice;
-
-INDENT = {
-  indent: true
-};
-
-OUTDENT = {
-  outdent: true
-};
-
-BREAK = {
-  "break": true
-};
+var INDENT = { indent: true },
+    OUTDENT = { outdent: true },
+    BREAK = { "break": true };
 
 class ScriptBuilder {
   constructor() {
     this.buffer = [];
-    this['break'] = BREAK;
-    this.global = 'window';
 
     this['function'] = function(args, body) {
       this.append(this._functionHeader(args));
@@ -32,6 +19,14 @@ class ScriptBuilder {
     };
   }
 
+  get 'break'() {
+    return BREAK;
+  }
+
+  get global() {
+    return 'window';
+  }
+
   useStrict() {
     this.line('"use strict"');
   }
@@ -41,17 +36,19 @@ class ScriptBuilder {
   }
 
   call(fn, args) {
-    var arg, end, i, indented, result, _i, _len;
+    var end, indented, result;
     fn = this._wrapCallable(fn);
     args = this._prepareArgsForCall(args);
+
     end = args.length - 1;
     while (args[end] === BREAK) {
       end--;
     }
+
     result = "" + fn + "(";
     indented = false;
-    for (i = _i = 0, _len = args.length; _i < _len; i = ++_i) {
-      arg = args[i];
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
       if (arg === BREAK) {
         this.append(result);
         if (!indented) {
@@ -72,42 +69,39 @@ class ScriptBuilder {
     result += ')';
     this.append(result);
     if (indented) {
-      return this.outdent();
+      this.outdent();
     }
   };
 
   _prepareArgsForCall(args) {
-    var result,
-      _this = this;
     if (typeof args === 'function') {
-      result = [];
-      args(function(arg) {
-        return result.push(_this.capture(arg));
-      });
+      var result = [];
+      args(arg => result.push(this.capture(arg)))
       args = result;
     }
+
     return args;
   }
 
   _wrapCallable(fn) {
-    var functionCalled, functionImpl, result,
-      _this = this;
-    if (typeof fn !== 'function') {
-      return fn;
-    }
-    functionImpl = this["function"];
-    functionCalled = false;
-    this["function"] = function() {
-      var args;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    if (typeof fn !== 'function') { return fn; }
+
+    var functionImpl = this['function'],
+        functionCalled = false,
+        self = this;
+
+    this['function'] = function(...args) {
       functionCalled = true;
-      return functionImpl.call.apply(functionImpl, [_this].concat(__slice.call(args)));
+      return functionImpl.apply(self, args);
     };
-    result = this.capture(fn);
-    this["function"] = functionImpl;
+
+    var result = this.capture(fn);
+
+    this['function'] = functionImpl;
     if (functionCalled) {
-      result = "(" + result + (this._functionTail != null ? '' : '\n') + ")";
+      result = '(' + result + (this._functionTail != null ? '' : '\n') + ')';
     }
+
     return result;
   }
 
@@ -140,41 +134,37 @@ class ScriptBuilder {
   }
 
   capture(fn) {
-    var buffer, result;
-    if (typeof fn !== 'function') {
-      return fn;
-    }
-    buffer = this.buffer;
+    if (typeof fn !== 'function') { return fn; }
+
+    // reinit buffer
+    var buffer = this.buffer;
     this.buffer = [];
+
+    // add to buffer
     fn();
-    result = this.toString();
+
+    // capture and restore buffer
+    var result = this.toString();
     this.buffer = buffer;
+
     return result;
   }
 
+
   toString() {
-    var chunk, indent, line, result, _i, _j, _len, _len1, _ref, _ref1;
-    indent = 0;
-    result = [];
-    _ref = this.buffer;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      chunk = _ref[_i];
+    var indent = 0,
+        result = [];
+
+    forEach(this.buffer, function(chunk) {
       if (chunk === INDENT) {
         indent++;
       } else if (chunk === OUTDENT) {
         indent--;
       } else {
-        _ref1 = chunk.split('\n');
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          line = _ref1[_j];
-          if (/^\s*$/.test(line)) {
-            result.push(line);
-          } else {
-            result.push((new Array(indent + 1)).join('  ') + line);
-          }
-        }
+        result.push(...string.indent(chunk.split('\n'), indent));
       }
-    }
+    });
+
     return result.join('\n');
   }
 }
