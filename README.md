@@ -295,7 +295,7 @@ import jQuery from "jquery";
 export jQuery;
 
 // bootstrap.js
-require("es6-module-transpiler/require_support").enable();
+require("es6-module-transpiler/lib/require_support").enable();
 var jQuery = require("./mymodule").jQuery;
 
 // …
