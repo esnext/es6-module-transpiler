@@ -1,55 +1,64 @@
 import optimist from 'optimist';
 import fs from 'fs';
 import path from 'path';
+import through from 'through';
+
+function extend(target, ...sources) {
+  var toString = {}.toString;
+
+  sources.forEach(function(source) {
+    for (var key in source) {
+      target[key] = source[key];
+    }
+  });
+
+  return target;
+}
 
 class CLI {
-  constructor(Compiler, stdin, stdout, fs_) {
+  constructor(Compiler, stdin=process.stdin, stdout=process.stdout, fs_=fs) {
     this.Compiler = Compiler;
-    this.stdin = stdin != null ? stdin : process.stdin;
-    this.stdout = stdout != null ? stdout : process.stdout;
-    this.fs = fs_ != null ? fs_ : fs;
+    this.stdin = stdin;
+    this.stdout = stdout;
+    this.fs = fs_;
   }
 
   start(argv) {
-    var filename, options, _i, _len, _ref;
-    options = this.parseArgs(argv);
+    var options = this.parseArgs(argv);
+
     if (options.help) {
       this.argParser(argv).showHelp();
-      return;
-    }
-    if (options.stdio) {
+    } else if (options.stdio) {
       this.processStdio(options);
     } else {
-      _ref = options._;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        filename = _ref[_i];
+      for (var i = 0; i < options._.length; i++) {
+        var filename = options._[i];
         this.processPath(filename, options);
       }
     }
-    return null;
   }
 
   parseArgs(argv) {
-    var args, global, imports, pair, requirePath, _i, _len, _ref, _ref1;
-    args = this.argParser(argv).argv;
+    var args = this.argParser(argv).argv;
+
     if (args.imports) {
-      imports = {};
-      _ref = args.imports.split(',');
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pair = _ref[_i];
-        _ref1 = pair.split(':'), requirePath = _ref1[0], global = _ref1[1];
+      var imports = {};
+      args.imports.split(',').forEach(function(pair) {
+        var [requirePath, global] = pair.split(':');
         imports[requirePath] = global;
-      }
+      });
       args.imports = imports;
     }
+
     if (args.global) {
       args.into = args.global;
     }
+
     return args;
   }
 
   argParser(argv) {
-    return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--coffee] [--type TYPE] [--imports PATH:GLOBAL] (--module-name MOD|--anonymous)').options({
+    return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--anonymous] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--type TYPE] [--imports PATH:GLOBAL] (--module-name MOD|--anonymous)').options({
       type: {
         "default": 'amd',
         describe: 'The type of output (one of "amd", "cjs", or "globals")'
@@ -75,11 +84,6 @@ class CLI {
         alias: 's',
         describe: 'Use stdin and stdout to process a file'
       },
-      coffee: {
-        "default": false,
-        type: 'boolean',
-        describe: 'Process stdin as CoffeeScript (requires --stdio)'
-      },
       global: {
         describe: 'When the type is `globals`, the name of the global to export into'
       },
@@ -89,98 +93,80 @@ class CLI {
         alias: 'h',
         describe: 'Shows this help message'
       }
-    }).check(function(args) {
-      var _ref;
-      return (_ref = args.type) === 'amd' || _ref === 'cjs' || _ref === 'globals';
-    }).check(function(args) {
-      return !(args.anonymous && args.m);
-    }).check(function(args) {
-      if (args.stdio && args.type === 'amd') {
-        return args.anonymous || args.m || false;
-      } else {
-        return true;
-      }
-    }).check(function(args) {
-      return !(args.coffee && !args.stdio);
-    }).check(function(args) {
-      return args.stdio || args.to || args.help;
-    }).check(function(args) {
-      if (args.imports) {
-        return args.type === 'globals';
-      } else {
-        return true;
-      }
-    });
+    }).check(({type}) => type === 'amd' || type === 'cjs' || type === 'globals')
+    .check(args => !args.anonymous || !args.m)
+    .check(args => (args.stdio && args.type === 'amd') ? args.anonymous || args.m || false : true)
+    .check(args => args.stdio || args.to || args.help)
+    .check(args => args.imports ? args.type === 'globals' : args.type !== 'globals');
   }
 
   processStdio(options) {
-    var input,
-      _this = this;
-    input = '';
-    this.stdin.resume();
-    this.stdin.setEncoding('utf8');
-    this.stdin.on('data', function(data) {
-      return input += data;
-    });
-    return this.stdin.on('end', function() {
-      var output;
-      output = _this._compile(input, options.m, options.type, options);
-      return _this.stdout.write(output);
-    });
+    this.processIO(this.stdin, this.stdout, options);
+  }
+
+  processIO(input, output, options) {
+    var data = '',
+        self = this;
+
+    function write(chunk) {
+      data += chunk;
+    }
+
+    function end() {
+      this.queue(self._compile(data, options.m, options.type, options));
+      this.queue(null);
+    }
+
+    input.pipe(through(write, end)).pipe(output);
   }
 
   processPath(filename, options) {
-    var _this = this;
-    return this.fs.stat(filename, function(err, stat) {
+    this.fs.stat(filename, function(err, stat) {
       if (err) {
         console.error(err.message);
-        return process.exit(1);
+        process.exit(1);
       } else if (stat.isDirectory()) {
-        return _this.processDirectory(filename, options);
+        this.processDirectory(filename, options);
       } else {
-        return _this.processFile(filename, options);
+        this.processFile(filename, options);
       }
-    });
+    }.bind(this));
   }
 
   processDirectory(dirname, options) {
-    var _this = this;
-    return this.fs.readdir(dirname, function(err, children) {
-      var child, _i, _len, _results;
+    this.fs.readdir(dirname, function(err, children) {
       if (err) {
         console.error(err.message);
         process.exit(1);
       }
-      _results = [];
-      for (_i = 0, _len = children.length; _i < _len; _i++) {
-        child = children[_i];
-        _results.push(_this.processPath(path.join(dirname, child), options));
-      }
-      return _results;
-    });
+      children.forEach(function(child) {
+        this.processPath(path.join(dirname, child), options);
+      }.bind(this));
+    }.bind(this));
   }
 
   processFile(filename, options) {
-    var _this = this;
-    return this.fs.readFile(filename, 'utf8', function(err, input) {
-      var ext, moduleName, output, outputFilename;
-      ext = path.extname(filename);
-      if (!options.anonymous) {
-        moduleName = path.join(path.dirname(filename), path.basename(filename, ext)).replace(/[\\]/g, '/');
-      }
-      output = _this._compile(input, moduleName, options.type, {
-        coffee: ext === '.coffee',
-        imports: options.imports
-      });
-      outputFilename = path.join(options.to, filename).replace(/[\\]/g, '/');
-      _this._mkdirp(path.dirname(outputFilename));
-      return _this.fs.writeFile(outputFilename, output, 'utf8', function(err) {
-        if (err) {
-          console.error(err.message);
-          return process.exit(1);
-        }
-      });
-    });
+    var ext, moduleName, output, outputFilename;
+
+    function normalizePath(p) {
+      return p.replace(/\\/g, '/');
+    }
+
+    var ext            = path.extname(filename),
+        basenameNoExt  = path.basename(filename, ext),
+        dirname        = path.dirname(filename),
+        pathNoExt      = normalizePath(path.join(dirname, basenameNoExt)),
+        outputFilename = normalizePath(path.join(options.to, filename)),
+        moduleName     = options.anonymous ? null : pathNoExt;
+
+    options = extend({}, options, {m: moduleName});
+    this._mkdirp(path.dirname(outputFilename));
+
+    this.processIO(
+      this.fs.createReadStream(filename),
+      this.fs.createWriteStream(outputFilename),
+      options
+    );
   }
 
   _compile(input, moduleName, type, options) {
@@ -208,16 +194,7 @@ class CLI {
   }
 }
 
-CLI.start = function(Compiler, argv, stdin, stdout, fs_) {
-  if (stdin == null) {
-    stdin = process.stdin;
-  }
-  if (stdout == null) {
-    stdout = process.stdout;
-  }
-  if (fs_ == null) {
-    fs_ = fs;
-  }
+CLI.start = function(Compiler, argv, stdin=process.stdin, stdout=process.stdout, fs_=fs) {
   return new CLI(Compiler, stdin, stdout, fs_).start(argv);
 };
 
