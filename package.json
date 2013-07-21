@@ -28,7 +28,9 @@
     "through": "~2.3.4"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "build": "grunt build",
+    "package": "grunt build && grunt test"
   },
   "devDependencies": {
     "es6ify": "~0.2.0",
