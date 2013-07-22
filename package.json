@@ -27,7 +27,7 @@
     "through": "~2.3.4"
   },
   "scripts": {
-    "test": "grunt test",
+    "test": "grunt build && grunt test",
     "build": "grunt build",
     "prepublish": "grunt build && grunt test"
   },
