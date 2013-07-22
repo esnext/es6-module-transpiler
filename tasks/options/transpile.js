@@ -3,7 +3,7 @@ module.exports = {
     type: 'cjs',
     files: [{
       expand: true,
-      cwd: 'src/',
+      cwd: 'lib/',
       src: ['**/*.js'],
       dest: 'tmp/transpiled/'
     }]

@@ -15,7 +15,7 @@
     "compile-modules": "./bin/compile-modules"
   },
   "directories": {
-    "lib": "./dist/es6-module-transpiler"
+    "lib": "./lib"
   },
   "main": "./dist/es6-module-transpiler",
   "repository": {

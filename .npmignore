@@ -5,7 +5,7 @@ Gruntfile.js
 Makefile
 dist/es6-module-transpiler.min.js
 node_modules/
-src/
+lib/
 tasks/
 test/
 tmp/
