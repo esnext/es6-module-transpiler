@@ -192,7 +192,7 @@ export { get, set };
 will compile into this AMD output:
 
 ```javascript
-define("ember",
+define(
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -230,7 +230,7 @@ export default jQuery;
 will compile into this AMD output:
 
 ```javascript
-define("ember",
+define(
   [],
   function() {
     "use strict";
@@ -255,7 +255,7 @@ import { get, set } from "ember";
 will compile into this AMD output:
 
 ```javascript
-define("app",
+define(
   ["ember"],
   function(__dependency1__) {
     "use strict";
@@ -275,7 +275,7 @@ import jQuery from "jquery";
 will compile into this AMD output:
 
 ```javascript
-define("app",
+define(
   ["jquery"],
   function(jQuery) {
     "use strict";
