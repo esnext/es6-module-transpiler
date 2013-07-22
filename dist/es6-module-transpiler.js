@@ -574,7 +574,6 @@ var IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/;
 var RE_EXPORT = /^export\s+({.*})\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/;
 var COMMENT_START = new RegExp("/\\*");
 var COMMENT_END = new RegExp("\\*/");
-var COMMENT_CS_TOGGLE = /^###/;
 function getNames(string) {
   if (string[0] === '{' && string[string.length - 1] === '}') {
     return string.slice(1, - 1).split(',').map((function(name) {
@@ -605,13 +604,8 @@ var Compiler = function() {
       this.id = 0;
       this.inBlockComment = false;
       this.reExportUnique = new Unique('reexport');
-      if (!this.options.coffee) {
-        this.commentStart = COMMENT_START;
-        this.commentEnd = COMMENT_END;
-      } else {
-        this.commentStart = COMMENT_CS_TOGGLE;
-        this.commentEnd = COMMENT_CS_TOGGLE;
-      }
+      this.commentStart = COMMENT_START;
+      this.commentEnd = COMMENT_END;
       this.parse();
     },
     parse: function() {
@@ -646,11 +640,7 @@ var Compiler = function() {
       }
     },
     matchLine: function(line, pattern) {
-      var match = line.match(pattern);
-      if (match && !this.options.coffee && !match[match.length - 1]) {
-        return null;
-      }
-      return match;
+      return line.match(pattern);
     },
     processExportDefault: function(match) {
       this.exportDefault = match[1];
@@ -731,7 +721,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":5,"./utils":6}],6:[function(require,module,exports){
+},{"./amd_compiler":3,"./cjs_compiler":5,"./globals_compiler":4,"./utils":6}],6:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1142,7 +1132,7 @@ var AMDCompiler = function($__super) {
 module.exports = AMDCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6,"path":8}],4:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6,"path":8}],5:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1246,7 +1236,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":9,"./utils":6}],5:[function(require,module,exports){
+},{"./abstract_compiler":9,"./utils":6}],4:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');

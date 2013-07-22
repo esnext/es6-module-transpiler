@@ -1,19 +1,19 @@
 # ES6 Module Transpiler
 
-ES6 Module Transpiler is an experimental compiler that allows you to write
-your JavaScript/CoffeeScript using a subset of the current ES6 module syntax,
-and compile it into AMD or CommonJS modules.
+ES6 Module Transpiler is an experimental compiler that allows you to write your
+JavaScript using a subset of the current ES6 module syntax, and compile it into
+AMD or CommonJS modules.
 
-**WARNING: The ES6 module syntax is still undergoing a lot of churn,
-and will definitely still change before final approval.**
+**WARNING: The ES6 module syntax is still undergoing a lot of churn, and will
+definitely still change before final approval.**
 
-**ES6 Module Transpiler will track ES6 syntax, and not attempt to
-maintain backwards compatibility with syntax that ultimately did
-not succeed as part of ES6.**
+**ES6 Module Transpiler will track ES6 syntax, and not attempt to maintain
+backwards compatibility with syntax that ultimately did not succeed as part of
+ES6.**
 
-This compiler provides a way to experiment with ES6 syntax in real
-world scenarios to see how the syntax holds up. It also provides a
-nicer, more declarative way to write AMD (or CommonJS) modules.
+This compiler provides a way to experiment with ES6 syntax in real world
+scenarios to see how the syntax holds up. It also provides a nicer, more
+declarative way to write AMD (or CommonJS) modules.
 
 See the [CHANGELOG](./CHANGELOG.md) for the latest updates.
 
@@ -51,8 +51,8 @@ ANONYMOUS
 
 NAME
   You can supply a name to use as the module name.  By default, the transpiler
-  will use the name of the file (without the ending `.js`/`.coffee`) as the
-  module name.  You may not use this option if you provided multiple FILEs.
+  will use the name of the file (without the ending `.js`) as the module name.
+  You may not use this option if you provided multiple FILEs.
 
 GLOBAL
   This option is only supported when the type is `globals`. By default, the
