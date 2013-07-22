@@ -565,13 +565,13 @@ var AMDCompiler = require("./amd_compiler");
 var CJSCompiler = require("./cjs_compiler");
 var GlobalsCompiler = require("./globals_compiler");
 var Unique = require("./utils").Unique;
-var EXPORT = /^\s*export\s+(.*?)\s*(;)?\s*$/;
-var EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*(;)?\s*$/;
+var EXPORT = /^\s*export\s+(.*?)\s*;?\s*$/;
+var EXPORT_DEFAULT = /^\s*export\s*default\s*(.*?)\s*;?\s*$/;
 var EXPORT_FUNCTION = /^\s*export\s+function\s+(\w+)\s*(\(.*)$/;
 var EXPORT_VAR = /^\s*export\s+var\s+(\w+)\s*=\s*(.*)$/;
-var IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/;
+var IMPORT = /^\s*import\s+(.*)\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*;?\s*$/;
 var IMPORT_AS = /^\s*(.*)\s+as\s+(.*)\s*$/;
-var RE_EXPORT = /^export\s+({.*})\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*(;)?\s*$/;
+var RE_EXPORT = /^export\s+({.*})\s+from\s+(?:"([^"]+?)"|'([^']+?)')\s*;?\s*$/;
 var COMMENT_START = new RegExp("/\\*");
 var COMMENT_END = new RegExp("\\*/");
 function getNames(string) {
