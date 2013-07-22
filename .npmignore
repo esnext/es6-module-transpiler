@@ -1,0 +1,11 @@
+.travis.yml
+AUTHORS
+CHANGELOG.md
+Gruntfile.js
+Makefile
+dist/es6-module-transpiler.min.js
+node_modules/
+lib/
+tasks/
+test/
+tmp/
