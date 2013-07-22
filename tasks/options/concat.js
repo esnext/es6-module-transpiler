@@ -7,5 +7,14 @@ module.exports = {
       'tmp/es6-module-transpiler.es5.js'
     ],
     dest: 'dist/es6-module-transpiler.js'
+  },
+
+  bin: {
+    options: {
+      banner: '#!/usr/bin/env node\n'
+    },
+    files: {
+      'bin/compile-modules': 'tmp/bin/compile-modules'
+    }
   }
 };

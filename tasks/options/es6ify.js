@@ -1,10 +1,7 @@
 module.exports = {
   cli: {
-    files: [{
-      expand: true,
-      cwd: 'tmp/transpiled/',
-      src: 'cli.js',
-      dest: 'lib/'
-    }]
+    files: {
+      'tmp/bin/compile-modules': 'tmp/transpiled/compile-modules.js'
+    }
   }
 };

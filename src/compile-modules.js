@@ -198,4 +198,17 @@ CLI.start = function(Compiler, argv, stdin=process.stdin, stdout=process.stdout,
   return new CLI(Compiler, stdin, stdout, fs_).start(argv);
 };
 
-export default CLI;
+let fs   = require('fs'),
+    path = require('path');
+
+function requireMain() {
+  var root    = path.join(__dirname, '..'),
+      pkgPath = path.join(root, 'package.json'),
+      pkg     = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+  return require(path.join(root, pkg.main));
+}
+
+let Compiler = requireMain().Compiler;
+
+CLI.start(Compiler, process.argv);
