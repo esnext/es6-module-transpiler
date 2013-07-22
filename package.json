@@ -30,7 +30,7 @@
   "scripts": {
     "test": "grunt test",
     "build": "grunt build",
-    "package": "grunt build && grunt test"
+    "prepublish": "grunt build && grunt test"
   },
   "devDependencies": {
     "es6ify": "~0.2.0",
