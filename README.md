@@ -282,28 +282,10 @@ define("app",
   });
 ```
 
-## Using with Node.js
+## Using with Node.js/Grunt
 
-You can use this library to pre-transpile your browser code or your node packages,
-but when developing a node package this can be painful. To make testing your
-packages easier you can configure es6-module-transpiler to auto-transpile your
-JavaScript or CoffeeScript modules on the fly:
-
-```javascript
-// mymodule.js
-import jQuery from "jquery";
-export jQuery;
-
-// bootstrap.js
-require("es6-module-transpiler/lib/require_support").enable();
-var jQuery = require("./mymodule").jQuery;
-
-// …
-```
-
-## Using with Grunt
-
-You can install the
+You can use this library to pre-transpile your browser code or your node
+packages however you wish, but the easiest way to do it is probably to use the
 [grunt-es6-module-transpiler](http://github.com/joefiorini/grunt-es6-module-transpiler)
 plugin to run the transpiler as part of your [Grunt.js](http://gruntjs.com)
 build task. See the README on the plugin's Github page for more information.
