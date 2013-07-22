@@ -320,12 +320,16 @@ Or install it globally:
 
 ## Acknowledgements
 
-Thanks to Yehuda Katz for
+Thanks to [Yehuda Katz](https://twitter.com/wycats) for
 [js_module_transpiler](https://github.com/wycats/js_module_transpiler), the
-library on which this one is based. Thanks to Dave Herman for his work on ES6
-modules. Thanks to Erik Bryn for providing the initial push to write this
-library. And finally thanks to the JavaScript community at Square for helping
-to write and release this library.
+library on which this one is based. Thanks to [Dave
+Herman](https://twitter.com/littlecalculist) for his work on ES6 modules.
+Thanks to [Erik Bryn](https://twitter.com/ebryn) for providing the initial push
+to write this library. And finally thanks to the JavaScript community at Square
+for helping to write and release this library. Thanks to [Domenic
+Denicola](https://twitter.com/domenic) & [Thomas
+Boyt](https://twitter.com/thomasaboyt) for their efforts to make this project
+even better.
 
 ## Contributing
 
