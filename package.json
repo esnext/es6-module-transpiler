@@ -27,9 +27,9 @@
     "through": "~2.3.4"
   },
   "scripts": {
-    "test": "grunt build && grunt test",
-    "build": "grunt build",
-    "prepublish": "grunt build && grunt test"
+    "test": "npm run-script build && grunt test",
+    "build": "grunt clean transpile && grunt es6ify && grunt browserify concat uglify",
+    "prepublish": "npm run-script build && grunt test"
   },
   "devDependencies": {
     "es6ify": "~0.2.0",
