@@ -45,6 +45,7 @@
     "matchdep": "~0.1.2",
     "mocha": "~1.12.0",
     "qunit-mocha-ui": "0.0.4",
-    "uglify-js": "~2.2.4"
+    "uglify-js": "~2.2.4",
+    "grunt-contrib-jshint": "~0.6.2"
   }
 }
