@@ -10,5 +10,10 @@ module.exports = {
     reporter: 'tap'
   },
 
-  all: { src: ['test/.generated/**/*.js'] }
+  all: { src: ['test/.generated/**/*.js'] },
+  amd: { src: ['test/.generated/**/*.js'], 
+    options: {
+      grep: "AMD"
+    }
+  },
 };
