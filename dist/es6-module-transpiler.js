@@ -918,7 +918,154 @@ exports.relative = function(from, to) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":8}],4:[function(require,module,exports){
+},{"__browserify_process":8}],3:[function(require,module,exports){
+"use strict";
+var $__superDescriptor = function(proto, name) {
+  if (!proto) throw new TypeError('super is null');
+  return Object.getPropertyDescriptor(proto, name);
+}, $__superCall = function(self, proto, name, args) {
+  var descriptor = $__superDescriptor(proto, name);
+  if (descriptor) {
+    if ('value'in descriptor) return descriptor.value.apply(self, args);
+    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
+  }
+  throw new TypeError("Object has no method '" + name + "'.");
+}, $__getProtoParent = function(superClass) {
+  if (typeof superClass === 'function') {
+    var prototype = superClass.prototype;
+    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
+  }
+  if (superClass === null) return null;
+  throw new TypeError();
+}, $__getDescriptors = function(object) {
+  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
+  }
+  return descriptors;
+}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
+  var ctor = object.constructor;
+  if (typeof superClass === 'function') ctor.__proto__ = superClass;
+  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
+  var descriptors = $__getDescriptors(object);
+  descriptors.constructor.enumerable = false;
+  ctor.prototype = Object.create(protoParent, descriptors);
+  Object.defineProperties(ctor, $__getDescriptors(staticObject));
+  return ctor;
+};
+var AbstractCompiler = require("./abstract_compiler");
+var path = require("path");
+var SourceModifier = require("./source_modifier");
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var forEach = __dependency1__.forEach;
+var AMDCompiler = function($__super) {
+  'use strict';
+  var $__proto = $__getProtoParent($__super);
+  var $AMDCompiler = ($__createClass)({
+    constructor: function() {
+      $__superCall(this, $__proto, "constructor", arguments);
+    },
+    stringify: function() {
+      var exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, moduleName = this.moduleName, dependencyNames = this.dependencyNames, string = this.string.toString(), out = "";
+      var source = new SourceModifier(string);
+      out = this.buildPreamble(this.exports.length > 0);
+      for (var idx = 0; idx < imports.length; idx++) {
+        var import_ = imports[idx], replacement = "";
+        if (import_.kind === "default") {
+          var specifier = import_.specifiers[0];
+          replacement = ("var " + specifier.id.name + " = __dependency" + idx + "__;\n");
+        } else if (import_.kind === "named") {
+          {
+            var $__1 = traceur.runtime.getIterator(import_.specifiers);
+            try {
+              while (true) {
+                var specifier = $__1.next();
+                {
+                  replacement += ("var " + specifier.id.name + " = __dependency" + idx + "__." + specifier.id.name + ";\n");
+                }
+              }
+            } catch (e) {
+              if (!traceur.runtime.isStopIteration(e)) throw e;
+            }
+          }
+        }
+        source.replace(import_.range[0], import_.range[1], replacement);
+      }
+      if (exportDefault) {
+        source.replace(exportDefault.range[0], exportDefault.declaration.range[0] - 1, "return ");
+      }
+      {
+        var $__3 = traceur.runtime.getIterator(exports_);
+        try {
+          while (true) {
+            var export_ = $__3.next();
+            {
+              var replacement = "";
+              if (export_.specifiers) {
+                {
+                  var $__2 = traceur.runtime.getIterator(export_.specifiers);
+                  try {
+                    while (true) {
+                      var specifier = $__2.next();
+                      {
+                        replacement += ("__exports__." + specifier.id.name + " = " + specifier.id.name + ";\n");
+                      }
+                    }
+                  } catch (e) {
+                    if (!traceur.runtime.isStopIteration(e)) throw e;
+                  }
+                }
+                source.replace(export_.range[0], export_.range[1], replacement);
+              } else if (export_.declaration) {
+                if (export_.declaration.type === "VariableDeclaration") {
+                  var name = export_.declaration.declarations[0].id.name;
+                  replacement = ("__exports__." + name + " = ");
+                  source.replace(export_.range[0], export_.declaration.declarations[0].init.range[0] - 1, replacement);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
+      out += source.toString();
+      out += "});";
+      return out;
+    },
+    buildPreamble: function(hasExports) {
+      var out = "", dependencyNames = this.dependencyNames;
+      if (hasExports) dependencyNames.push("exports");
+      out += "define(";
+      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
+      out += "[";
+      var idx;
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        var name = dependencyNames[idx];
+        out += ("\"" + name + "\"");
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += "], function(";
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        if (dependencyNames[idx] === "exports") {
+          out += "__exports__";
+        } else {
+          out += ("__dependency" + idx + "__");
+        }
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += ") {\n";
+      return out;
+    }
+  }, {}, $__proto, $__super, false);
+  return $AMDCompiler;
+}(AbstractCompiler);
+module.exports = AMDCompiler;
+
+
+},{"./abstract_compiler":10,"./source_modifier":11,"./utils":7,"path":9}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1021,111 +1168,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":10,"./utils":7}],3:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-};
-var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
-var SourceModifier = require("./source_modifier");
-var __dependency1__ = require("./utils");
-var isEmpty = __dependency1__.isEmpty;
-var forEach = __dependency1__.forEach;
-var AMDCompiler = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $AMDCompiler = ($__createClass)({
-    constructor: function() {
-      $__superCall(this, $__proto, "constructor", arguments);
-    },
-    stringify: function() {
-      var exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, moduleName = this.moduleName, dependencyNames = this.dependencyNames, string = this.string.toString(), out = "";
-      var source = new SourceModifier(string);
-      out = this.buildPreamble();
-      for (var idx = 0; idx < imports.length; idx++) {
-        var import_ = imports[idx], replacement = "";
-        if (import_.kind === "default") {
-          var specifier = import_.specifiers[0];
-          replacement = ("var " + specifier.id.name + " = __dependency" + idx + "__;\n");
-        } else if (import_.kind === "named") {
-          {
-            var $__1 = traceur.runtime.getIterator(import_.specifiers);
-            try {
-              while (true) {
-                var specifier = $__1.next();
-                {
-                  replacement += ("var " + specifier.id.name + " = __dependency" + idx + "__[\"" + specifier.id.name + "\"];\n");
-                }
-              }
-            } catch (e) {
-              if (!traceur.runtime.isStopIteration(e)) throw e;
-            }
-          }
-        }
-        source.replace(import_.range[0], import_.range[1], replacement);
-      }
-      out += source.toString();
-      out += "\n});";
-      return out;
-    },
-    buildPreamble: function() {
-      var out = "", dependencyNames = this.dependencyNames;
-      out += "define(";
-      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
-      out += "[";
-      var idx;
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        var name = dependencyNames[idx];
-        out += ("\"" + name + "\"");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out += "], function(";
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        out += ("__dependency" + idx + "__");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out += ") {\n";
-      return out;
-    }
-  }, {}, $__proto, $__super, false);
-  return $AMDCompiler;
-}(AbstractCompiler);
-module.exports = AMDCompiler;
-
-
-},{"./abstract_compiler":10,"./source_modifier":11,"./utils":7,"path":9}],5:[function(require,module,exports){
+},{"./abstract_compiler":10,"./utils":7}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1425,8 +1468,8 @@ var Parser = function() {
       this.imports.push(node);
     },
     processExportDeclaration: function(node) {
-      if (!node.declaration) {
-        throw new Error('expected declaration after `export` statement');
+      if (!node.declaration && !node.specifiers) {
+        throw new Error('expected declaration or specifiers after `export` keyword');
       }
       if (node.default) {
         this.exportDefault = node;
