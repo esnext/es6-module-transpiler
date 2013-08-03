@@ -957,9 +957,6 @@ var $__superDescriptor = function(proto, name) {
 var AbstractCompiler = require("./abstract_compiler");
 var path = require("path");
 var SourceModifier = require("./source_modifier");
-var __dependency1__ = require("./utils");
-var isEmpty = __dependency1__.isEmpty;
-var forEach = __dependency1__.forEach;
 var AMDCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
@@ -968,9 +965,45 @@ var AMDCompiler = function($__super) {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, moduleName = this.moduleName, dependencyNames = this.dependencyNames, string = this.string.toString(), out = "";
-      var source = new SourceModifier(string);
-      out = this.buildPreamble(this.exports.length > 0);
+      var string = this.string.toString();
+      this.source = new SourceModifier(string);
+      var out = this.buildPreamble(this.exports.length > 0);
+      this.buildImports();
+      this.buildExports();
+      var innerLines = this.source.toString().split("\n");
+      var inner = innerLines.reduce(function(acc, item) {
+        return acc + "    " + item + "\n";
+      }, "");
+      out += inner;
+      out += "  });";
+      return out;
+    },
+    buildPreamble: function(hasExports) {
+      var out = "", dependencyNames = this.dependencyNames;
+      if (hasExports) dependencyNames.push("exports");
+      out += "define(";
+      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
+      out += "\n  [";
+      var idx;
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        var name = dependencyNames[idx];
+        out += ("\"" + name + "\"");
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += "],\n  function(";
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        if (dependencyNames[idx] === "exports") {
+          out += "__exports__";
+        } else {
+          out += ("__dependency" + idx + "__");
+        }
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += ") {\n";
+      return out;
+    },
+    buildImports: function() {
+      var imports = this.imports, source = this.source;
       for (var idx = 0; idx < imports.length; idx++) {
         var import_ = imports[idx], replacement = "";
         if (import_.kind === "default") {
@@ -993,6 +1026,9 @@ var AMDCompiler = function($__super) {
         }
         source.replace(import_.range[0], import_.range[1], replacement);
       }
+    },
+    buildExports: function() {
+      var source = this.source, exports_ = this.exports, exportDefault = this.exportDefault;
       if (exportDefault) {
         source.replace(exportDefault.range[0], exportDefault.declaration.range[0] - 1, "return ");
       }
@@ -1021,8 +1057,14 @@ var AMDCompiler = function($__super) {
               } else if (export_.declaration) {
                 if (export_.declaration.type === "VariableDeclaration") {
                   var name = export_.declaration.declarations[0].id.name;
-                  replacement = ("__exports__." + name + " = ");
-                  source.replace(export_.range[0], export_.declaration.declarations[0].init.range[0] - 1, replacement);
+                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
+                  replacement = ("\n__exports__." + name + " = " + name + ";");
+                  source.replace(export_.range[1], export_.range[1], replacement);
+                } else if (export_.declaration.type === "FunctionDeclaration") {
+                  var name = export_.declaration.id.name;
+                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
+                  replacement = ("\n__exports__." + name + " = " + name + ";");
+                  source.replace(export_.range[1], export_.range[1], replacement);
                 }
               }
             }
@@ -1031,33 +1073,6 @@ var AMDCompiler = function($__super) {
           if (!traceur.runtime.isStopIteration(e)) throw e;
         }
       }
-      out += source.toString();
-      out += "});";
-      return out;
-    },
-    buildPreamble: function(hasExports) {
-      var out = "", dependencyNames = this.dependencyNames;
-      if (hasExports) dependencyNames.push("exports");
-      out += "define(";
-      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
-      out += "[";
-      var idx;
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        var name = dependencyNames[idx];
-        out += ("\"" + name + "\"");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out += "], function(";
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        if (dependencyNames[idx] === "exports") {
-          out += "__exports__";
-        } else {
-          out += ("__dependency" + idx + "__");
-        }
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out += ") {\n";
-      return out;
     }
   }, {}, $__proto, $__super, false);
   return $AMDCompiler;
@@ -1065,7 +1080,7 @@ var AMDCompiler = function($__super) {
 module.exports = AMDCompiler;
 
 
-},{"./abstract_compiler":10,"./source_modifier":11,"./utils":7,"path":9}],4:[function(require,module,exports){
+},{"./abstract_compiler":10,"./source_modifier":11,"path":9}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
