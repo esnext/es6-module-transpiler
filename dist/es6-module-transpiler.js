@@ -918,90 +918,7 @@ exports.relative = function(from, to) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":8}],3:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-};
-var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
-var SourceModifier = require("./source_modifier");
-var __dependency1__ = require("./utils");
-var isEmpty = __dependency1__.isEmpty;
-var forEach = __dependency1__.forEach;
-var AMDCompiler = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $AMDCompiler = ($__createClass)({
-    constructor: function() {
-      $__superCall(this, $__proto, "constructor", arguments);
-    },
-    stringify: function() {
-      var exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, moduleName = this.moduleName, dependencyNames = this.dependencyNames, string = this.string, out = "";
-      var source = new SourceModifier(string);
-      out = this.buildPreamble();
-      out += source.toString();
-      out += "\n}";
-      console.log(out);
-    },
-    buildPreamble: function() {
-      var out = "", dependencyNames = this.dependencyNames;
-      out += "define(";
-      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
-      out += "[";
-      var idx;
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        var name = dependencyNames[idx];
-        out += ("\"" + name + "\"");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out = out.slice(0, - 1);
-      out += "], function(";
-      for (idx = 0; idx < dependencyNames.length; idx++) {
-        out += ("__dependency" + idx + "__");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
-      }
-      out += ") {\n";
-      return out;
-    }
-  }, {}, $__proto, $__super, false);
-  return $AMDCompiler;
-}(AbstractCompiler);
-module.exports = AMDCompiler;
-
-
-},{"./abstract_compiler":10,"./source_modifier":11,"./utils":7,"path":9}],4:[function(require,module,exports){
+},{"__browserify_process":8}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1104,7 +1021,111 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":10,"./utils":7}],5:[function(require,module,exports){
+},{"./abstract_compiler":10,"./utils":7}],3:[function(require,module,exports){
+"use strict";
+var $__superDescriptor = function(proto, name) {
+  if (!proto) throw new TypeError('super is null');
+  return Object.getPropertyDescriptor(proto, name);
+}, $__superCall = function(self, proto, name, args) {
+  var descriptor = $__superDescriptor(proto, name);
+  if (descriptor) {
+    if ('value'in descriptor) return descriptor.value.apply(self, args);
+    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
+  }
+  throw new TypeError("Object has no method '" + name + "'.");
+}, $__getProtoParent = function(superClass) {
+  if (typeof superClass === 'function') {
+    var prototype = superClass.prototype;
+    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
+  }
+  if (superClass === null) return null;
+  throw new TypeError();
+}, $__getDescriptors = function(object) {
+  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
+  }
+  return descriptors;
+}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
+  var ctor = object.constructor;
+  if (typeof superClass === 'function') ctor.__proto__ = superClass;
+  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
+  var descriptors = $__getDescriptors(object);
+  descriptors.constructor.enumerable = false;
+  ctor.prototype = Object.create(protoParent, descriptors);
+  Object.defineProperties(ctor, $__getDescriptors(staticObject));
+  return ctor;
+};
+var AbstractCompiler = require("./abstract_compiler");
+var path = require("path");
+var SourceModifier = require("./source_modifier");
+var __dependency1__ = require("./utils");
+var isEmpty = __dependency1__.isEmpty;
+var forEach = __dependency1__.forEach;
+var AMDCompiler = function($__super) {
+  'use strict';
+  var $__proto = $__getProtoParent($__super);
+  var $AMDCompiler = ($__createClass)({
+    constructor: function() {
+      $__superCall(this, $__proto, "constructor", arguments);
+    },
+    stringify: function() {
+      var exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, moduleName = this.moduleName, dependencyNames = this.dependencyNames, string = this.string.toString(), out = "";
+      var source = new SourceModifier(string);
+      out = this.buildPreamble();
+      for (var idx = 0; idx < imports.length; idx++) {
+        var import_ = imports[idx], replacement = "";
+        if (import_.kind === "default") {
+          var specifier = import_.specifiers[0];
+          replacement = ("var " + specifier.id.name + " = __dependency" + idx + "__;\n");
+        } else if (import_.kind === "named") {
+          {
+            var $__1 = traceur.runtime.getIterator(import_.specifiers);
+            try {
+              while (true) {
+                var specifier = $__1.next();
+                {
+                  replacement += ("var " + specifier.id.name + " = __dependency" + idx + "__[\"" + specifier.id.name + "\"];\n");
+                }
+              }
+            } catch (e) {
+              if (!traceur.runtime.isStopIteration(e)) throw e;
+            }
+          }
+        }
+        source.replace(import_.range[0], import_.range[1], replacement);
+      }
+      out += source.toString();
+      out += "\n});";
+      return out;
+    },
+    buildPreamble: function() {
+      var out = "", dependencyNames = this.dependencyNames;
+      out += "define(";
+      if (this.moduleName) out += ("\"" + this.moduleName + "\", ");
+      out += "[";
+      var idx;
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        var name = dependencyNames[idx];
+        out += ("\"" + name + "\"");
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += "], function(";
+      for (idx = 0; idx < dependencyNames.length; idx++) {
+        out += ("__dependency" + idx + "__");
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += ") {\n";
+      return out;
+    }
+  }, {}, $__proto, $__super, false);
+  return $AMDCompiler;
+}(AbstractCompiler);
+module.exports = AMDCompiler;
+
+
+},{"./abstract_compiler":10,"./source_modifier":11,"./utils":7,"path":9}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1300,6 +1321,7 @@ var AbstractCompiler = function() {
       this.imports = compiler.imports;
       this.moduleName = compiler.moduleName;
       this.lines = compiler.lines;
+      this.string = compiler.string;
       this.options = options;
       this.dependencyNames = array.uniq(this.imports.map(function(import_) {
         return import_.source.value;
@@ -1310,23 +1332,6 @@ var AbstractCompiler = function() {
       if (this.exportDefault && !isEmpty(this.exports)) {
         throw new CompileError("You cannot use both `export default` and `export` in the same module");
       }
-    },
-    buildPreamble: function(names) {
-      var args = [], preamble;
-      preamble = this.build(function(s) {
-        var deps = s.unique('dependency');
-        for (var i = 0; i < names.length; i++) {
-          var name = names[i];
-          if (name in this.importDefault) {
-            args.push(this.importDefault[name]);
-          } else {
-            var dependency = deps.next();
-            args.push(dependency);
-            this.buildImportsForPreamble(s, this.imports[name], dependency);
-          }
-        }
-      }.bind(this));
-      return [args, preamble];
     },
     build: function(fn) {
       var builder = new JavaScriptBuilder();
