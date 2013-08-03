@@ -588,6 +588,7 @@ var Compiler = function() {
       this.imports = parser.imports;
       this.exports = parser.exports;
       this.exportDefault = parser.exportDefault;
+      this.directives = parser.directives;
     },
     toAMD: function() {
       return new AMDCompiler(this, this.options).stringify();
@@ -968,14 +969,16 @@ var AMDCompiler = function($__super) {
       var string = this.string.toString();
       this.source = new SourceModifier(string);
       var out = this.buildPreamble(this.exports.length > 0);
+      this.parseDirectives();
       this.buildImports();
       this.buildExports();
       var innerLines = this.source.toString().split("\n");
       var inner = innerLines.reduce(function(acc, item) {
+        if (item === "") return acc + "\n";
         return acc + "    " + item + "\n";
       }, "");
-      out += inner;
-      out += "  });";
+      out += inner.replace(/\s+$/, "");
+      out += "\n  });";
       return out;
     },
     buildPreamble: function(hasExports) {
@@ -988,18 +991,19 @@ var AMDCompiler = function($__super) {
       for (idx = 0; idx < dependencyNames.length; idx++) {
         var name = dependencyNames[idx];
         out += ("\"" + name + "\"");
-        if (!(idx === dependencyNames.length - 1)) out += ", ";
+        if (!(idx === dependencyNames.length - 1)) out += ",";
       }
       out += "],\n  function(";
       for (idx = 0; idx < dependencyNames.length; idx++) {
         if (dependencyNames[idx] === "exports") {
           out += "__exports__";
         } else {
-          out += ("__dependency" + idx + "__");
+          out += ("__dependency" + (idx + 1) + "__");
         }
         if (!(idx === dependencyNames.length - 1)) out += ", ";
       }
       out += ") {\n";
+      out += '    "use strict";\n';
       return out;
     },
     buildImports: function() {
@@ -1008,7 +1012,7 @@ var AMDCompiler = function($__super) {
         var import_ = imports[idx], replacement = "";
         if (import_.kind === "default") {
           var specifier = import_.specifiers[0];
-          replacement = ("var " + specifier.id.name + " = __dependency" + idx + "__;\n");
+          replacement = ("var " + specifier.id.name + " = __dependency" + (idx + 1) + "__;\n");
         } else if (import_.kind === "named") {
           {
             var $__1 = traceur.runtime.getIterator(import_.specifiers);
@@ -1016,7 +1020,8 @@ var AMDCompiler = function($__super) {
               while (true) {
                 var specifier = $__1.next();
                 {
-                  replacement += ("var " + specifier.id.name + " = __dependency" + idx + "__." + specifier.id.name + ";\n");
+                  var alias = specifier.name ? specifier.name.name: specifier.id.name;
+                  replacement += ("var " + alias + " = __dependency" + (idx + 1) + "__." + specifier.id.name + ";\n");
                 }
               }
             } catch (e) {
@@ -1064,9 +1069,25 @@ var AMDCompiler = function($__super) {
                   var name = export_.declaration.id.name;
                   source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
                   replacement = ("\n__exports__." + name + " = " + name + ";");
-                  source.replace(export_.range[1], export_.range[1], replacement);
+                  source.replace(export_.range[1] + 1, export_.range[1] + 1, replacement);
                 }
               }
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
+    },
+    parseDirectives: function() {
+      var directives = this.directives;
+      {
+        var $__4 = traceur.runtime.getIterator(directives);
+        try {
+          while (true) {
+            var directive = $__4.next();
+            {
+              this.source.replace(directive.range[0], directive.range[1], "");
             }
           }
         } catch (e) {
@@ -1364,7 +1385,6 @@ var $__getDescriptors = function(object) {
   return ctor;
 };
 var CompileError = require("./compile_error");
-var JavaScriptBuilder = require("./java_script_builder");
 var __dependency1__ = require("./utils");
 var isEmpty = __dependency1__.isEmpty;
 var array = __dependency1__.array;
@@ -1377,6 +1397,7 @@ var AbstractCompiler = function() {
       this.exports = compiler.exports;
       this.exportDefault = compiler.exportDefault;
       this.imports = compiler.imports;
+      this.directives = compiler.directives;
       this.moduleName = compiler.moduleName;
       this.lines = compiler.lines;
       this.string = compiler.string;
@@ -1390,18 +1411,6 @@ var AbstractCompiler = function() {
       if (this.exportDefault && !isEmpty(this.exports)) {
         throw new CompileError("You cannot use both `export default` and `export` in the same module");
       }
-    },
-    build: function(fn) {
-      var builder = new JavaScriptBuilder();
-      fn(builder);
-      return builder.toString();
-    },
-    buildImportsForPreamble: function(builder, imports_, dependencyName) {
-      forEach(imports_, function(alias, name) {
-        builder.variable(alias, function() {
-          return builder.prop(dependencyName, name);
-        });
-      });
     }
   }, {});
   return $AbstractCompiler;
@@ -1409,7 +1418,7 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./compile_error":12,"./java_script_builder":13,"./utils":7}],6:[function(require,module,exports){
+},{"./compile_error":12,"./utils":7}],6:[function(require,module,exports){
 (function(){"use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1436,12 +1445,15 @@ var Parser = function() {
     parse: function(script) {
       this.imports = [];
       this.exports = [];
+      this.directives = [];
       this.exportDefault = undefined;
-      this.walk(esparse(script, {range: true}));
+      this.walk(esparse(script, {
+        range: true,
+        comment: true
+      }));
     },
     walk: function(node) {
       if (node.type) {
-        console.log(node.type);
         var processor = this['process' + node.type];
         if (processor) {
           var result = processor.call(this, node);
@@ -1456,9 +1468,26 @@ var Parser = function() {
           this.walk(child);
         }.bind(this));
       }
+      if (node.comments && node.type === "Program") {
+        {
+          var $__1 = traceur.runtime.getIterator(node.comments);
+          try {
+            while (true) {
+              var comment = $__1.next();
+              {
+                if (comment.value.indexOf("transpile:") !== - 1) {
+                  this.directives.push(comment);
+                }
+              }
+            }
+          } catch (e) {
+            if (!traceur.runtime.isStopIteration(e)) throw e;
+          }
+        }
+      }
     },
     processImportDeclaration: function(node) {
-      var $__1 = node, kind = $__1.kind, source = $__1.source;
+      var $__2 = node, kind = $__2.kind, source = $__2.source;
       if (source.type !== LITERAL || typeof source.value !== 'string') {
         throw new Error('invalid module source: ' + source.value);
       }
@@ -1499,7 +1528,7 @@ module.exports = Parser;
 
 
 })()
-},{"esprima":14}],12:[function(require,module,exports){
+},{"esprima":13}],12:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1546,7 +1575,7 @@ var CompileError = function($__super) {
 module.exports = CompileError;
 
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function(){/*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -7074,235 +7103,6 @@ parseYieldExpression: true
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 })()
-},{}],13:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-};
-var ScriptBuilder = require("./script_builder");
-var JavaScriptBuilder = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $JavaScriptBuilder = ($__createClass)({
-    constructor: function() {
-      $__superCall(this, $__proto, "constructor", arguments);
-    },
-    get eol() {
-      return ';';
-    },
-    variable: function(lhs, rhs) {
-      this.line('var ' + this.capture(lhs) + ' = ' + this.capture(rhs));
-    },
-    _functionHeader: function(args) {
-      return "function(" + (args.join(', ')) + ") {";
-    },
-    _functionTail: function() {
-      return '}';
-    }
-  }, {}, $__proto, $__super, false);
-  return $JavaScriptBuilder;
-}(ScriptBuilder);
-module.exports = JavaScriptBuilder;
-
-
-},{"./script_builder":15}],15:[function(require,module,exports){
-(function(){"use strict";
-var $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClassNoExtends = function(object, staticObject) {
-  var ctor = object.constructor;
-  Object.defineProperty(object, 'constructor', {enumerable: false});
-  ctor.prototype = object;
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-}, $__toObject = function(value) {
-  if (value == null) throw TypeError();
-  return Object(value);
-};
-var $__3, $__4;
-var __dependency1__ = require("./utils");
-var Unique = __dependency1__.Unique;
-var forEach = __dependency1__.forEach;
-var string = __dependency1__.string;
-var INDENT = {}, OUTDENT = {}, BREAK = {};
-var ScriptBuilder = function() {
-  'use strict';
-  var $ScriptBuilder = ($__createClassNoExtends)({
-    constructor: function() {
-      this.buffer = [];
-    },
-    get linebreak() {
-      return BREAK;
-    },
-    get global() {
-      return 'window';
-    },
-    useStrict: function() {
-      this.line('"use strict"');
-    },
-    set_: function(lhs, rhs) {
-      this.line("" + (this.capture(lhs)) + " = " + (this.capture(rhs)));
-    },
-    func: function(args, body) {
-      this.append(this._functionHeader(args));
-      this.indent();
-      body();
-      this.outdent();
-      if (this._functionTail != null) {
-        this.append(this._functionTail());
-      }
-    },
-    call: function(fn, args) {
-      var end, indented, result;
-      fn = this._wrapCallable(fn);
-      args = this._prepareArgsForCall(args);
-      end = args.length - 1;
-      while (args[end] === BREAK) {
-        end--;
-      }
-      result = "" + fn + "(";
-      indented = false;
-      for (var i = 0; i < args.length; i++) {
-        var arg = args[i];
-        if (arg === BREAK) {
-          this.append(result);
-          if (!indented) {
-            indented = true;
-            this.indent();
-          }
-          result = '';
-        } else {
-          result += arg;
-          if (i < end) {
-            result += ',';
-            if (args[i + 1] !== BREAK) {
-              result += ' ';
-            }
-          }
-        }
-      }
-      result += ')';
-      this.append(result);
-      if (indented) {
-        this.outdent();
-      }
-    },
-    _prepareArgsForCall: function(args) {
-      if (typeof args === 'function') {
-        var result = [];
-        args((function(arg) {
-          return result.push(this.capture(arg));
-        }).bind(this));
-        args = result;
-      }
-      return args;
-    },
-    _wrapCallable: function(fn) {
-      if (typeof fn !== 'function') {
-        return fn;
-      }
-      var functionImpl = this.func, functionCalled = false, self = this;
-      this.func = function() {
-        for (var args = [], $__1 = 0; $__1 < arguments.length; $__1++) args[$__1] = arguments[$__1];
-        functionCalled = true;
-        return functionImpl.apply(self, args);
-      };
-      var result = this.capture(fn);
-      this.func = functionImpl;
-      if (functionCalled) {
-        result = '(' + result + (this._functionTail != null ? '': '\n') + ')';
-      }
-      return result;
-    },
-    print: function(value) {
-      return JSON.stringify(this.capture(value));
-    },
-    prop: function(object, prop_) {
-      this.append("" + (this.capture(object)) + "." + (this.capture(prop_)));
-    },
-    unique: function(prefix) {
-      return new Unique(prefix);
-    },
-    line: function(code) {
-      this.append(this.capture(code) + this.eol);
-    },
-    append: function() {
-      for (var code = [], $__2 = 0; $__2 < arguments.length; $__2++) code[$__2] = arguments[$__2];
-      ($__3 = this.buffer).push.apply($__3, $__toObject(code));
-    },
-    indent: function() {
-      this.buffer.push(INDENT);
-    },
-    outdent: function() {
-      this.buffer.push(OUTDENT);
-    },
-    capture: function(fn) {
-      if (typeof fn !== 'function') {
-        return fn;
-      }
-      var buffer = this.buffer;
-      this.buffer = [];
-      fn();
-      var result = this.toString();
-      this.buffer = buffer;
-      return result;
-    },
-    toString: function() {
-      var indent = 0, result = [];
-      forEach(this.buffer, function(chunk) {
-        if (chunk === INDENT) {
-          indent++;
-        } else if (chunk === OUTDENT) {
-          indent--;
-        } else {
-          ($__4 = result).push.apply($__4, $__toObject(string.indent(chunk.split('\n'), indent)));
-        }
-      });
-      return result.join('\n');
-    }
-  }, {});
-  return $ScriptBuilder;
-}();
-module.exports = ScriptBuilder;
-
-
-})()
-},{"./utils":7}]},{},[1])(1)
+},{}]},{},[1])(1)
 });
 ;
