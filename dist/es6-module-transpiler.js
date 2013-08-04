@@ -605,7 +605,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":5,"./parser":6,"./utils":7}],7:[function(require,module,exports){
+},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":6,"./parser":5,"./utils":7}],7:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1204,7 +1204,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":10,"./utils":7}],5:[function(require,module,exports){
+},{"./abstract_compiler":10,"./utils":7}],6:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1418,7 +1418,7 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./compile_error":12,"./utils":7}],6:[function(require,module,exports){
+},{"./compile_error":12,"./utils":7}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
