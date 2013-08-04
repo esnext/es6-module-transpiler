@@ -11,9 +11,6 @@
     "commonjs"
   ],
   "bugs": "https://github.com/square/es6-module-transpiler/issues",
-  "bin": {
-    "compile-modules": "./bin/compile-modules"
-  },
   "directories": {
     "lib": "./lib"
   },
