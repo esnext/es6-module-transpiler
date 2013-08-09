@@ -605,7 +605,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":6,"./parser":5,"./utils":7}],7:[function(require,module,exports){
+},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":5,"./parser":6,"./utils":7}],7:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1204,7 +1204,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":10,"./utils":7}],6:[function(require,module,exports){
+},{"./abstract_compiler":10,"./utils":7}],5:[function(require,module,exports){
 (function(){"use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -1418,7 +1418,54 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./compile_error":12,"./utils":7}],5:[function(require,module,exports){
+},{"./compile_error":12,"./utils":7}],12:[function(require,module,exports){
+"use strict";
+var $__superDescriptor = function(proto, name) {
+  if (!proto) throw new TypeError('super is null');
+  return Object.getPropertyDescriptor(proto, name);
+}, $__superCall = function(self, proto, name, args) {
+  var descriptor = $__superDescriptor(proto, name);
+  if (descriptor) {
+    if ('value'in descriptor) return descriptor.value.apply(self, args);
+    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
+  }
+  throw new TypeError("Object has no method '" + name + "'.");
+}, $__getProtoParent = function(superClass) {
+  if (typeof superClass === 'function') {
+    var prototype = superClass.prototype;
+    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
+  }
+  if (superClass === null) return null;
+  throw new TypeError();
+}, $__getDescriptors = function(object) {
+  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
+  }
+  return descriptors;
+}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
+  var ctor = object.constructor;
+  if (typeof superClass === 'function') ctor.__proto__ = superClass;
+  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
+  var descriptors = $__getDescriptors(object);
+  descriptors.constructor.enumerable = false;
+  ctor.prototype = Object.create(protoParent, descriptors);
+  Object.defineProperties(ctor, $__getDescriptors(staticObject));
+  return ctor;
+};
+var CompileError = function($__super) {
+  'use strict';
+  var $__proto = $__getProtoParent($__super);
+  var $CompileError = ($__createClass)({constructor: function() {
+      $__superCall(this, $__proto, "constructor", arguments);
+    }}, {}, $__proto, $__super, false);
+  return $CompileError;
+}(Error);
+module.exports = CompileError;
+
+
+},{}],6:[function(require,module,exports){
 (function(){"use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -1462,7 +1509,7 @@ var Parser = function() {
           }
         }
       }
-      if (node.body) {
+      if (node.body && node.body.length > 0) {
         node.body.forEach(function(child) {
           child.parent = node;
           this.walk(child);
@@ -1528,54 +1575,7 @@ module.exports = Parser;
 
 
 })()
-},{"esprima":13}],12:[function(require,module,exports){
-"use strict";
-var $__superDescriptor = function(proto, name) {
-  if (!proto) throw new TypeError('super is null');
-  return Object.getPropertyDescriptor(proto, name);
-}, $__superCall = function(self, proto, name, args) {
-  var descriptor = $__superDescriptor(proto, name);
-  if (descriptor) {
-    if ('value'in descriptor) return descriptor.value.apply(self, args);
-    if (descriptor.get) return descriptor.get.call(self).apply(self, args);
-  }
-  throw new TypeError("Object has no method '" + name + "'.");
-}, $__getProtoParent = function(superClass) {
-  if (typeof superClass === 'function') {
-    var prototype = superClass.prototype;
-    if (Object(prototype) === prototype || prototype === null) return superClass.prototype;
-  }
-  if (superClass === null) return null;
-  throw new TypeError();
-}, $__getDescriptors = function(object) {
-  var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    descriptors[name] = Object.getOwnPropertyDescriptor(object, name);
-  }
-  return descriptors;
-}, $__createClass = function(object, staticObject, protoParent, superClass, hasConstructor) {
-  var ctor = object.constructor;
-  if (typeof superClass === 'function') ctor.__proto__ = superClass;
-  if (!hasConstructor && protoParent === null) ctor = object.constructor = function() {};
-  var descriptors = $__getDescriptors(object);
-  descriptors.constructor.enumerable = false;
-  ctor.prototype = Object.create(protoParent, descriptors);
-  Object.defineProperties(ctor, $__getDescriptors(staticObject));
-  return ctor;
-};
-var CompileError = function($__super) {
-  'use strict';
-  var $__proto = $__getProtoParent($__super);
-  var $CompileError = ($__createClass)({constructor: function() {
-      $__superCall(this, $__proto, "constructor", arguments);
-    }}, {}, $__proto, $__super, false);
-  return $CompileError;
-}(Error);
-module.exports = CompileError;
-
-
-},{}],13:[function(require,module,exports){
+},{"esprima":13}],13:[function(require,module,exports){
 (function(){/*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
