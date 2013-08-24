@@ -1,8 +1,8 @@
 define(
-  [],
-  function() {
+  ["exports"],
+  function(__exports__) {
     "use strict";
     var jQuery = function() { };
 
-    return jQuery;
+    __exports__.__default__ = jQuery;
   });

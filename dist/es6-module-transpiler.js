@@ -6087,239 +6087,6 @@ parseYieldExpression: true
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 },{}],2:[function(require,module,exports){
-var process=require("__browserify_process");function filter (xs, fn) {
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (fn(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length; i >= 0; i--) {
-    var last = parts[i];
-    if (last == '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// Regex to split a filename into [*, dir, basename, ext]
-// posix version
-var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-var resolvedPath = '',
-    resolvedAbsolute = false;
-
-for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
-  var path = (i >= 0)
-      ? arguments[i]
-      : process.cwd();
-
-  // Skip empty and invalid entries
-  if (typeof path !== 'string' || !path) {
-    continue;
-  }
-
-  resolvedPath = path + '/' + resolvedPath;
-  resolvedAbsolute = path.charAt(0) === '/';
-}
-
-// At this point the path should be resolved to a full absolute path, but
-// handle relative paths to be safe (might happen when process.cwd() fails)
-
-// Normalize the path
-resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-var isAbsolute = path.charAt(0) === '/',
-    trailingSlash = path.slice(-1) === '/';
-
-// Normalize the path
-path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-  
-  return (isAbsolute ? '/' : '') + path;
-};
-
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    return p && typeof p === 'string';
-  }).join('/'));
-};
-
-
-exports.dirname = function(path) {
-  var dir = splitPathRe.exec(path)[1] || '';
-  var isWindows = false;
-  if (!dir) {
-    // No dirname
-    return '.';
-  } else if (dir.length === 1 ||
-      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
-    // It is just a slash or a drive letter with a slash
-    return dir;
-  } else {
-    // It is a full dirname, strip trailing slash
-    return dir.substring(0, dir.length - 1);
-  }
-};
-
-
-exports.basename = function(path, ext) {
-  var f = splitPathRe.exec(path)[2] || '';
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-
-exports.extname = function(path) {
-  return splitPathRe.exec(path)[3] || '';
-};
-
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-
-},{"__browserify_process":3}],3:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],4:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -6369,20 +6136,7 @@ var AbstractCompiler = function() {
             var specifier = import_.specifiers[0];
             replacement = this.doDefaultImport(specifier.id.name, dependencyName, idx);
           } else if (import_.kind === "named") {
-            {
-              var $__1 = traceur.runtime.getIterator(import_.specifiers);
-              try {
-                while (true) {
-                  var specifier = $__1.next();
-                  {
-                    var alias = specifier.name ? specifier.name.name: specifier.id.name;
-                    replacement = this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
-                  }
-                }
-              } catch (e) {
-                if (!traceur.runtime.isStopIteration(e)) throw e;
-              }
-            }
+            replacement = this.doImportSpecifiers(import_, idx);
           } else if (import_.kind === undefined) {
             replacement = this.doBareImport(import_.source.value);
           }
@@ -6393,20 +6147,20 @@ var AbstractCompiler = function() {
     buildExports: function() {
       var source = this.source, exports_ = this.exports;
       {
-        var $__3 = traceur.runtime.getIterator(exports_);
+        var $__2 = traceur.runtime.getIterator(exports_);
         try {
           while (true) {
-            var export_ = $__3.next();
+            var export_ = $__2.next();
             {
               var replacement = "";
               if (export_.default) {
                 source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport());
               } else if (export_.specifiers) {
                 {
-                  var $__2 = traceur.runtime.getIterator(export_.specifiers);
+                  var $__1 = traceur.runtime.getIterator(export_.specifiers);
                   try {
                     while (true) {
-                      var specifier = $__2.next();
+                      var specifier = $__1.next();
                       {
                         replacement += this.doExportSpecifier(specifier.id.name);
                       }
@@ -6439,6 +6193,22 @@ var AbstractCompiler = function() {
           if (!traceur.runtime.isStopIteration(e)) throw e;
         }
       }
+    },
+    parseDirectives: function() {
+      var directives = this.directives;
+      {
+        var $__3 = traceur.runtime.getIterator(directives);
+        try {
+          while (true) {
+            var directive = $__3.next();
+            {
+              this.source.replace(directive.range[0], directive.range[1], "");
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
     }
   }, {});
   return $AbstractCompiler;
@@ -6446,7 +6216,7 @@ var AbstractCompiler = function() {
 module.exports = AbstractCompiler;
 
 
-},{"./compile_error":7,"./utils":13}],5:[function(require,module,exports){
+},{"./compile_error":5,"./utils":11}],3:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -6483,7 +6253,6 @@ var $__superDescriptor = function(proto, name) {
   return ctor;
 };
 var AbstractCompiler = require("./abstract_compiler");
-var path = require("path");
 var SourceModifier = require("./source_modifier");
 var AMDCompiler = function($__super) {
   'use strict';
@@ -6555,21 +6324,24 @@ var AMDCompiler = function($__super) {
     doDefaultExport: function() {
       return "__exports__.__default__ = ";
     },
-    parseDirectives: function() {
-      var directives = this.directives;
+    doImportSpecifiers: function(import_, idx) {
+      var dependencyName = import_.source.value;
+      var replacement = "";
       {
-        var $__1 = traceur.runtime.getIterator(directives);
+        var $__1 = traceur.runtime.getIterator(import_.specifiers);
         try {
           while (true) {
-            var directive = $__1.next();
+            var specifier = $__1.next();
             {
-              this.source.replace(directive.range[0], directive.range[1], "");
+              var alias = specifier.name ? specifier.name.name: specifier.id.name;
+              replacement += this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
             }
           }
         } catch (e) {
           if (!traceur.runtime.isStopIteration(e)) throw e;
         }
       }
+      return replacement;
     }
   }, {}, $__proto, $__super, false);
   return $AMDCompiler;
@@ -6577,7 +6349,7 @@ var AMDCompiler = function($__super) {
 module.exports = AMDCompiler;
 
 
-},{"./abstract_compiler":4,"./source_modifier":12,"path":2}],6:[function(require,module,exports){
+},{"./abstract_compiler":2,"./source_modifier":10}],4:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -6625,11 +6397,13 @@ var CJSCompiler = function($__super) {
     stringify: function() {
       var string = this.string.toString();
       this.source = new SourceModifier(string);
+      this.parseDirectives();
       this.buildImports();
       this.buildExports();
       var out = "\"use strict\";\n";
       out += this.source.toString();
       out = out.trim();
+      console.log(out);
       return out;
     },
     doModuleImport: function(name, dependencyName, idx) {
@@ -6642,6 +6416,9 @@ var CJSCompiler = function($__super) {
       return ("var " + name + " = require(\"" + dependencyName + "\").__default__;\n");
     },
     doNamedImport: function(name, dependencyName, idx, alias) {
+      return ("var " + alias + " = __dependency" + (idx + 1) + "__." + name + ";\n");
+    },
+    doSingleNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = require(\"" + dependencyName + "\")." + name + ";\n");
     },
     doExportSpecifier: function(name) {
@@ -6652,6 +6429,32 @@ var CJSCompiler = function($__super) {
     },
     doDefaultExport: function() {
       return "exports.__default__ = ";
+    },
+    doImportSpecifiers: function(import_, idx) {
+      var dependencyName = import_.source.value;
+      if (import_.specifiers.length === 1) {
+        var specifier = import_.specifiers[0];
+        var alias = specifier.name ? specifier.name.name: specifier.id.name;
+        return this.doSingleNamedImport(specifier.id.name, dependencyName, alias);
+      }
+      var replacement = "";
+      replacement += ("var __dependency" + (idx + 1) + "__ = require(\"" + dependencyName + "\");\n");
+      dependencyName = ("__dependency" + (idx + 1) + "__");
+      {
+        var $__1 = traceur.runtime.getIterator(import_.specifiers);
+        try {
+          while (true) {
+            var specifier = $__1.next();
+            {
+              var alias = specifier.name ? specifier.name.name: specifier.id.name;
+              replacement += this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
+      return replacement;
     }
   }, {}, $__proto, $__super, false);
   return $CJSCompiler;
@@ -6659,7 +6462,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":4,"./source_modifier":12}],7:[function(require,module,exports){
+},{"./abstract_compiler":2,"./source_modifier":10}],5:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -6706,7 +6509,7 @@ var CompileError = function($__super) {
 module.exports = CompileError;
 
 
-},{}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -6766,7 +6569,7 @@ var Compiler = function() {
 module.exports = Compiler;
 
 
-},{"./amd_compiler":5,"./cjs_compiler":6,"./globals_compiler":9,"./parser":11,"./utils":13}],9:[function(require,module,exports){
+},{"./amd_compiler":3,"./cjs_compiler":4,"./globals_compiler":7,"./parser":9,"./utils":11}],7:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -6871,13 +6674,13 @@ var GlobalsCompiler = function($__super) {
 module.exports = GlobalsCompiler;
 
 
-},{"./abstract_compiler":4,"./utils":13}],10:[function(require,module,exports){
+},{"./abstract_compiler":2,"./utils":11}],8:[function(require,module,exports){
 "use strict";
 var Compiler = require("./compiler");
 exports.Compiler = Compiler;
 
 
-},{"./compiler":8}],11:[function(require,module,exports){
+},{"./compiler":6}],9:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -6988,7 +6791,7 @@ var Parser = function() {
 module.exports = Parser;
 
 
-},{"esprima":1}],12:[function(require,module,exports){
+},{"esprima":1}],10:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -7046,7 +6849,7 @@ var SourceModifier = function() {
 module.exports = SourceModifier;
 
 
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 var $__getDescriptors = function(object) {
   var descriptors = {}, name, names = Object.getOwnPropertyNames(object);
@@ -7128,6 +6931,6 @@ exports.forEach = forEach;
 exports.string = string;
 
 
-},{}]},{},[10])(10)
+},{}]},{},[8])(8)
 });
 ;
