@@ -6342,7 +6342,8 @@ var array = __dependency1__.array;
 var forEach = __dependency1__.forEach;
 var AbstractCompiler = function() {
   'use strict';
-  var $AbstractCompiler = ($__createClassNoExtends)({constructor: function(compiler, options) {
+  var $AbstractCompiler = ($__createClassNoExtends)({
+    constructor: function(compiler, options) {
       this.compiler = compiler;
       this.exports = compiler.exports;
       this.exportDefault = compiler.exportDefault;
@@ -6355,7 +6356,91 @@ var AbstractCompiler = function() {
       this.dependencyNames = array.uniq(this.imports.map(function(import_) {
         return import_.source.value;
       }));
-    }}, {});
+    },
+    buildImports: function() {
+      var imports = this.imports, moduleImports = this.moduleImports, source = this.source;
+      for (var idx = 0; idx < imports.length; idx++) {
+        var import_ = imports[idx], replacement = "";
+        var dependencyName = import_.source.value;
+        if (import_.type === "ModuleDeclaration" && import_.source.type === "Literal") {
+          replacement = this.doModuleImport(import_.id.name, dependencyName, idx);
+        } else if (import_.type === "ImportDeclaration") {
+          if (import_.kind === "default") {
+            var specifier = import_.specifiers[0];
+            replacement = this.doDefaultImport(specifier.id.name, dependencyName, idx);
+          } else if (import_.kind === "named") {
+            {
+              var $__1 = traceur.runtime.getIterator(import_.specifiers);
+              try {
+                while (true) {
+                  var specifier = $__1.next();
+                  {
+                    var alias = specifier.name ? specifier.name.name: specifier.id.name;
+                    replacement = this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
+                  }
+                }
+              } catch (e) {
+                if (!traceur.runtime.isStopIteration(e)) throw e;
+              }
+            }
+          } else if (import_.kind === undefined) {
+            replacement = this.doBareImport(import_.source.value);
+          }
+        }
+        source.replace(import_.range[0], import_.range[1], replacement);
+      }
+    },
+    buildExports: function() {
+      var source = this.source, exports_ = this.exports;
+      {
+        var $__3 = traceur.runtime.getIterator(exports_);
+        try {
+          while (true) {
+            var export_ = $__3.next();
+            {
+              var replacement = "";
+              if (export_.default) {
+                source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport());
+              } else if (export_.specifiers) {
+                {
+                  var $__2 = traceur.runtime.getIterator(export_.specifiers);
+                  try {
+                    while (true) {
+                      var specifier = $__2.next();
+                      {
+                        replacement += this.doExportSpecifier(specifier.id.name);
+                      }
+                    }
+                  } catch (e) {
+                    if (!traceur.runtime.isStopIteration(e)) throw e;
+                  }
+                }
+                source.replace(export_.range[0], export_.range[1], replacement);
+              } else if (export_.declaration) {
+                if (export_.declaration.type === "VariableDeclaration") {
+                  var name = export_.declaration.declarations[0].id.name;
+                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
+                  replacement = this.doExportDeclaration(name);
+                  source.replace(export_.range[1], export_.range[1], replacement);
+                } else if (export_.declaration.type === "FunctionDeclaration") {
+                  var name = export_.declaration.id.name;
+                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
+                  replacement = this.doExportDeclaration(name);
+                  source.replace(export_.range[1] + 1, export_.range[1] + 1, replacement);
+                } else if (export_.declaration.type === "Identifier") {
+                  var name = export_.declaration.name;
+                  replacement = this.doExportDeclaration(name);
+                  source.replace(export_.range[0], export_.range[1] - 1, replacement);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
+    }
+  }, {});
   return $AbstractCompiler;
 }();
 module.exports = AbstractCompiler;
@@ -6449,94 +6534,34 @@ var AMDCompiler = function($__super) {
       out += '    "use strict";\n';
       return out;
     },
-    buildImports: function() {
-      var imports = this.imports, moduleImports = this.moduleImports, source = this.source;
-      for (var idx = 0; idx < imports.length; idx++) {
-        var import_ = imports[idx], replacement = "";
-        if (import_.type === "ModuleDeclaration" && import_.source.type === "Literal") {
-          replacement = ("var " + import_.id.name + " = __dependency" + (idx + 1) + "__;\n");
-        } else if (import_.type === "ImportDeclaration") {
-          if (import_.kind === "default") {
-            var specifier = import_.specifiers[0];
-            replacement = ("var " + specifier.id.name + " = __dependency" + (idx + 1) + "__.__default__;\n");
-          } else if (import_.kind === "named") {
-            {
-              var $__1 = traceur.runtime.getIterator(import_.specifiers);
-              try {
-                while (true) {
-                  var specifier = $__1.next();
-                  {
-                    var alias = specifier.name ? specifier.name.name: specifier.id.name;
-                    replacement += ("var " + alias + " = __dependency" + (idx + 1) + "__." + specifier.id.name + ";\n");
-                  }
-                }
-              } catch (e) {
-                if (!traceur.runtime.isStopIteration(e)) throw e;
-              }
-            }
-          }
-        }
-        source.replace(import_.range[0], import_.range[1], replacement);
-      }
+    doModuleImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + (idx + 1) + "__;\n");
     },
-    buildExports: function() {
-      var source = this.source, exports_ = this.exports, exportDefault = this.exportDefault;
-      {
-        var $__3 = traceur.runtime.getIterator(exports_);
-        try {
-          while (true) {
-            var export_ = $__3.next();
-            {
-              var replacement = "";
-              if (export_.specifiers) {
-                {
-                  var $__2 = traceur.runtime.getIterator(export_.specifiers);
-                  try {
-                    while (true) {
-                      var specifier = $__2.next();
-                      {
-                        replacement += ("__exports__." + specifier.id.name + " = " + specifier.id.name + ";\n");
-                      }
-                    }
-                  } catch (e) {
-                    if (!traceur.runtime.isStopIteration(e)) throw e;
-                  }
-                }
-                source.replace(export_.range[0], export_.range[1], replacement);
-              } else if (export_.declaration) {
-                if (export_.declaration.type === "VariableDeclaration") {
-                  var name = export_.declaration.declarations[0].id.name;
-                  var exportedName = export_.default ? "__default__": name;
-                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
-                  replacement = ("\n__exports__." + exportedName + " = " + name + ";");
-                  source.replace(export_.range[1], export_.range[1], replacement);
-                } else if (export_.declaration.type === "FunctionDeclaration") {
-                  var name = export_.declaration.id.name;
-                  var exportedName = export_.default ? "__default__": name;
-                  source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
-                  replacement = ("\n__exports__." + exportedName + " = " + name + ";");
-                  source.replace(export_.range[1] + 1, export_.range[1] + 1, replacement);
-                } else if (export_.declaration.type === "Identifier") {
-                  var name = export_.declaration.name;
-                  var exportedName = export_.default ? "__default__": name;
-                  replacement = ("__exports__." + exportedName + " = " + name + ";");
-                  source.replace(export_.range[0], export_.range[1] - 1, replacement);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          if (!traceur.runtime.isStopIteration(e)) throw e;
-        }
-      }
+    doBareImport: function(name) {
+      return "";
+    },
+    doDefaultImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + (idx + 1) + "__.__default__;\n");
+    },
+    doNamedImport: function(name, dependencyName, idx, alias) {
+      return ("var " + alias + " = __dependency" + (idx + 1) + "__." + name + ";\n");
+    },
+    doExportSpecifier: function(name) {
+      return ("__exports__." + name + " = " + name + ";\n");
+    },
+    doExportDeclaration: function(name) {
+      return ("\n__exports__." + name + " = " + name + ";");
+    },
+    doDefaultExport: function() {
+      return "__exports__.__default__ = ";
     },
     parseDirectives: function() {
       var directives = this.directives;
       {
-        var $__4 = traceur.runtime.getIterator(directives);
+        var $__1 = traceur.runtime.getIterator(directives);
         try {
           while (true) {
-            var directive = $__4.next();
+            var directive = $__1.next();
             {
               this.source.replace(directive.range[0], directive.range[1], "");
             }
@@ -6587,13 +6612,9 @@ var $__superDescriptor = function(proto, name) {
   ctor.prototype = Object.create(protoParent, descriptors);
   Object.defineProperties(ctor, $__getDescriptors(staticObject));
   return ctor;
-}, $__toObject = function(value) {
-  if (value == null) throw TypeError();
-  return Object(value);
 };
-var $__1;
 var AbstractCompiler = require("./abstract_compiler");
-var forEach = require("./utils").forEach;
+var SourceModifier = require("./source_modifier");
 var CJSCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
@@ -6602,52 +6623,35 @@ var CJSCompiler = function($__super) {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var imports = this.imports, importDefault = this.importDefault, exports_ = this.exports, exportDefault = this.exportDefault, lines = this.lines;
-      return this.build(function(s) {
-        try {
-          throw undefined;
-        } catch (doImport) {
-          doImport = function(name, import_, prop) {
-            var req, rhs;
-            if (prop == null) {
-              prop = null;
-            }
-            req = function() {
-              s.call('require', [s.print(import_)]);
-            };
-            rhs = prop ? (function() {
-              s.prop(req, prop);
-            }): req;
-            s.variable(name, rhs);
-          };
-          s.useStrict();
-          var deps = s.unique('dependency');
-          forEach(importDefault, doImport);
-          forEach(imports, function(variables, import_) {
-            if (Object.keys(variables).length === 1) {
-              var name = Object.keys(variables)[0];
-              doImport(variables[name], import_, name);
-            } else {
-              var dependency = deps.next();
-              doImport(dependency, import_);
-              forEach(variables, function(alias, name) {
-                if (name === 'default') {
-                  s.variable(alias, '' + dependency);
-                } else {
-                  s.variable(alias, '' + dependency + '.' + name);
-                }
-              });
-            }
-          });
-          ($__1 = s).append.apply($__1, $__toObject(lines));
-          if (exportDefault) {
-            s.line('module.exports = ' + exportDefault);
-          }
-          forEach(exports_, function(exportValue, exportName) {
-            s.line('exports.' + exportName + ' = ' + exportValue);
-          });
-        }
-      });
+      var string = this.string.toString();
+      this.source = new SourceModifier(string);
+      this.buildImports();
+      this.buildExports();
+      var out = "\"use strict\";\n";
+      out += this.source.toString();
+      out = out.trim();
+      return out;
+    },
+    doModuleImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = require(\"" + dependencyName + "\");\n");
+    },
+    doBareImport: function(name) {
+      return ("require(\"" + name + "\");");
+    },
+    doDefaultImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = require(\"" + dependencyName + "\").__default__;\n");
+    },
+    doNamedImport: function(name, dependencyName, idx, alias) {
+      return ("var " + alias + " = require(\"" + dependencyName + "\")." + name + ";\n");
+    },
+    doExportSpecifier: function(name) {
+      return ("exports." + name + " = " + name + ";\n");
+    },
+    doExportDeclaration: function(name) {
+      return ("\nexports." + name + " = " + name + ";");
+    },
+    doDefaultExport: function() {
+      return "exports.__default__ = ";
     }
   }, {}, $__proto, $__super, false);
   return $CJSCompiler;
@@ -6655,7 +6659,7 @@ var CJSCompiler = function($__super) {
 module.exports = CJSCompiler;
 
 
-},{"./abstract_compiler":4,"./utils":13}],7:[function(require,module,exports){
+},{"./abstract_compiler":4,"./source_modifier":12}],7:[function(require,module,exports){
 "use strict";
 var $__superDescriptor = function(proto, name) {
   if (!proto) throw new TypeError('super is null');
@@ -6952,6 +6956,9 @@ var Parser = function() {
           break;
         case 'default':
           this.processDefaultImportDeclaration(node);
+          break;
+        case undefined:
+          this.processNamedImportDeclaration(node);
           break;
         default:
           throw new Error('unknown import kind: ' + kind);
