@@ -6669,7 +6669,7 @@ var GlobalsCompiler = function($__super) {
       return "";
     },
     doDefaultImport: function(name, dependencyName, idx) {
-      return ("var " + name + " = __dependency" + this.map[dependencyName] + "__.__default__;\n");
+      return ("var " + name + " = __dependency" + this.map[dependencyName] + "__;\n");
     },
     doNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = __dependency" + this.map[dependencyName] + "__." + name + ";\n");
