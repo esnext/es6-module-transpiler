@@ -6267,7 +6267,6 @@ var AMDCompiler = function($__super) {
       }, "");
       out += inner.replace(/\s+$/, "");
       out += "\n  });";
-      console.log(out);
       return out;
     },
     buildPreamble: function(hasExports) {
@@ -6402,7 +6401,6 @@ var CJSCompiler = function($__super) {
       var out = "\"use strict\";\n";
       out += this.source.toString();
       out = out.trim();
-      console.log(out);
       return out;
     },
     doModuleImport: function(name, dependencyName, idx) {
@@ -6628,7 +6626,6 @@ var GlobalsCompiler = function($__super) {
       out += "\n})";
       out += this.buildSuffix();
       out += ";";
-      console.log(out);
       return out;
     },
     buildPreamble: function() {
