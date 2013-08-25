@@ -6157,7 +6157,8 @@ var AbstractCompiler = function() {
             {
               var replacement = "";
               if (export_.default) {
-                source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport());
+                var identifier = export_.declaration.name || null;
+                source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport(identifier));
               } else if (export_.specifiers) {
                 var reexport;
                 if (export_.source) {
@@ -6176,7 +6177,7 @@ var AbstractCompiler = function() {
                     if (!traceur.runtime.isStopIteration(e)) throw e;
                   }
                 }
-                source.replace(export_.range[0], export_.range[1] - 1, replacement);
+                source.replace(export_.range[0], export_.range[1], replacement);
               } else if (export_.declaration) {
                 if (export_.declaration.type === "VariableDeclaration") {
                   var name = export_.declaration.declarations[0].id.name;
@@ -6194,22 +6195,6 @@ var AbstractCompiler = function() {
                   source.replace(export_.range[0], export_.range[1] - 1, replacement);
                 }
               }
-            }
-          }
-        } catch (e) {
-          if (!traceur.runtime.isStopIteration(e)) throw e;
-        }
-      }
-    },
-    parseDirectives: function() {
-      var directives = this.directives;
-      {
-        var $__3 = traceur.runtime.getIterator(directives);
-        try {
-          while (true) {
-            var directive = $__3.next();
-            {
-              this.source.replace(directive.range[0], directive.range[1], "");
             }
           }
         } catch (e) {
@@ -6273,7 +6258,6 @@ var AMDCompiler = function($__super) {
       this.source = new SourceModifier(string);
       this.map = [];
       var out = this.buildPreamble(this.exports.length > 0);
-      this.parseDirectives();
       this.buildImports();
       this.buildExports();
       var innerLines = this.source.toString().split("\n");
@@ -6409,7 +6393,6 @@ var CJSCompiler = function($__super) {
     stringify: function() {
       var string = this.string.toString();
       this.source = new SourceModifier(string);
-      this.parseDirectives();
       this.buildImports();
       this.buildExports();
       var out = "\"use strict\";\n";
@@ -6611,9 +6594,7 @@ var $__superDescriptor = function(proto, name) {
   return ctor;
 };
 var AbstractCompiler = require("./abstract_compiler");
-var __dependency1__ = require("./utils");
-var isEmpty = __dependency1__.isEmpty;
-var forEach = __dependency1__.forEach;
+var SourceModifier = require("./source_modifier");
 var GlobalsCompiler = function($__super) {
   'use strict';
   var $__proto = $__getProtoParent($__super);
@@ -6622,56 +6603,110 @@ var GlobalsCompiler = function($__super) {
       $__superCall(this, $__proto, "constructor", arguments);
     },
     stringify: function() {
-      var options = this.options, deps = this.dependencyNames, exports_ = this.exports, exportDefault = this.exportDefault, imports = this.imports, importDefault = this.importDefault, lines = this.lines;
-      return this.build(function(s) {
-        try {
-          throw undefined;
-        } catch (args) {
-          try {
-            throw undefined;
-          } catch (wrapper) {
-            var passedArgs = [], receivedArgs = [], locals = {}, into = options.into || exportDefault;
-            if (!isEmpty(exports_) || exportDefault) {
-              passedArgs.push(exportDefault ? s.global: into ? '' + s.global + '.' + into + ' = {}': s.global);
-              receivedArgs.push('exports');
-            }
-            forEach(deps, function(name) {
-              var globalImport = options.imports[name];
-              passedArgs.push([s.global, globalImport].join('.'));
-              if (name in importDefault) {
-                receivedArgs.push(importDefault[name]);
-              } else {
-                receivedArgs.push(globalImport);
-                forEach(imports[name], function(alias, name) {
-                  locals[alias] = [globalImport, name].join('.');
-                });
-              }
-            });
-            wrapper = function() {
-              s.func(receivedArgs, function() {
-                s.useStrict();
-                forEach(locals, function(rhs, lhs) {
-                  s.variable(lhs, rhs);
-                });
-                s.append.apply(s, lines);
-                if (exportDefault) {
-                  s.set('exports.' + into, exportDefault);
-                } else {
-                  forEach(exports_, function(exportValue, exportName) {
-                    s.set('exports.' + exportName, exportValue);
-                  });
-                }
-              });
-            };
-            args = function(arg) {
-              forEach(passedArgs, arg);
-            };
-            s.line(function() {
-              s.call(wrapper, args);
-            });
-          }
+      var string = this.string.toString();
+      this.source = new SourceModifier(string);
+      this.map = [];
+      var out = this.buildPreamble(this.exports.length > 0);
+      this.buildImports();
+      this.buildExports();
+      if (!this.options.imports) this.options.imports = {};
+      if (!this.options.global) this.options.global = "window";
+      var innerLines = this.source.toString().split("\n");
+      var inner = innerLines.reduce(function(acc, item) {
+        if (item === "") return acc + "\n";
+        return acc + "  " + item + "\n";
+      }, "");
+      out += inner.replace(/\s+$/, "");
+      out += "\n})";
+      out += this.buildSuffix();
+      out += ";";
+      console.log(out);
+      return out;
+    },
+    buildPreamble: function() {
+      var out = "", dependencyNames = this.dependencyNames;
+      out += "(function(";
+      if (this.exports.length > 0) {
+        out += "__exports__";
+        if (this.dependencyNames.length > 0) {
+          out += ', ';
         }
-      });
+      }
+      for (var idx = 0; idx < dependencyNames.length; idx++) {
+        out += ("__dependency" + (idx + 1) + "__");
+        this.map[dependencyNames[idx]] = idx + 1;
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += ") {\n";
+      out += '  "use strict";\n';
+      return out;
+    },
+    buildSuffix: function() {
+      var dependencyNames = this.dependencyNames;
+      var out = "(";
+      if (this.exports.length > 0) {
+        if (this.options.into) {
+          out += (this.options.global + "." + this.options.into + " = {}");
+        } else {
+          out += this.options.global;
+        }
+        if (this.dependencyNames.length > 0) {
+          out += ', ';
+        }
+      }
+      for (var idx = 0; idx < dependencyNames.length; idx++) {
+        var name = dependencyNames[idx];
+        out += (this.options.global + "." + (this.options.imports[name] || name));
+        if (!(idx === dependencyNames.length - 1)) out += ", ";
+      }
+      out += ")";
+      return out;
+    },
+    doModuleImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + this.map[dependencyName] + "__;\n");
+    },
+    doBareImport: function(name) {
+      return "";
+    },
+    doDefaultImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + this.map[dependencyName] + "__.__default__;\n");
+    },
+    doNamedImport: function(name, dependencyName, alias) {
+      return ("var " + alias + " = __dependency" + this.map[dependencyName] + "__." + name + ";\n");
+    },
+    doExportSpecifier: function(name, reexport) {
+      if (reexport) {
+        return ("__exports__." + name + " = __dependency" + this.map[reexport] + "__." + name + ";\n");
+      }
+      return ("__exports__." + name + " = " + name + ";\n");
+    },
+    doExportDeclaration: function(name) {
+      return ("\n__exports__." + name + " = " + name + ";");
+    },
+    doDefaultExport: function(identifier) {
+      if (identifier === null) {
+        throw new Error("The globals compiler does not support anonymous default exports.");
+      }
+      return ("__exports__." + identifier + " = ");
+    },
+    doImportSpecifiers: function(import_, idx) {
+      var dependencyName = import_.source.value;
+      var replacement = "";
+      {
+        var $__1 = traceur.runtime.getIterator(import_.specifiers);
+        try {
+          while (true) {
+            var specifier = $__1.next();
+            {
+              var alias = specifier.name ? specifier.name.name: specifier.id.name;
+              replacement += this.doNamedImport(specifier.id.name, dependencyName, alias);
+            }
+          }
+        } catch (e) {
+          if (!traceur.runtime.isStopIteration(e)) throw e;
+        }
+      }
+      return replacement;
     }
   }, {}, $__proto, $__super, false);
   return $GlobalsCompiler;
@@ -6679,7 +6714,7 @@ var GlobalsCompiler = function($__super) {
 module.exports = GlobalsCompiler;
 
 
-},{"./abstract_compiler":2,"./utils":11}],8:[function(require,module,exports){
+},{"./abstract_compiler":2,"./source_modifier":10}],8:[function(require,module,exports){
 "use strict";
 var Compiler = require("./compiler");
 exports.Compiler = Compiler;
