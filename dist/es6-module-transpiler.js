@@ -6303,7 +6303,11 @@ var AMDCompiler = function($__super) {
       return "";
     },
     doDefaultImport: function(name, dependencyName, idx) {
-      return ("var " + name + " = __dependency" + this.map[dependencyName] + "__.__default__;\n");
+      if (this.options.compatFix === true) {
+        return ("var " + name + " = __dependency" + this.map[dependencyName] + "__.__default__ || __dependency" + this.map[dependencyName] + "__;\n");
+      } else {
+        return ("var " + name + " = __dependency" + this.map[dependencyName] + "__.__default__;\n");
+      }
     },
     doNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = __dependency" + this.map[dependencyName] + "__." + name + ";\n");
@@ -6408,7 +6412,11 @@ var CJSCompiler = function($__super) {
       return ("require(\"" + name + "\");");
     },
     doDefaultImport: function(name, dependencyName, idx) {
-      return ("var " + name + " = require(\"" + dependencyName + "\").__default__;\n");
+      if (this.options.compatFix === true) {
+        return ("var " + name + " = require(\"" + dependencyName + "\").__default__; || require(\"" + dependencyName + "\")\n");
+      } else {
+        return ("var " + name + " = require(\"" + dependencyName + "\").__default__;\n");
+      }
     },
     doNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = require(\"" + dependencyName + "\")." + name + ";\n");
