@@ -6102,7 +6102,6 @@ var $__getDescriptors = function(object) {
   Object.defineProperties(ctor, $__getDescriptors(staticObject));
   return ctor;
 };
-var $__4, $__5, $__6;
 var CompileError = require("./compile_error");
 var __dependency1__ = require("./utils");
 var isEmpty = __dependency1__.isEmpty;
@@ -6124,43 +6123,26 @@ var AbstractCompiler = function() {
       this.dependencyNames = array.uniq(this.imports.map(function(import_) {
         return import_.source.value;
       }));
-      this.seen = {};
-      this.seenIdx = 1;
     },
     buildImports: function() {
       var imports = this.imports, moduleImports = this.moduleImports, source = this.source;
       for (var idx = 0; idx < imports.length; idx++) {
-        var import_ = imports[idx], replacement = "", dependencyName = import_.source.value, dependencyIdentifier;
+        var import_ = imports[idx], replacement = "";
+        var dependencyName = import_.source.value;
         if (import_.type === "ModuleDeclaration" && import_.source.type === "Literal") {
-          ($__4 = this.doCache(dependencyName, import_.range), dependencyName = $__4[0], replacement = $__4[1], $__4);
-          replacement += this.doModuleImport(import_.id.name, dependencyName);
+          replacement = this.doModuleImport(import_.id.name, dependencyName, idx);
         } else if (import_.type === "ImportDeclaration") {
           if (import_.kind === "default") {
-            ($__5 = this.doCache(dependencyName, import_.range), dependencyName = $__5[0], replacement = $__5[1], $__5);
             var specifier = import_.specifiers[0];
-            replacement += this.doDefaultImport(specifier.id.name, dependencyName);
+            replacement = this.doDefaultImport(specifier.id.name, dependencyName, idx);
           } else if (import_.kind === "named") {
-            ($__6 = this.doCache(dependencyName, import_.range), dependencyName = $__6[0], replacement = $__6[1], $__6);
-            replacement += this.doImportSpecifiers(import_, dependencyName);
+            replacement = this.doImportSpecifiers(import_, idx);
           } else if (import_.kind === undefined) {
-            replacement += this.doBareImport(import_.source.value);
+            replacement = this.doBareImport(import_.source.value);
           }
         }
         source.replace(import_.range[0], import_.range[1], replacement);
       }
-    },
-    doCache: function(dependencyName, range) {
-      var dependencyIdentifier, replacement = "";
-      if (!this.seen[dependencyName]) {
-        dependencyIdentifier = this.seen[dependencyName] = ("__dependency" + this.seenIdx + "__");
-        this.seenIdx += 1;
-        if (this.doUnseenImport) {
-          replacement = this.doUnseenImport(dependencyName, dependencyIdentifier);
-        }
-      } else {
-        dependencyIdentifier = this.seen[dependencyName];
-      }
-      return [dependencyIdentifier, replacement];
     },
     buildExports: function() {
       var source = this.source, exports_ = this.exports;
@@ -6170,7 +6152,7 @@ var AbstractCompiler = function() {
           while (true) {
             var export_ = $__2.next();
             {
-              var replacement = "", name;
+              var replacement = "";
               if (export_.default) {
                 source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport());
               } else if (export_.specifiers) {
@@ -6190,17 +6172,17 @@ var AbstractCompiler = function() {
                 source.replace(export_.range[0], export_.range[1], replacement);
               } else if (export_.declaration) {
                 if (export_.declaration.type === "VariableDeclaration") {
-                  name = export_.declaration.declarations[0].id.name;
+                  var name = export_.declaration.declarations[0].id.name;
                   source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
                   replacement = this.doExportDeclaration(name);
                   source.replace(export_.range[1], export_.range[1], replacement);
                 } else if (export_.declaration.type === "FunctionDeclaration") {
-                  name = export_.declaration.id.name;
+                  var name = export_.declaration.id.name;
                   source.replace(export_.range[0], export_.declaration.range[0] - 1, "");
                   replacement = this.doExportDeclaration(name);
                   source.replace(export_.range[1] + 1, export_.range[1] + 1, replacement);
                 } else if (export_.declaration.type === "Identifier") {
-                  name = export_.declaration.name;
+                  var name = export_.declaration.name;
                   replacement = this.doExportDeclaration(name);
                   source.replace(export_.range[0], export_.range[1] - 1, replacement);
                 }
@@ -6321,17 +6303,17 @@ var AMDCompiler = function($__super) {
       out += '    "use strict";\n';
       return out;
     },
-    doModuleImport: function(name, dependencyName) {
-      return ("var " + name + " = " + dependencyName + ";\n");
+    doModuleImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + (idx + 1) + "__;\n");
     },
     doBareImport: function(name) {
       return "";
     },
-    doDefaultImport: function(name, dependencyName) {
-      return ("var " + name + " = " + dependencyName + ".__default__;\n");
+    doDefaultImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = __dependency" + (idx + 1) + "__.__default__;\n");
     },
-    doNamedImport: function(name, dependencyName, alias) {
-      return ("var " + alias + " = " + dependencyName + "." + name + ";\n");
+    doNamedImport: function(name, dependencyName, idx, alias) {
+      return ("var " + alias + " = __dependency" + (idx + 1) + "__." + name + ";\n");
     },
     doExportSpecifier: function(name) {
       return ("__exports__." + name + " = " + name + ";\n");
@@ -6342,7 +6324,8 @@ var AMDCompiler = function($__super) {
     doDefaultExport: function() {
       return "__exports__.__default__ = ";
     },
-    doImportSpecifiers: function(import_, dependencyName) {
+    doImportSpecifiers: function(import_, idx) {
+      var dependencyName = import_.source.value;
       var replacement = "";
       {
         var $__1 = traceur.runtime.getIterator(import_.specifiers);
@@ -6351,7 +6334,7 @@ var AMDCompiler = function($__super) {
             var specifier = $__1.next();
             {
               var alias = specifier.name ? specifier.name.name: specifier.id.name;
-              replacement += this.doNamedImport(specifier.id.name, dependencyName, alias);
+              replacement += this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
             }
           }
         } catch (e) {
@@ -6423,23 +6406,20 @@ var CJSCompiler = function($__super) {
       console.log(out);
       return out;
     },
-    doUnseenImport: function(name, dependencyIdentifier) {
-      return ("var " + dependencyIdentifier + " = require(\"" + name + "\");\n");
-    },
-    doModuleImport: function(name, dependencyName) {
-      return ("var " + name + " = " + dependencyName + ";\n");
+    doModuleImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = require(\"" + dependencyName + "\");\n");
     },
     doBareImport: function(name) {
       return ("require(\"" + name + "\");");
     },
-    doDefaultImport: function(name, dependencyName) {
-      return ("var " + name + " = " + dependencyName + ".__default__;\n");
+    doDefaultImport: function(name, dependencyName, idx) {
+      return ("var " + name + " = require(\"" + dependencyName + "\").__default__;\n");
     },
-    doNamedImport: function(name, dependencyName, alias) {
-      return ("var " + alias + " = " + dependencyName + "." + name + ";\n");
+    doNamedImport: function(name, dependencyName, idx, alias) {
+      return ("var " + alias + " = __dependency" + (idx + 1) + "__." + name + ";\n");
     },
     doSingleNamedImport: function(name, dependencyName, alias) {
-      return ("var " + alias + " = " + dependencyName + "." + name + ";\n");
+      return ("var " + alias + " = require(\"" + dependencyName + "\")." + name + ";\n");
     },
     doExportSpecifier: function(name) {
       return ("exports." + name + " = " + name + ";\n");
@@ -6450,8 +6430,16 @@ var CJSCompiler = function($__super) {
     doDefaultExport: function() {
       return "exports.__default__ = ";
     },
-    doImportSpecifiers: function(import_, dependencyName) {
+    doImportSpecifiers: function(import_, idx) {
+      var dependencyName = import_.source.value;
+      if (import_.specifiers.length === 1) {
+        var specifier = import_.specifiers[0];
+        var alias = specifier.name ? specifier.name.name: specifier.id.name;
+        return this.doSingleNamedImport(specifier.id.name, dependencyName, alias);
+      }
       var replacement = "";
+      replacement += ("var __dependency" + (idx + 1) + "__ = require(\"" + dependencyName + "\");\n");
+      dependencyName = ("__dependency" + (idx + 1) + "__");
       {
         var $__1 = traceur.runtime.getIterator(import_.specifiers);
         try {
@@ -6459,7 +6447,7 @@ var CJSCompiler = function($__super) {
             var specifier = $__1.next();
             {
               var alias = specifier.name ? specifier.name.name: specifier.id.name;
-              replacement += this.doNamedImport(specifier.id.name, dependencyName, alias);
+              replacement += this.doNamedImport(specifier.id.name, dependencyName, idx, alias);
             }
           }
         } catch (e) {

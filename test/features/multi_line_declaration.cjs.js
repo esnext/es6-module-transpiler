@@ -5,5 +5,4 @@ exports.__default__ = function() {
 
 exports.__default__ = 1 + 2;
 
-var __dependency1__ = require("foo");
-var foo = __dependency1__.foo;
+var foo = require("foo").foo;
