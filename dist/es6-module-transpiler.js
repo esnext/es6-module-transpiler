@@ -6120,8 +6120,11 @@ var AbstractCompiler = function() {
       this.lines = compiler.lines;
       this.string = compiler.string;
       this.options = options;
-      this.dependencyNames = array.uniq(this.imports.map(function(import_) {
-        return import_.source.value;
+      var allDependencies = this.imports.concat(this.exports.filter(function(export_) {
+        return export_.source !== null;
+      }));
+      this.dependencyNames = array.uniq(allDependencies.map(function(dep) {
+        return dep.source.value;
       }));
     },
     buildImports: function() {
@@ -6156,20 +6159,24 @@ var AbstractCompiler = function() {
               if (export_.default) {
                 source.replace(export_.range[0], export_.declaration.range[0] - 1, this.doDefaultExport());
               } else if (export_.specifiers) {
+                var reexport;
+                if (export_.source) {
+                  reexport = export_.source.value;
+                }
                 {
                   var $__1 = traceur.runtime.getIterator(export_.specifiers);
                   try {
                     while (true) {
                       var specifier = $__1.next();
                       {
-                        replacement += this.doExportSpecifier(specifier.id.name);
+                        replacement += this.doExportSpecifier(specifier.id.name, reexport);
                       }
                     }
                   } catch (e) {
                     if (!traceur.runtime.isStopIteration(e)) throw e;
                   }
                 }
-                source.replace(export_.range[0], export_.range[1], replacement);
+                source.replace(export_.range[0], export_.range[1] - 1, replacement);
               } else if (export_.declaration) {
                 if (export_.declaration.type === "VariableDeclaration") {
                   var name = export_.declaration.declarations[0].id.name;
@@ -6317,7 +6324,10 @@ var AMDCompiler = function($__super) {
     doNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = __dependency" + this.map[dependencyName] + "__." + name + ";\n");
     },
-    doExportSpecifier: function(name) {
+    doExportSpecifier: function(name, reexport) {
+      if (reexport) {
+        return ("__exports__." + name + " = __dependency" + this.map[reexport] + "__." + name + ";\n");
+      }
       return ("__exports__." + name + " = " + name + ";\n");
     },
     doExportDeclaration: function(name) {
@@ -6420,7 +6430,10 @@ var CJSCompiler = function($__super) {
     doNamedImport: function(name, dependencyName, alias) {
       return ("var " + alias + " = require(\"" + dependencyName + "\")." + name + ";\n");
     },
-    doExportSpecifier: function(name) {
+    doExportSpecifier: function(name, reexport) {
+      if (reexport) {
+        return ("exports." + name + " = require(\"" + reexport + "\")." + name + ";\n");
+      }
       return ("exports." + name + " = " + name + ";\n");
     },
     doExportDeclaration: function(name) {
