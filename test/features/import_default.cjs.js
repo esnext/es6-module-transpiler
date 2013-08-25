@@ -1,2 +1,3 @@
 "use strict";
-var RSVP = require("rsvp").__default__;
+var __dependency1__ = require("rsvp");
+var RSVP = __dependency1__.__default__;
