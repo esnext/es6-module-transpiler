@@ -6321,7 +6321,7 @@ var AMDCompiler = function($__super) {
       return ("\n__exports__." + name + " = " + name + ";");
     },
     doDefaultExport: function() {
-      return "__exports__.__default__ = ";
+      return "__exports__['default'] = ";
     },
     doImportSpecifiers: function(import_, idx) {
       var dependencyName = import_.source.value;
@@ -6429,7 +6429,7 @@ var CJSCompiler = function($__super) {
       return ("\nexports." + name + " = " + name + ";");
     },
     doDefaultExport: function() {
-      return "exports.__default__ = ";
+      return "exports['default'] = ";
     },
     doImportSpecifiers: function(import_, idx) {
       var dependencyName = import_.source.value;

@@ -4,5 +4,5 @@ define(
     "use strict";
     var jQuery = function() { };
 
-    __exports__.__default__ = jQuery;
+    __exports__['default'] = jQuery;
   });

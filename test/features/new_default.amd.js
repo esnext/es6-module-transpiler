@@ -8,6 +8,6 @@ define(
     var baz = "baz";
     var qux = "qux";
 
-    __exports__.__default__ = baz;
+    __exports__['default'] = baz;
     __exports__.qux = qux;
   });

@@ -1,3 +1,3 @@
 var jQuery = function() { };
 
-export default jQuery;
+export default = jQuery;

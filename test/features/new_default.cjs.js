@@ -5,5 +5,5 @@ var bar = require("bar").__default__;
 var baz = "baz";
 var qux = "qux";
 
-exports.__default__ = baz;
+exports['default'] = baz;
 exports.qux = qux;

@@ -1,8 +1,4 @@
 "use strict";
-exports.__default__ = function() {
-  return "foo";
-}
-
-exports.__default__ = 1 + 2;
+exports['default'] = 1 + 2;
 
 var foo = require("foo").foo;
