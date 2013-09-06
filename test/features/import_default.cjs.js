@@ -1,2 +1,2 @@
 "use strict";
-var RSVP = require("rsvp");
+var RSVP = require("rsvp").__default__;

@@ -1,5 +1,4 @@
 "use strict";
-var __dependency1__ = require("ember");
-var get = __dependency1__.get;
-var set = __dependency1__.set;
+var get = require("ember").get;
+var set = require("ember").set;
 var makeDeferred = require("rsvp").defer;

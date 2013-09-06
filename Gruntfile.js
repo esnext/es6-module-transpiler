@@ -15,6 +15,7 @@ module.exports = function(grunt) {
     es6ify     : config('es6ify'),
     concat     : config('concat'),
     uglify     : config('uglify'),
+    jshint     : config('jshint'),
 
     simplemocha : config('simplemocha'),
     features    : config('features')

@@ -1,5 +1,5 @@
-(function(exports) {
+(function(__exports__) {
   "use strict";
   function jQuery() { };
-  exports.jQuery = jQuery;
+  __exports__.jQuery = jQuery;
 })(window);

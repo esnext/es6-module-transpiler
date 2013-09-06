@@ -1,4 +1,4 @@
 "use strict";
 var jQuery = function() { };
 
-module.exports = jQuery;
+exports['default'] = jQuery;

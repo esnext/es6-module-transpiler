@@ -1,6 +1,6 @@
-(function(Ember, RSVP) {
+(function(__dependency1__, __dependency2__) {
   "use strict";
-  var get = Ember.get;
-  var set = Ember.set;
-  var makeDeferred = RSVP.defer;
+  var get = __dependency1__.get;
+  var set = __dependency1__.set;
+  var makeDeferred = __dependency2__.defer;
 })(window.Ember, window.RSVP);
