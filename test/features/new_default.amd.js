@@ -3,7 +3,7 @@ define(
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     var foo = __dependency1__;
-    var bar = __dependency2__.__default__;
+    var bar = __dependency2__['default'];
 
     var baz = "baz";
     var qux = "qux";

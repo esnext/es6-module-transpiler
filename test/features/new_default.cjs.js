@@ -1,6 +1,6 @@
 "use strict";
 var foo = require("foo");
-var bar = require("bar").__default__;
+var bar = require("bar")['default'];
 
 var baz = "baz";
 var qux = "qux";
