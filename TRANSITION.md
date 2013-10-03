@@ -62,3 +62,20 @@ import "foo";
 ## Old features you can no longer use
 
 * Relative pathing in AMD modules has been removed, as it was broken, hacky, and made people sad.
+
+* CoffeeScript support is removed, sort of.
+
+If you're using **the original CoffeeScript compiler**, you can use JS passthrough:
+
+```coffeescript
+foo = "look at this elegant coffeescript!"
+
+`
+// now we're in sad curly-brace land
+export default foo;
+`
+```
+
+You'll then want to transpile your modules using the compiled JS as a base.
+
+Unfortunately, **this doesn't work with CoffeeScript Redux (or EmberScript)**, because that compiler wraps pass-through in an `eval` call.

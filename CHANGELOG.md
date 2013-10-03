@@ -11,6 +11,7 @@ This is a **major, breaking version**. See TRANSITION.md for information on upgr
 * Added support for `module` keyword (i.e. `module foo from "foo"`)
 * Added support for `import "foo";` form
 * fixed the `--anonymous` flag with the CLI for recursive transpiling (#20)
+* Removed relative pathing for AMD resolution & direct CoffeeScript transpilation (see TRANSITION.md)
 
 ## v0.2.0 (Monday, July 8th, 2013)
 
