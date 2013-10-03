@@ -1,7 +1,15 @@
 # CHANGELOG
 
-## Unreleased
+## v0.3.0 (x, y, z)
 
+This is a **major, breaking version**. See TRANSITION.md for information on upgrading your code.
+
+* Rewrote the transpiler using Esprima
+* Support default exports and named exports in the same module
+  * Default export now exports to `moduleObject.default`, see TRANSITION.md for details
+* Fixed multiline export parsing
+* Added support for `module` keyword (i.e. `module foo from "foo"`)
+* Added support for `import "foo";` form
 * fixed the `--anonymous` flag with the CLI for recursive transpiling (#20)
 
 ## v0.2.0 (Monday, July 8th, 2013)
