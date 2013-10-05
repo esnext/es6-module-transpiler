@@ -6201,6 +6201,15 @@ var AbstractCompiler = function() {
           if (!traceur.runtime.isStopIteration(e)) throw e;
         }
       }
+    },
+    indentLines: function() {
+      var indent = arguments[0] !== (void 0) ? arguments[0]: "  ";
+      var innerLines = this.source.toString().split("\n");
+      var inner = innerLines.reduce(function(acc, item) {
+        if (item === "") return acc + "\n";
+        return acc + indent + item + "\n";
+      }, "");
+      return inner.replace(/\s+$/, "");
     }
   }, {});
   return $AbstractCompiler;
@@ -6260,12 +6269,7 @@ var AMDCompiler = function($__super) {
       var out = this.buildPreamble(this.exports.length > 0);
       this.buildImports();
       this.buildExports();
-      var innerLines = this.source.toString().split("\n");
-      var inner = innerLines.reduce(function(acc, item) {
-        if (item === "") return acc + "\n";
-        return acc + "    " + item + "\n";
-      }, "");
-      out += inner.replace(/\s+$/, "");
+      out += this.indentLines("    ");
       out += "\n  });";
       return out;
     },
@@ -6617,12 +6621,7 @@ var GlobalsCompiler = function($__super) {
       this.buildExports();
       if (!this.options.imports) this.options.imports = {};
       if (!this.options.global) this.options.global = "window";
-      var innerLines = this.source.toString().split("\n");
-      var inner = innerLines.reduce(function(acc, item) {
-        if (item === "") return acc + "\n";
-        return acc + "  " + item + "\n";
-      }, "");
-      out += inner.replace(/\s+$/, "");
+      out += this.indentLines();
       out += "\n})";
       out += this.buildSuffix();
       out += ";";
