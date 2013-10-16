@@ -5,7 +5,7 @@ JavaScript using a subset of the current ES6 module syntax, and compile it into
 AMD or CommonJS modules.
 
 **WARNING: The ES6 module syntax is still undergoing a lot of churn, and will
-definitely still change before final approval.**
+likely change before final approval.**
 
 **ES6 Module Transpiler will track ES6 syntax, and not attempt to maintain
 backwards compatibility with syntax that ultimately did not succeed as part of
@@ -74,8 +74,8 @@ You can also use the transpiler as a library:
 ```javascript
 var Compiler = require("es6-module-transpiler").Compiler;
 
-var compiler = new Compiler(string, name);
-compiler.toAMD(); // AMD output
+var compiler = new Compiler(inputString, moduleName);
+var output = compiler.toAMD(); // AMD output as a string
 ```
 
 If you want to emit globals output, and your module has imports, you must
@@ -99,78 +99,135 @@ The `name` parameter is an optional name that should be used as the name of the
 module if appropriate (for AMD, this maps onto the first parameter to the
 `define` function).
 
-## Support Syntax
+## Supported ES6 Module Syntax
 
 Again, this syntax is in flux and is closely tracking the module work being
 done by TC39.
 
-### Exports
+### Named Exports
 
-There are two ways to do exports.
+There are two types of exports. *Named exports* like the following:
 
 ```javascript
-var get = function(obj, key) {
-  return obj[key];
-};
+// foobar.js
+var foo = "foo", bar = "bar";
 
-var set = function(obj, key, value) {
-  obj[key] = value;
-  return obj;
-};
-
-export { get, set };
+export { foo, bar };
 ```
+
+This module has two named exports, `foo` and `bar`.
 
 You can also write this form as:
 
 ```javascript
-var get = function(obj, key) {
-  return obj[key];
-};
-
-export get;
-
-var set = function(obj, key, value) {
-  obj[key] = value;
-  return obj;
-};
-
-export set;
+// foobar.js
+export var foo = "foo";
+export var bar = "bar";
 ```
 
-Both of these export two variables: `get` and `set`. Below, in the import
-section, you will see how to use these exports in another module.
+Either way, another module can then import your exports like so:
 
-You can also export a single variable *as the module itself*:
+```js
+import { foo, bar } from "foobar";
+
+console.log(foo);  // "foo"
+```
+
+### Default Exports
+
+You can also export a *default* export. For example, an ES6ified jQuery might
+look like this:
 
 ```javascript
+// jquery.js
 var jQuery = function() {};
 
 jQuery.prototype = {
   // ...
 };
 
-export default jQuery;
+export default = jQuery;
 ```
 
-### Imports
-
-If you want to import variables exported individually from another module, you
-use this syntax:
+Then, an app that uses jQuery could import it with:
 
 ```javascript
-import { get, set } from "ember";
+import $ from "jquery";
 ```
 
-To import a module that set its export using `export default`, you use this syntax:
+The default export of the "jquery" module is now aliased to `$`.
 
-```javascript
-import jQuery from "jquery";
+A default export makes the most sense as a module's "main" export, like the
+`jQuery` object in jQuery. You can use default and named exports in parallel.
+
+## Other Syntax
+
+### `module`
+
+Whereas the `import` keyword imports specific identifiers from a module,
+the `module` keyword creates an object that contains all of a module's
+exports:
+
+```js
+module foobar from "foobar";
+console.log(foobar.foo);  // "foo"
 ```
 
-As you can see, the import and export syntaxes are symmetric.
+In ES6, this created object is *read-only*, so don't treat it like a mutable
+namespace!
 
-## AMD Compiled Output
+### `import "foo";`
+
+A "bare import" that doesn't import any identifiers is useful for executing
+side effects in a module. For example:
+
+```js
+// alerter.js
+alert("alert! alert!");
+
+// alertee.js
+import "alerter";  // will pop up alert box
+```
+
+## Compiled Output
+
+### Default Exports
+
+This is super important:
+
+**Default exports bind to an identifier on the module called `default`!**
+
+Internally, the transpiler will use this default identifer when importing, but
+any outside consumer needs to be aware that it should use the `default` key and
+not the module itself. For example, an AMD consumer should look like this:
+
+```js
+define(["jquery"],
+  function(jQuery) {
+    var $ = jQuery['default'];
+  });
+```
+
+In general, if your project wants to create a "native" module for AMD, CJS, or
+globals, you should wrap modules with default exports like so:
+
+```js
+// AMD wrapper
+define("jquery-amd",
+  ["jquery"],
+  function(jQuery) {
+    return jQuery['default'];
+  });
+
+// consumer
+define(["jquery-amd"],
+  function($) {
+    // $ is now bound to jQuery['default']
+  });
+```
+
+The reason for all of this extra boilerplate is that ES6 modules support
+a module having both default and named exports, whereas AMD and CJS do not.
 
 ### Individual Exports
 
@@ -213,37 +270,6 @@ define(
 The output is the same whether you use the single-line export (`export { get,
 set }`) or multiple export lines, as above.
 
-### A Single Export
-
-This input:
-
-```javascript
-var jQuery = function() {};
-
-jQuery.prototype = {
-  // ...
-};
-
-export default jQuery;
-```
-
-will compile into this AMD output:
-
-```javascript
-define(
-  [],
-  function() {
-    "use strict";
-    var jQuery = function() {};
-
-    jQuery.prototype = {
-      // ...
-    };
-
-    return jQuery;
-  });
-```
-
 ### Individual Imports
 
 This input:
@@ -261,24 +287,6 @@ define(
     "use strict";
     var get = __dependency1__.get;
     var set = __dependency1__.set;
-  });
-```
-
-### Importing a Whole Module (`import as`)
-
-This input:
-
-```javascript
-import jQuery from "jquery";
-```
-
-will compile into this AMD output:
-
-```javascript
-define(
-  ["jquery"],
-  function(jQuery) {
-    "use strict";
   });
 ```
 

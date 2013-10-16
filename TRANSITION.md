@@ -2,6 +2,12 @@
 
 ## default export changes
 
+### Spec changes
+
+`export default foo;` has been removed in favor of `export default = foo`.
+
+### Internal changes
+
 In 0.2.x, the default export was the module's only export. Now, it's internally a named export called `default`:
 
 ```js
@@ -33,7 +39,7 @@ define("my-module",
 * Multi line exports!
 
 ```js
-export default {
+export default = {
   foo: "\n to your heart's content!"
 };
 ```
@@ -48,7 +54,7 @@ var namedExport = foo.namedExport;
 * Mixed default/named exports!
 
 ```js
-export default "foo";
+export default = "foo";
 export var bar = "bar";
 ```
 
@@ -72,7 +78,7 @@ foo = "look at this elegant coffeescript!"
 
 `
 // now we're in sad curly-brace land
-export default foo;
+export default = foo;
 `
 ```
 
