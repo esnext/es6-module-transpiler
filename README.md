@@ -160,9 +160,9 @@ The default export of the "jquery" module is now aliased to `$`.
 A default export makes the most sense as a module's "main" export, like the
 `jQuery` object in jQuery. You can use default and named exports in parallel.
 
-## Other Syntax
+### Other Syntax
 
-### `module`
+#### `module`
 
 Whereas the `import` keyword imports specific identifiers from a module,
 the `module` keyword creates an object that contains all of a module's
@@ -176,7 +176,7 @@ console.log(foobar.foo);  // "foo"
 In ES6, this created object is *read-only*, so don't treat it like a mutable
 namespace!
 
-### `import "foo";`
+#### `import "foo";`
 
 A "bare import" that doesn't import any identifiers is useful for executing
 side effects in a module. For example:
