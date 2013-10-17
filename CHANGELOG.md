@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## v0.3.0 (x, y, z)
+## v0.3.1 (Thursday, October 17, 2013)
+
+* Use a working commit for Esprima
+
+## v0.3.0 (Wednesday, October 16, 2013)
 
 This is a **major, breaking version**. See TRANSITION.md for information on upgrading your code.
 
