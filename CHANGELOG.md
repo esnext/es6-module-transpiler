@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.2 (Friday, October 18, 2013)
+
+* Fixes path resolution on the command line (thanks rpflorence!)
+
 ## v0.3.1 (Thursday, October 17, 2013)
 
 * Use a working commit for Esprima
