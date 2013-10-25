@@ -6,8 +6,7 @@ module.exports = {
     globals: ['should'],
     timeout: 3000,
     ignoreLeaks: false,
-    ui: 'qunit-mocha-ui',
-    reporter: 'tap'
+    ui: 'qunit-mocha-ui'
   },
 
   all: { src: ['test/.generated/**/*.js'] }
