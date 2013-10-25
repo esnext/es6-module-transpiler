@@ -1,5 +1,17 @@
 "use strict";
-var foo = require("foo");
+var foo = (function() {
+  var moduleInstanceObject = Object.create ? Object.create(null) : {};
+  var imported = require("foo");
+  for (var key in imported) {
+    if (Object.prototype.hasOwnProperty.call(imported, key)) {
+      moduleInstanceObject[key] = imported[key];
+    }
+  }
+  if (Object.freeze) {
+    Object.freeze(moduleInstanceObject);
+  }
+  return moduleInstanceObject;
+}).call(this);
 var bar = require("bar")["default"];
 
 var baz = "baz";
