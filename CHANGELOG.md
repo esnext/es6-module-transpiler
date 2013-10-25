@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.3 (Friday, October 25, 2013)
+
+* Fix syntax error in CommonJS output with default imports and `compatFix` option.
+
 ## v0.3.2 (Friday, October 18, 2013)
 
 * Fixes path resolution on the command line (thanks rpflorence!)
