@@ -1,2 +1,2 @@
 "use strict";
-var $ = require("jquery")['default'] || require("jquery");
+var $ = require("jquery")["default"] || require("jquery");
