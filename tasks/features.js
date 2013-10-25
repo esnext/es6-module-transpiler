@@ -47,6 +47,12 @@ module.exports = function(grunt) {
           imports[importPath] = importGlobal;
         });
         options[key] = imports;
+      } else if (value === 'true') {
+        options[key] = true;
+      } else if (value === 'false') {
+        options[key] = false;
+      } else if (value === 'null') {
+        options[key] = null;
       } else {
         options[key] = value;
       }
