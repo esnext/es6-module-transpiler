@@ -24,7 +24,7 @@ try {
 }
   <% } else { %>
     <% if (test.typeName == 'YUI') { %>
-    <%= compiler(test, mod.name.replace(/\ /g, '-')) %>
+    <%= compiler(test, mod.name.replace(/\ /g, '_')) %>
 equal(compiler.to<%= test.typeName %>(), <%= JSON.stringify(test.expected) %>);
     <% } else { %>
     <%= compiler(test) %>
