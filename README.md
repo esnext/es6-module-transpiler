@@ -43,7 +43,8 @@ OUTPUT
   it will be created.
 
 TYPE
-  One of `amd` (for AMD output), `cjs` (for CommonJS output).
+  One of `amd` (for AMD output), `cjs` (for CommonJS output), `yui` (for YUI
+  output).
 
 ANONYMOUS
   If you use the --anonymous flag with the AMD type, the transpiler will output
@@ -208,8 +209,8 @@ define(["jquery"],
   });
 ```
 
-In general, if your project wants to create a "native" module for AMD, CJS, or
-globals, you should wrap modules with default exports like so:
+In general, if your project wants to create a "native" module for AMD, YUI, CJS,
+or globals, you should wrap modules with default exports like so:
 
 ```js
 // AMD wrapper
@@ -227,7 +228,7 @@ define(["jquery-amd"],
 ```
 
 The reason for all of this extra boilerplate is that ES6 modules support
-a module having both default and named exports, whereas AMD and CJS do not.
+a module having both default and named exports, whereas AMD, YUI and CJS do not.
 
 ### Individual Exports
 
