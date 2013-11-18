@@ -1,4 +1,4 @@
-YUI.add("multi_line_declaration", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     __exports__["default"] = 1 + 2;
 

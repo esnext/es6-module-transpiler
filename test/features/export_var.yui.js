@@ -1,4 +1,4 @@
-YUI.add("export_var", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var jQuery = function() { };
     __exports__.jQuery = jQuery;

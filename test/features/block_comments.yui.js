@@ -1,4 +1,4 @@
-YUI.add("block_comments", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var async = __imports__["rsvp"].async;
     /* import { foo } from "foo";

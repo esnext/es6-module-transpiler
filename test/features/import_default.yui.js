@@ -1,4 +1,4 @@
-YUI.add("import_default", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var RSVP = __imports__["rsvp"]["default"];
     return __exports__;

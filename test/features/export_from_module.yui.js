@@ -1,4 +1,4 @@
-YUI.add("export_from_module", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     __exports__.join = __imports__["path"].join;
     __exports__.extname = __imports__["path"].extname;

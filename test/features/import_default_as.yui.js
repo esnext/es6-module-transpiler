@@ -1,4 +1,4 @@
-YUI.add("import_default_as", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var Ember = __imports__["ember"]["default"];
     return __exports__;

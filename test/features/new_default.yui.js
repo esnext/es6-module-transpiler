@@ -1,4 +1,4 @@
-YUI.add("new_default", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var foo = __imports__["foo"];
     var bar = __imports__["bar"]["default"];

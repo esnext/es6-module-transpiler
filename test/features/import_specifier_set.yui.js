@@ -1,4 +1,4 @@
-YUI.add("import_specifier_set", function(Y, NAME, __imports__, __exports__) {
+YUI.add("@NAME@", function(Y, NAME, __imports__, __exports__) {
     "use strict";
     var get = __imports__["ember"].get;
     var set = __imports__["ember"].set;
