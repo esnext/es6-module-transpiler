@@ -1,8 +1,8 @@
 <%
-  function compiler(test) {
+  function compiler(test, moduleName) {
     return "var compiler = new Compiler(" +
       JSON.stringify(test.source) +
-      ", null, " +
+      ", " + (moduleName ? "'" + moduleName + "'" : "null") + ", " +
       JSON.stringify(test.options) +
     ");";
   }
@@ -23,8 +23,13 @@ try {
   ok(e, e ? e.message : "expects an error");
 }
   <% } else { %>
-  <%= compiler(test) %>
+    <% if (test.typeName == 'YUI') { %>
+    <%= compiler(test, mod.name.replace(/\ /g, '-')) %>
 equal(compiler.to<%= test.typeName %>(), <%= JSON.stringify(test.expected) %>);
+    <% } else { %>
+    <%= compiler(test) %>
+equal(compiler.to<%= test.typeName %>(), <%= JSON.stringify(test.expected) %>);
+    <% } %>
   <% } %>
 });
 <% }); %>
