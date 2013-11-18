@@ -78,7 +78,7 @@ module.exports = function(grunt) {
           lines    = source.split('\n'),
           options  = null;
 
-      mod.name     = basename.replace(/[^a-z]/i, ' ');
+      mod.name     = basename.replace(/[^a-z]/gi, ' ');
       mod.basename = basename;
       mod.tests    = [];
 
