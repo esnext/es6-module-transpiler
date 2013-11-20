@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "es6ify": "~0.2.0",
-    "esprima": "git://github.com/ariya/esprima.git#4bf313134c93e71a97524dada947c5d07b08702b",
+    "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
     "grunt": "~0.4.1",
     "grunt-browserify": "~1.2.0",
     "grunt-contrib-clean": "~0.5.0",
