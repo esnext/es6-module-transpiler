@@ -1,8 +1,10 @@
 # CHANGELOG
 
-## Unreleased
+## v0.3.4 (Tuesday, November 19, 2013)
 
-* Build a module object when using `module foo from "foo"` for better forward-compatibility.
+* CJS: Build a module object when using `module foo from "foo"` for better forward-compatibility.
+* Added YUI transpiler, lovingly created & maintained by the YUI team
+* Fixed `'static'` keyword not being quoted in Esprima, causing issues in some JS runtimes
 
 ## v0.3.3 (Friday, October 25, 2013)
 
