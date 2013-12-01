@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.5 (Sunday, December 1, 2013)
+
+* Fixed incorrect module path strings in CJS output (#82)
+
 ## v0.3.4 (Tuesday, November 19, 2013)
 
 * CJS: Build a module object when using `module foo from "foo"` for better forward-compatibility.
@@ -8,7 +12,7 @@
 
 ## v0.3.3 (Friday, October 25, 2013)
 
-* Fix syntax error in CommonJS output with default imports and `compatFix` option.
+* Fix syntax error in CommonJS output with default imports and `compatFix` option
 
 ## v0.3.2 (Friday, October 18, 2013)
 
