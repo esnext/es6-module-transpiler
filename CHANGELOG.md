@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.6 (Monday, December 16, 2013)
+
+* Rebuilt & republished to fix regression on quoting `static` property (sorry!)
+
 ## v0.3.5 (Sunday, December 1, 2013)
 
 * Fixed incorrect module path strings in CJS output (#82)
