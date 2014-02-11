@@ -19,9 +19,18 @@ See the [CHANGELOG](./CHANGELOG.md) for the latest updates.
 
 ## Usage
 
+### Build tools
+
+The easiest way to use the transpiler is from an existing build tool. There several plugins developed for different build tools:
+
+* **Grunt:** [grunt-es6-module-transpiler](https://github.com/joefiorini/grunt-es6-module-transpiler), maintained by @joefiorini
+* **Gulp:** [gulp-es6-module-transpiler](https://github.com/ryanseddon/gulp-es6-module-transpiler), maintained by @ryanseddon
+* **Brunch:** [es6-module-transpiler-brunch](https://github.com/gcollazo/es6-module-transpiler-brunch), maintained by @gcollazo *(CommonJS only)*
+* **Broccoli:** [broccoli-es6-concatenator](https://github.com/joliss/broccoli-es6-concatenator), maintained by @joliss
+
 ### Executable
 
-The easiest way to use the transpiler is via the command line:
+The transpiler can be used directly from the command line:
 
 ```
 $ npm install -g https://git.squareup.com/javascript/es6-module-transpiler
@@ -290,14 +299,6 @@ define(
     var set = __dependency1__.set;
   });
 ```
-
-## Using with Node.js/Grunt
-
-You can use this library to pre-transpile your browser code or your node
-packages however you wish, but the easiest way to do it is probably to use the
-[grunt-es6-module-transpiler](http://github.com/joefiorini/grunt-es6-module-transpiler)
-plugin to run the transpiler as part of your [Grunt.js](http://gruntjs.com)
-build task. See the README on the plugin's Github page for more information.
 
 ## Installation
 
