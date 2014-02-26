@@ -41,7 +41,7 @@ Here is the basic usage:
 
 ```
 compile-modules FILE [FILE…] --to OUTPUT [--type=TYPE]
-  [--anonymous] [--module-name=NAME]
+  [--infer-name] [--module-name=NAME]
   [--global=GLOBAL] [--imports=IMPORTS]
 
 FILE
@@ -55,9 +55,10 @@ TYPE
   One of `amd` (for AMD output), `cjs` (for CommonJS output), `yui` (for YUI
   output).
 
-ANONYMOUS
-  If you use the --anonymous flag with the AMD type, the transpiler will output
-  a module with no name.
+INFER-NAME
+  If you use the --infer-name flag with the AMD or YUI type, the transpiler will
+  generate a name for the module from its file path. The default is to output
+  anonymous modules.
 
 NAME
   You can supply a name to use as the module name.  By default, the transpiler
