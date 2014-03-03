@@ -27,8 +27,8 @@
     "through": "~2.3.4"
   },
   "scripts": {
-    "test": "grunt build && grunt test",
-    "prepublish": "grunt build && grunt test"
+    "test": "gulp build && grunt test",
+    "prepublish": "gulp build && grunt test"
   },
   "devDependencies": {
     "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
