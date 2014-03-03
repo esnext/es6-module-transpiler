@@ -31,7 +31,12 @@ gulp.task('add-runtime', ['browserify'], function() {
     .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('build', ['traceur', 'browserify', 'add-runtime']);
+gulp.task('cli', ['traceur'], function() {
+  return gulp.src(['node_modules/gulp-traceur/node_modules/traceur/bin/traceur-runtime.js', './tmp/traceured/compile-modules.js'])
+    .pipe(concat('compile-modules'))
+    .pipe(gulp.dest('./bin'));
+});
+gulp.task('build', ['traceur', 'browserify', 'add-runtime', 'cli']);
 
 /*
  * Util tasks
