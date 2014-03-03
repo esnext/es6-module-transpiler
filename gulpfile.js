@@ -4,6 +4,7 @@ var concat = require('gulp-concat');
 var traceur = require('gulp-traceur');
 var clean = require('gulp-clean');
 var mocha = require('gulp-mocha');
+var header = require('gulp-header');
 
 /*
  * Main build pipeline
@@ -31,9 +32,11 @@ gulp.task('add-runtime', ['browserify'], function() {
     .pipe(gulp.dest('./dist'));
 });
 
+// Build bin/compile-modules
 gulp.task('cli', ['traceur'], function() {
   return gulp.src(['node_modules/gulp-traceur/node_modules/traceur/bin/traceur-runtime.js', './tmp/traceured/compile-modules.js'])
     .pipe(concat('compile-modules'))
+    .pipe(header('#!/usr/bin/env node\n'))
     .pipe(gulp.dest('./bin'));
 });
 gulp.task('build', ['traceur', 'browserify', 'add-runtime', 'cli']);
@@ -43,7 +46,7 @@ gulp.task('build', ['traceur', 'browserify', 'add-runtime', 'cli']);
  */
 
 gulp.task('clean', function() {
-  gulp.src(['./tmp', './dist'], {read: false}).pipe(clean());
+  gulp.src(['./tmp', './dist', './bin'], {read: false}).pipe(clean());
 });
 
 // TODO: build tests
