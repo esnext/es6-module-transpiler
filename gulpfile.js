@@ -5,10 +5,7 @@ var clean = require('gulp-clean');
 var mocha = require('gulp-mocha');
 var header = require('gulp-header');
 
-/*
- * Main build pipeline
- * traceur -> add traceur runtime
- */
+// Build ES6 src to ES5
 gulp.task('traceur', function() {
   return gulp.src('./src/**/*.js')
     .pipe(traceur({
@@ -26,11 +23,9 @@ gulp.task('cli', ['traceur'], function() {
   });
 
 gulp.task('build', ['traceur', 'cli']);
+gulp.task('default', ['build']);
 
-/*
- * Util tasks
- */
-
+// Clean built files
 gulp.task('clean', function() {
   gulp.src(['./dist', './bin'], {read: false}).pipe(clean());
 });
