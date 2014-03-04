@@ -1,3 +1,5 @@
+require('../lib/traceur-runtime');
+
 var AMDCompiler = require('./amd_compiler');
 var YUICompiler = require('./yui_compiler');
 var CJSCompiler = require('./cjs_compiler');

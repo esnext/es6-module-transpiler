@@ -1,3 +1,5 @@
+require('../lib/traceur-runtime');
+
 var optimist = require('optimist');
 var fs = require('fs');
 var path = require('path');

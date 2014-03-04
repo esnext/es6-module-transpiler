@@ -15,9 +15,9 @@
     "compile-modules": "./bin/compile-modules"
   },
   "directories": {
-    "lib": "./lib"
+    "src": "./src"
   },
-  "main": "./dist/es6-module-transpiler",
+  "main": "./dist/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/square/es6-module-transpiler.git"
@@ -38,11 +38,10 @@
     "mocha": "~1.12.0",
     "qunit-mocha-ui": "0.0.4",
     "gulp": "~3.5.5",
-    "gulp-browserify": "~0.4.6",
-    "gulp-concat": "~2.1.7",
     "gulp-traceur": "~0.1.3",
     "gulp-clean": "~0.2.4",
     "gulp-mocha": "~0.4.1",
-    "gulp-header": "~1.0.2"
+    "gulp-header": "~1.0.2",
+    "gulp-rename": "~1.1.0"
   }
 }
