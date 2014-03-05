@@ -10,6 +10,9 @@ class AbstractCompiler {
     this.imports = compiler.imports;
     this.directives = compiler.directives;
 
+    this.importedIdentifiers = compiler.importedIdentifiers;
+    this.importsToRewrite = compiler.importsToRewrite;
+
     this.moduleName = compiler.moduleName;
     this.lines = compiler.lines;
     this.string = compiler.string;
@@ -103,6 +106,14 @@ class AbstractCompiler {
         }
 
       }
+    }
+  }
+
+  buildRewriteImports() {
+    for (var name in this.importsToRewrite) {
+      var node = this.importsToRewrite[name];
+      var replacement = this.rewriteImportedIdentifier(node);
+      this.source.replace(node.range[0], node.range[1] - 1, replacement);
     }
   }
 

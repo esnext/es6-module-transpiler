@@ -1,4 +1,4 @@
-var esparse = require('esprima').parse;
+var falafel = require('../lib/falafel');
 
 const LITERAL = 'Literal';
 
@@ -12,7 +12,11 @@ class Parser {
     this.exports = [];
     this.directives = [];
     this.exportDefault = undefined;
-    this.walk(esparse(script, {range: true, comment: true}));
+
+    this.importedIdentifiers = {};
+    this.importsToRewrite = [];
+
+    falafel(script, {range: true, comment: true}, this.walk.bind(this));
   }
 
   walk(node) {
@@ -24,13 +28,6 @@ class Parser {
           return;
         }
       }
-    }
-
-    if (node.body && node.body.length > 0) {
-      node.body.forEach(function(child) {
-        child.parent = node;
-        this.walk(child);
-      }.bind(this));
     }
 
     // directives have to be top-level
@@ -49,7 +46,17 @@ class Parser {
     if (source.type !== LITERAL || typeof source.value !== 'string') {
       throw new Error('invalid module source: '+source.value);
     }
-    
+
+    for (var specifier of node.specifiers) {
+      var alias = specifier.name ? specifier.name.name : specifier.id.name;
+
+      if ( kind === 'default' ) {
+        this.importedIdentifiers[alias] = { name: 'default', moduleName: source.value};
+      } else {
+        this.importedIdentifiers[alias] = { name: specifier.id.name, moduleName: source.value};
+      }
+    }
+
     switch (kind) {
       case 'named':
         this.processNamedImportDeclaration(node);
@@ -90,6 +97,20 @@ class Parser {
 
   processModuleDeclaration(node) {
     this.imports.push(node);
+  }
+
+  processIdentifier(node) {
+    var parent = node.parent;
+
+    if (parent && (parent.type === 'ImportSpecifier' || parent.type === 'ExportSpecifier')) {
+      // this should be taken care of by processImportDeclaration
+      return;
+    }
+
+    if ( node.name in this.importedIdentifiers ) {
+      // TODO: Check scope, prevent rewriting shaowed variables
+      this.importsToRewrite.push(node);
+    }
   }
 }
 

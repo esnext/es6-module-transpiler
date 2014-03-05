@@ -31,19 +31,41 @@ const MODULE_OBJECT_BUILDER_SOURCE = string.ltrim(string.unindent(`
     return moduleInstanceObject;
   }`));
 
+
+const INIT_EXPORTS = string.ltrim(string.unindent(`
+  var __es6_module__ = {}, __imports__ = [];
+
+  module.exports = {
+    __es6_module__: __es6_module__
+  };
+
+`));
+
 class CJSCompiler extends AbstractCompiler {
   stringify() {
     var string = this.string.toString();  // string is actually a node buffer
     this.source = new SourceModifier(string);
     this.prelude = [];
 
+    this.moduleImports = {};
+
     this.buildImports();
     this.buildExports();
+    this.buildRewriteImports();
 
     var out = `"use strict";\n`;
+    out += INIT_EXPORTS;
+
     for (var source of this.prelude) {
       out += source + "\n";
     }
+
+    for (var name in this.moduleImports) {
+      if (Object.prototype.hasOwnProperty.call(this.moduleImports, name)) {
+        out += this.moduleImports[name] + "\n";
+      }
+    }
+
     out += this.source.toString();
     out = out.trim();
     return out;
@@ -73,35 +95,48 @@ class CJSCompiler extends AbstractCompiler {
     }
   }
 
+  ensureInModuleImports(name) {
+    if (this.moduleImports[name]) {
+      return;
+    }
+
+    this.moduleImports[name] = string.ltrim(string.unindent(`
+      __imports__['${name}'] = require('${name}');
+      __imports__['${name}'] = __imports__['${name}'].__es6_module__ || __imports__['${name}'];
+    `));
+  }
+
   doBareImport(name) {
-    return `require("${name}");`;
+    this.ensureInModuleImports(dependencyName);
+    return '';
+    //return `require("${name}");`;
   }
 
   doDefaultImport(name, dependencyName, idx) {
-    if (this.options.compatFix === true) {
-      return `var ${name} = require("${dependencyName}")["default"] || require("${dependencyName}");\n`;
-    } else {
-      return `var ${name} = require("${dependencyName}")["default"];\n`;
-    }
+    this.ensureInModuleImports(dependencyName);
+    return '';
+    //return `var ${name} = require("${dependencyName}")["default"];\n`;
   }
 
   doNamedImport(name, dependencyName, alias) {
-    return `var ${alias} = require("${dependencyName}").${name};\n`;
+    this.ensureInModuleImports(dependencyName);
+    return '';
+    //return `var ${alias} = require("${dependencyName}").${name};\n`;
   }
 
   doExportSpecifier(name, reexport) {
     if (reexport) {
-      return `exports.${name} = require("${reexport}").${name};\n`;
+      return `module.exports.${name} = require("${reexport}").${name};\n`;
     }
-    return `exports.${name} = ${name};\n`;
+    return `module.exports.${name} = ${name};\n`;
   }
 
   doExportDeclaration(name) {
-    return `\nexports.${name} = ${name};`;
+    return `\nmodule.exports.${name} = ${name};`;
   }
 
   doDefaultExport() {
-    return `exports["default"] = `;
+    return `__es6_module__["default"] = `;
   }
 
   doImportSpecifiers(import_, idx) {
@@ -113,6 +148,12 @@ class CJSCompiler extends AbstractCompiler {
       replacement += this.doNamedImport(specifier.id.name, dependencyName, alias);
     }
     return replacement;
+  }
+
+  rewriteImportedIdentifier(identifier) {
+    console.log(identifier);
+    var {name, moduleName} = this.importedIdentifiers[identifier.name];
+    return `__imports__['${moduleName}'].${name}`;
   }
 
 }

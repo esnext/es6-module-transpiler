@@ -42,6 +42,8 @@ class Compiler {
     this.exports = parser.exports;
     this.exportDefault = parser.exportDefault;
     this.directives = parser.directives;
+    this.importsToRewrite = parser.importsToRewrite;
+    this.importedIdentifiers = parser.importedIdentifiers;
   }
 
   /**
