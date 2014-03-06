@@ -14,3 +14,7 @@ function bar() {
   var odd;
   console.log(odd);
 }
+
+// nor should this
+function odd() {
+}
