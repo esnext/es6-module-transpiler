@@ -52,6 +52,9 @@ class Parser {
   }
 
   leave(node, parent) {
+    if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+      this.scopes.pop();
+    }
   }
 
   processImportDeclaration(node, parent) {

@@ -16,6 +16,8 @@ function bar() {
   console.log(odd);
 }
 
-// nor should this
+console.log(odd);
+
+/*// nor should this
 function odd() {
-}
+}*/
