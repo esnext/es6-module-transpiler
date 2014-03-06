@@ -1,4 +1,5 @@
-var falafel = require('../lib/falafel');
+var estraverse = require('estraverse');
+var esprima = require('esprima');
 
 const LITERAL = 'Literal';
 
@@ -16,14 +17,17 @@ class Parser {
     this.importedIdentifiers = {};
     this.importsToRewrite = [];
 
-    falafel(script, {range: true, comment: true}, this.walk.bind(this));
+    estraverse.traverse(esprima.parse(script, {range: true, loc: true}), {
+      enter: this.enter.bind(this),
+      leave: this.leave.bind(this)
+    });
   }
 
-  walk(node) {
+  enter(node, parent) {
     if (node.type) {
       var processor = this['process'+node.type];
       if (processor) {
-        var result = processor.call(this, node);
+        var result = processor.call(this, node, parent);
         if (result === false) {
           return;
         }
@@ -40,7 +44,10 @@ class Parser {
     }
   }
 
-  processImportDeclaration(node) {
+  leave(node, parent) {
+  }
+
+  processImportDeclaration(node, parent) {
     var {kind, source} = node;
 
     if (source.type !== LITERAL || typeof source.value !== 'string') {
@@ -59,16 +66,16 @@ class Parser {
 
     switch (kind) {
       case 'named':
-        this.processNamedImportDeclaration(node);
+        this.processNamedImportDeclaration(node, parent);
         break;
 
       case "default":
-        this.processDefaultImportDeclaration(node);
+        this.processDefaultImportDeclaration(node, parent);
         break;
 
       // bare import (i.e. `import "foo";`)
       case undefined:
-        this.processNamedImportDeclaration(node);
+        this.processNamedImportDeclaration(node, parent);
         break;
 
       default:
@@ -76,11 +83,11 @@ class Parser {
     }
   }
 
-  processNamedImportDeclaration(node) {
+  processNamedImportDeclaration(node, parent) {
     this.imports.push(node);
   }
 
-  processDefaultImportDeclaration(node) {
+  processDefaultImportDeclaration(node, parent) {
     if (node.specifiers.length !== 1) {
       throw new Error('expected one specifier for default import, got '+node.specifiers.length);
     }
@@ -88,28 +95,28 @@ class Parser {
     this.imports.push(node);
   }
 
-  processExportDeclaration(node) {
+  processExportDeclaration(node, parent) {
     if (!node.declaration && !node.specifiers) {
       throw new Error('expected declaration or specifiers after `export` keyword');
     }
     this.exports.push(node);
   }
 
-  processModuleDeclaration(node) {
+  processModuleDeclaration(node, parent) {
     this.imports.push(node);
   }
 
-  processIdentifier(node) {
-    var parent = node.parent;
-
+  processIdentifier(node, parent) {
     if (parent && (parent.type === 'ImportSpecifier' || parent.type === 'ExportSpecifier')) {
       // this should be taken care of by processImportDeclaration
       return;
     }
 
     if ( node.name in this.importedIdentifiers ) {
-      // TODO: Check scope, prevent rewriting shaowed variables
+      // TODO: Check scope, prevent rewriting shadowed variables
+      // if ( node.scope === 0 ) {
       this.importsToRewrite.push(node);
+      // }
     }
   }
 }

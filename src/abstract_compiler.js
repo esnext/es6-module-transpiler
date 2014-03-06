@@ -5,13 +5,13 @@ class AbstractCompiler {
   constructor(compiler, options) {
     this.compiler = compiler;
 
-    this.exports = compiler.exports;
-    this.exportDefault = compiler.exportDefault;
-    this.imports = compiler.imports;
-    this.directives = compiler.directives;
+    this.exports = compiler.parsed.exports;
+    this.exportDefault = compiler.parsed.exportDefault;
+    this.imports = compiler.parsed.imports;
+    this.directives = compiler.parsed.irectives;
 
-    this.importedIdentifiers = compiler.importedIdentifiers;
-    this.importsToRewrite = compiler.importsToRewrite;
+    this.importedIdentifiers = compiler.parsed.importedIdentifiers;
+    this.importsToRewrite = compiler.parsed.importsToRewrite;
 
     this.moduleName = compiler.moduleName;
     this.lines = compiler.lines;
