@@ -17,6 +17,8 @@ class Parser {
     this.importedIdentifiers = {};
     this.importsToRewrite = [];
 
+    this.scopes = [];
+
     estraverse.traverse(esprima.parse(script, {range: true, loc: true}), {
       enter: this.enter.bind(this),
       leave: this.leave.bind(this)
@@ -28,9 +30,14 @@ class Parser {
       var processor = this['process'+node.type];
       if (processor) {
         var result = processor.call(this, node, parent);
-        if (result === false) {
-          return;
-        }
+      }
+
+      if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+        // create a new scope with function's arguments
+        this.scopes.push(node.params.map((param) => param.name ));
+      } else if (node.type === 'VariableDeclarator') {
+        var currentScope = this.scopes[this.scopes.length - 1];
+        currentScope.push(node.id.name);
       }
     }
 
@@ -106,6 +113,8 @@ class Parser {
     this.imports.push(node);
   }
 
+  /* Handling scope & rewriting */
+
   processIdentifier(node, parent) {
     if (parent && (parent.type === 'ImportSpecifier' || parent.type === 'ExportSpecifier')) {
       // this should be taken care of by processImportDeclaration
@@ -115,10 +124,21 @@ class Parser {
     if ( node.name in this.importedIdentifiers ) {
       // TODO: Check scope, prevent rewriting shadowed variables
       // if ( node.scope === 0 ) {
-      this.importsToRewrite.push(node);
+      if (!inChain(this.scopes, node.name)) {
+        this.importsToRewrite.push(node);
+      }
       // }
     }
   }
 }
 
 module.exports = Parser;
+
+function inChain(chain, name) {
+  for (var arr of chain) {
+    if (arr.indexOf(name) !== -1) {
+      return true;
+    }
+  }
+  return false;
+}

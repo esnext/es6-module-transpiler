@@ -151,7 +151,7 @@ class CJSCompiler extends AbstractCompiler {
   }
 
   rewriteImportedIdentifier(identifier) {
-    console.log(identifier);
+    //console.log(identifier);
     var {name, moduleName} = this.importedIdentifiers[identifier.name];
     return `__imports__['${moduleName}'].${name}`;
   }

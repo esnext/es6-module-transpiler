@@ -7,6 +7,7 @@ export default function even(n) {
 
 // below should not
 function foo(odd) {
+  odd = 1;
 }
 
 // nor should this
