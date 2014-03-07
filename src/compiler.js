@@ -3,7 +3,6 @@ require('../lib/traceur-runtime');
 var AMDCompiler = require('./amd_compiler');
 var YUICompiler = require('./yui_compiler');
 var CJSCompiler = require('./cjs_compiler');
-var GlobalsCompiler = require('./globals_compiler');
 var Unique = require('./utils').Unique;
 var Parser = require('./parser');
 
@@ -68,14 +67,6 @@ class Compiler {
     return new CJSCompiler(this, this.options).stringify();
   }
 
-  /**
-   * Transpiles an ES6 module to IIFE-wrapped globals.
-   * @method toGlobals
-   * @return {String} The transpiled output
-   */
-  toGlobals() {
-    return new GlobalsCompiler(this, this.options).stringify();
-  }
 }
 
 module.exports = Compiler;

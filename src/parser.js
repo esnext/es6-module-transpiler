@@ -125,12 +125,9 @@ class Parser {
     }
 
     if ( node.name in this.importedIdentifiers ) {
-      // TODO: Check scope, prevent rewriting shadowed variables
-      // if ( node.scope === 0 ) {
       if (!inChain(this.scopes, node.name)) {
         this.importsToRewrite.push(node);
       }
-      // }
     }
   }
 }

@@ -42,7 +42,6 @@ Here is the basic usage:
 ```
 compile-modules FILE [FILE…] --to OUTPUT [--type=TYPE]
   [--infer-name] [--module-name=NAME]
-  [--global=GLOBAL] [--imports=IMPORTS]
 
 FILE
   An input file relative to the current directory to process.
@@ -65,17 +64,6 @@ NAME
   will use the name of the file (without the ending `.js`) as the module name.
   You may not use this option if you provided multiple FILEs.
 
-GLOBAL
-  This option is only supported when the type is `globals`. By default, the
-  `globals` option will attach all of the exports to `window`. This option will
-  attach the exports to a single named variable on `window` instead.
-
-IMPORTS
-  This option is only supported when the type is
-  `globals`. It is a hash option. If your module
-  includes imports, you must use this option to
-  map the import names onto globals. For example,
-  `--imports ember:Ember underscore:_`
 ```
 
 ### Library
@@ -87,20 +75,6 @@ var Compiler = require("es6-module-transpiler").Compiler;
 
 var compiler = new Compiler(inputString, moduleName);
 var output = compiler.toAMD(); // AMD output as a string
-```
-
-If you want to emit globals output, and your module has imports, you must
-supply an `imports` hash. You can also use the `global` option to specify that
-exports should be added to a single global instead of `window`.
-
-```javascript
-var Compiler = require("es6-module-transpiler").Compiler;
-
-var imports = { underscore: "_", ember: "Ember" };
-var options = { imports: imports, global: "RSVP" };
-
-var compiler = new Compiler(string, name, options);
-compiler.toGlobals() // window global output
 ```
 
 The `string` parameter is a string of JavaScript written using the declarative
@@ -219,8 +193,7 @@ define(["jquery"],
   });
 ```
 
-In general, if your project wants to create a "native" module for AMD, YUI, CJS,
-or globals, you should wrap modules with default exports like so:
+In general, if your project wants to create a "native" module for AMD, YUI, or CJS, you should wrap modules with default exports like so:
 
 ```js
 // AMD wrapper

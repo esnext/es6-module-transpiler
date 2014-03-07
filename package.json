@@ -1,7 +1,7 @@
 {
   "name": "es6-module-transpiler",
   "version": "0.3.6",
-  "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript using a subset of the current ES6 module syntax, and compile it into AMD, CommonJS, and globals styles.",
+  "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript using a subset of the current ES6 module syntax, and compile it into AMD, CommonJS, and YUI modules.",
   "homepage": "http://square.github.com/es6-module-transpiler",
   "keywords": [
     "es6",

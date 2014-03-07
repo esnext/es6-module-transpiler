@@ -43,33 +43,17 @@ class CLI {
   parseArgs(argv) {
     var args = this.argParser(argv).argv;
 
-    if (args.imports) {
-      var imports = {};
-      args.imports.split(',').forEach(function(pair) {
-        var [requirePath, global] = pair.split(':');
-        imports[requirePath] = global;
-      });
-      args.imports = imports;
-    }
-
-    if (args.global) {
-      args.into = args.global;
-    }
-
     return args;
   }
 
   argParser(argv) {
-    return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--infer-name] [--type TYPE] [--imports PATH:GLOBAL]\n\n  Using stdio:\n    compile-modules --stdio [--type TYPE] [--imports PATH:GLOBAL] [--module-name MOD]').options({
+    return optimist(argv).usage('compile-modules usage:\n\n  Using files:\n    compile-modules INPUT --to DIR [--infer-name] [--type TYPE]\n\n  Using stdio:\n    compile-modules --stdio [--type TYPE] [--module-name MOD]').options({
       type: {
         "default": 'amd',
-        describe: 'The type of output (one of "amd", "yui", "cjs", or "globals")'
+        describe: 'The type of output (one of "amd", "yui", or "cjs")'
       },
       to: {
         describe: 'A directory in which to write the resulting files'
-      },
-      imports: {
-        describe: 'A list of path:global pairs, comma separated (e.g. jquery:$,ember:Ember)'
       },
       'infer-name': {
         "default": false,
@@ -86,21 +70,17 @@ class CLI {
         alias: 's',
         describe: 'Use stdin and stdout to process a file'
       },
-      global: {
-        describe: 'When the type is `globals`, the name of the global to export into'
-      },
       help: {
         "default": false,
         type: 'boolean',
         alias: 'h',
         describe: 'Shows this help message'
       }
-    }).check(({type}) => type === 'amd' || type === 'yui' || type === 'cjs' || type === 'globals')
+    }).check(({type}) => type === 'amd' || type === 'yui' || type === 'cjs')
     .check(args => !args['infer-name'] || !args.m)
     .check(args => (args.stdio && args.type === 'amd') ? !args['infer-name'] : true)
     .check(args => (args.stdio && args.type === 'yui') ? !args['infer-name'] : true)
     .check(args => args.stdio || args.to || args.help)
-    .check(args => args.imports ? args.type === 'globals' : args.type !== 'globals');
   }
 
   processStdio(options) {
@@ -176,8 +156,7 @@ class CLI {
     type = {
       amd: 'AMD',
       yui: 'YUI',
-      cjs: 'CJS',
-      globals: 'Globals'
+      cjs: 'CJS'
     }[type];
     compiler = new this.Compiler(input, moduleName, options);
     method = "to" + type;
