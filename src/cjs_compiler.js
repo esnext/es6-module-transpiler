@@ -107,32 +107,34 @@ class CJSCompiler extends AbstractCompiler {
   }
 
   doBareImport(name) {
-    this.ensureInModuleImports(dependencyName);
+    this.ensureInModuleImports(name);
     return '';
-    //return `require("${name}");`;
   }
 
   doDefaultImport(name, dependencyName, idx) {
     this.ensureInModuleImports(dependencyName);
     return '';
-    //return `var ${name} = require("${dependencyName}")["default"];\n`;
   }
 
   doNamedImport(name, dependencyName, alias) {
     this.ensureInModuleImports(dependencyName);
     return '';
-    //return `var ${alias} = require("${dependencyName}").${name};\n`;
   }
 
   doExportSpecifier(name, reexport) {
+    // TODO:
+    // import foo from "bar";
+    // export { foo };
+    // ^ foo needs to be rewritten to be __imports__[export].foo
     if (reexport) {
-      return `module.exports.${name} = require("${reexport}").${name};\n`;
+      this.ensureInModuleImports(reexport);
+      return `__es6_module__['${name}'] = __imports__['${reexport}'].${name};\n`;
     }
-    return `module.exports.${name} = ${name};\n`;
+    return `__es6_module__['${name}'] = ${name};\n`;
   }
 
   doExportDeclaration(name) {
-    return `\nmodule.exports.${name} = ${name};`;
+    return `__es6_module__["${name}"] = ${name};`;
   }
 
   doDefaultExport() {
@@ -151,7 +153,6 @@ class CJSCompiler extends AbstractCompiler {
   }
 
   rewriteImportedIdentifier(identifier) {
-    //console.log(identifier);
     var {name, moduleName} = this.importedIdentifiers[identifier.name];
     return `__imports__['${moduleName}'].${name}`;
   }
