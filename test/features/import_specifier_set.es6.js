@@ -1,3 +1,5 @@
+// Rewriting named imports works correctly (including aliases)
+
 import { get, set } from 'ember';
 import { defer as makeDeferred } from 'rsvp';
 

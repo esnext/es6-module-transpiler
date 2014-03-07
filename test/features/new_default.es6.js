@@ -1,3 +1,5 @@
+// Syntax grab-bag for module/import defaults
+
 module foo from "foo";
 import bar from "bar";
 

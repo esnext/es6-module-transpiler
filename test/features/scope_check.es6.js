@@ -1,3 +1,5 @@
+// Imports are correctly rewritten based on scope
+
 import odd from './b';
 
 export default function even(n) {
@@ -18,6 +20,6 @@ function bar() {
 
 console.log(odd);
 
-/*// nor should this
+// nor should this
 function odd() {
-}*/
+}
