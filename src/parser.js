@@ -35,6 +35,8 @@ class Parser {
       if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
         // create a new scope with function's arguments
         this.scopes.push(node.params.map((param) => param.name ));
+      } else if (node.type === 'Program') {
+        this.scopes.push([]);
       } else if (node.type === 'VariableDeclarator') {
         var currentScope = this.scopes[this.scopes.length - 1];
         currentScope.push(node.id.name);
@@ -52,7 +54,7 @@ class Parser {
   }
 
   leave(node, parent) {
-    if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+    if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression' || node.type === 'Program') {
       this.scopes.pop();
     }
   }
