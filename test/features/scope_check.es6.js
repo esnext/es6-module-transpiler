@@ -18,8 +18,9 @@ function bar() {
   console.log(odd);
 }
 
+// but this should!
 console.log(odd);
 
-// nor should this
+// and this should not
 function odd() {
 }
