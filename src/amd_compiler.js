@@ -1,17 +1,42 @@
-var AbstractCompiler = require('./abstract_compiler');
+var CJSCompiler = require('./cjs_compiler');
 var SourceModifier = require('./source_modifier');
+var string = require('./utils').string;
 
-class AMDCompiler extends AbstractCompiler {
+const INIT_EXPORTS = (`
+  var __es6_module__ = {}, __imports__ = [];
+
+  module.exports = {
+    __es6_module__: __es6_module__
+  };
+
+`);
+
+
+class AMDCompiler extends CJSCompiler {
   stringify() {
     var string = this.string.toString();  // string is actually a node buffer
     this.source = new SourceModifier(string);
 
-    this.map = [];
-    var out = this.buildPreamble(this.exports.length > 0);
+    this.prelude = [];
+    this.moduleImports = {};
 
-    // build* mutates this.source
     this.buildImports();
     this.buildExports();
+    this.buildRewriteImports();
+
+    var out = this.amdWrapper();
+
+    out += INIT_EXPORTS;
+
+    for (var source of this.prelude) {
+      out += source + "\n";
+    }
+
+    for (var name in this.moduleImports) {
+      if (Object.prototype.hasOwnProperty.call(this.moduleImports, name)) {
+        out += this.moduleImports[name] + "\n";
+      }
+    }
 
     out += this.indentLines("    ");
     out += "\n  });";
@@ -19,88 +44,25 @@ class AMDCompiler extends AbstractCompiler {
     return out;
   }
 
-  buildPreamble(hasExports) {
-    var out = "",
-        dependencyNames = this.dependencyNames;
+  amdWrapper() {
+    var optionalName = '';
+    if (this.moduleName) {
+      optionalName = `'${this.moduleName}',`;
+    }
+    return string.ltrim(string.unindent(`
+     define(${optionalName}function(require, exports, module) {
+    `));
+  }
 
-    if (hasExports) dependencyNames.push("exports");
-
-    out += "define(";
-    if (this.moduleName) out += `"${this.moduleName}",`;
-    out += "\n  [";
-
-    // build preamble
-    var idx;
-    for (idx = 0; idx < dependencyNames.length; idx++) {
-      var name = dependencyNames[idx];
-      out += `"${name}"`;
-      if (!(idx === dependencyNames.length - 1)) out += ",";
+  ensureInModuleImports(name) {
+    if (this.moduleImports[name]) {
+      return;
     }
 
-    out += "],\n  function(";
-
-    for (idx = 0; idx < dependencyNames.length; idx++) {
-      if (dependencyNames[idx] === "exports") {
-        out += "__exports__";
-      } else {
-        out += `__dependency${idx+1}__`;
-        this.map[dependencyNames[idx]] = idx+1;
-      }
-      if (!(idx === dependencyNames.length - 1)) out += ", ";
-    }
-
-    out += ") {\n";
-
-    out += '    "use strict";\n';
-
-    return out;
+    this.moduleImports[name] = string.ltrim(string.unindent(`
+      __imports__['${name}'] = require('${name}');
+    `));
   }
-
-  doModuleImport(name, dependencyName, idx) {
-    return `var ${name} = __dependency${this.map[dependencyName]}__;\n`;
-  }
-
-  doBareImport(name) {
-    return "";
-  }
-
-  doDefaultImport(name, dependencyName, idx) {
-    if (this.options.compatFix === true) {
-      return `var ${name} = __dependency${this.map[dependencyName]}__["default"] || __dependency${this.map[dependencyName]}__;\n`;
-    } else {
-      return `var ${name} = __dependency${this.map[dependencyName]}__["default"];\n`;
-    }
-  }
-
-  doNamedImport(name, dependencyName, alias) {
-    return `var ${alias} = __dependency${this.map[dependencyName]}__.${name};\n`;
-  }
-
-  doExportSpecifier(name, reexport) {
-    if (reexport) {
-      return `__exports__.${name} = __dependency${this.map[reexport]}__.${name};\n`;
-    }
-    return `__exports__.${name} = ${name};\n`;
-  }
-
-  doExportDeclaration(name) {
-    return `\n__exports__.${name} = ${name};`;
-  }
-
-  doDefaultExport() {
-    return `__exports__["default"] = `;
-  }
-
-  doImportSpecifiers(import_, idx) {
-    var dependencyName = import_.source.value;
-    var replacement = "";
-    for (var specifier of import_.specifiers) {
-      var alias = specifier.name ? specifier.name.name : specifier.id.name;
-      replacement += this.doNamedImport(specifier.id.name, dependencyName, alias);
-    }
-    return replacement;
-  }
-
 }
 
 module.exports = AMDCompiler;
