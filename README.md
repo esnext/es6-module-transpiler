@@ -27,6 +27,7 @@ The easiest way to use the transpiler is from an existing build tool. There seve
 * **Gulp:** [gulp-es6-module-transpiler](https://github.com/ryanseddon/gulp-es6-module-transpiler), maintained by @ryanseddon
 * **Brunch:** [es6-module-transpiler-brunch](https://github.com/gcollazo/es6-module-transpiler-brunch), maintained by @gcollazo *(CommonJS only)*
 * **Broccoli:** [broccoli-es6-concatenator](https://github.com/joliss/broccoli-es6-concatenator), maintained by @joliss
+* **Mimosa:** [mimosa-es6-module-transpiler](https://github.com/dbashford/mimosa-es6-module-transpiler), maintained by @dbashford
 
 ### Executable
 
