@@ -34,7 +34,7 @@ The easiest way to use the transpiler is from an existing build tool. There seve
 The transpiler can be used directly from the command line:
 
 ```
-$ npm install -g es6-modules-transpiler
+$ npm install -g es6-module-transpiler
 $ compile-modules foo.js --to compiled
 ```
 
