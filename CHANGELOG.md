@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.0 (Thursday, April 3, 2014)
+
+* Remove trailing whitespace after AMD define (#93)
+* (**breaking**) Default to anonymous modules for AMD output (use `--infer-name` flag for old behavior). Replaces `--anonymous` flag.
+
 ## v0.3.6 (Monday, December 16, 2013)
 
 * Rebuilt & republished to fix regression on quoting `static` property (sorry!)
