@@ -29,7 +29,7 @@ var eputs = makeWriteLine(process.stderr);
 
 while ((option = parser.getopt()) !== undefined) {
   if (option.error) {
-    usage();
+    usage(eputs);
     process.exit(1);
   }
 
