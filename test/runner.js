@@ -207,7 +207,10 @@ function printSuccess(testName) {
 function printFailure(testName, error) {
   console.log('\x1b[31m✘ ' + testName + '\x1b[0m');
   console.log();
-  console.log(error.stack);
+  console.log(error.message);
+  if (error.stack) {
+    console.log(error.stack);
+  }
 }
 
 function usage() {
