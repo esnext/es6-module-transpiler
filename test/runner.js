@@ -148,16 +148,17 @@ function requireTestFile(path, relativeTo, assert) {
 
   if (!testFileGlobal) { testFileGlobal = {}; }
 
-  vm.runInNewContext(code, {
-    assert: assert,
-    global: testFileGlobal,
+  testFileGlobal.assert = assert;
+  testFileGlobal.global = testFileGlobal;
+  testFileGlobal.module = mod;
+  testFileGlobal.exports = mod.exports;
+  testFileGlobal.require = function(requiredPath) {
+    return requireTestFile(requiredPath, Path.dirname(path), assert);
+  };
 
-    module: mod,
-    exports: mod.exports,
-    require: function(requiredPath) {
-      return requireTestFile(requiredPath, Path.dirname(path), assert);
-    }
-  }, path);
+  // Hack to work around an issue where vm does not set `this` to the context.
+  code = '(function(){' + code + '}).call(global);';
+  vm.runInNewContext(code, testFileGlobal, path);
 
   testFileCache[path] = mod.exports;
   return mod.exports;

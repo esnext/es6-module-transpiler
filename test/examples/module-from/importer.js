@@ -8,7 +8,7 @@ assert.deepEqual(Object.keys(things).sort(), ['count', 'incr']);
 // can't add keys
 assert.throws(function() {
   things.iAmNotReal = 1;
-}, TypeError);
+}, /Can't add property iAmNotReal, object is not extensible/);
 
 // can't replace keys
 assert.throws(function() {
