@@ -92,7 +92,7 @@ function runTestDir(testDir) {
     resolvers: [new modules.FileResolver([testDir])],
     formatter: formatters[formatter]
   };
-  var container = modules.makeContainer(options);
+  var container = new modules.Container(options);
 
   try {
     fs.readdirSync(testDir).forEach(function(child) {
