@@ -24,11 +24,9 @@
     "url": "https://github.com/square/es6-module-transpiler.git"
   },
   "scripts": {
-    "test": "node test/runner.js -f ${MODULE_FORMATTER:-module-variable}",
-    "test-module-variable": "node test/runner.js -f module-variable",
-    "test-export-variable": "node test/runner.js -f export-variable",
-    "test-commonjs": "node test/runner.js -f commonjs",
-    "test-all": "npm run test-module-variable && npm run test-export-variable && npm run test-commonjs"
+    "test": "npm run test-bundle && npm run test-commonjs",
+    "test-bundle": "node test/runner.js -f bundle",
+    "test-commonjs": "node test/runner.js -f commonjs"
   },
   "author": "Square, Inc.",
   "license": "Apache 2",
