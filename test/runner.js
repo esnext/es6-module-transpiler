@@ -10,6 +10,7 @@ var assert = require('assert');
 var modules = require('../lib');
 var utils = require('../lib/utils');
 var endsWith = utils.endsWith;
+var ExpectedError = require('./support/expected_error');
 
 var examples = Path.join(__dirname, 'examples');
 
@@ -94,9 +95,19 @@ function runTestDir(testDir) {
   };
   var container = new modules.Container(options);
 
+  var expectedError;
   try {
     fs.readdirSync(testDir).forEach(function(child) {
-      container.getModule(child);
+      var mod = container.getModule(child);
+      var contents = fs.readFileSync(mod.path).toString();
+      var newExpectedError = ExpectedError.getFromSource(contents);
+
+      assert.ok(
+        !newExpectedError || !expectedError,
+        'found more than one error comment!'
+      );
+
+      expectedError = newExpectedError;
     });
 
     var resultPath = Path.join(results, testName + '.js');
@@ -112,15 +123,28 @@ function runTestDir(testDir) {
     }
 
     assert.ok(
-      testAssert.count > 0,
+      expectedError || testAssert.count > 0,
       'expected at least one assertion'
     );
+
+    if (expectedError) {
+      expectedError.assertMatch(null);
+    }
 
     passed = true;
     printSuccess(testName);
   } catch (ex) {
-    printFailure(testName, ex);
-    console.log();
+    if (!(ex instanceof assert.AssertionError) && expectedError) {
+      ex = expectedError.matchError(ex);
+    }
+
+    if (ex) {
+      printFailure(testName, ex);
+      console.log();
+    } else {
+      printSuccess(testName);
+      passed = true;
+    }
   }
 
   return passed;
