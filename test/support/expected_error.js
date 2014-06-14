@@ -110,7 +110,7 @@ ExpectedError.prototype.matchError = function(error) {
     assertMessage += ', but no error was thrown'
   }
 
-  return new Error(assertMessage);
+  return new assert.AssertionError({ message: assertMessage });
 };
 
 module.exports = ExpectedError;
