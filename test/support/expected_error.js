@@ -49,8 +49,8 @@ ExpectedError.getFromSource = function(source) {
 ExpectedError.prototype.matchesType = function(error) {
   return !this.type ||
     (typeof this.type === 'function' && error instanceof this.type) ||
-    this.type === error.constructor ||
-    this.type === error.constructor.name;
+    (this.type === error.constructor) ||
+    (this.type === error.constructor.name);
 };
 
 /**
@@ -61,7 +61,7 @@ ExpectedError.prototype.matchesType = function(error) {
  */
 ExpectedError.prototype.matchesMessage = function(error) {
   return !this.message ||
-    this.message === error.message ||
+    (this.message === error.message) ||
     (this.message.test && this.message.test(error.message));
 };
 
@@ -81,7 +81,7 @@ ExpectedError.prototype.assertMatch = function(error) {
  * Gets the error to throw if the given error does not match.
  *
  * @param {?Error} error
- * @returns {?Error}
+ * @returns {?AssertionError}
  */
 ExpectedError.prototype.matchError = function(error) {
   var matchesType = error && this.matchesType(error);
@@ -93,13 +93,13 @@ ExpectedError.prototype.matchError = function(error) {
 
   var assertMessage = 'expected error';
 
-  if (!matchesType) {
+  if (!matchesType && this.type) {
     assertMessage += ' type to equal ' + this.type;
-    if (!matchesMessage) {
+    if (!matchesMessage && this.message) {
       assertMessage += ' and';
     }
   }
-  if (!matchesMessage) {
+  if (!matchesMessage && this.message) {
     assertMessage += ' message to match ' +
       (typeof this.message === 'string' ? '"' + this.message + '"' : this.message);
   }
