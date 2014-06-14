@@ -34,7 +34,10 @@ ExpectedError.getFromSource = function(source) {
     errorInfo
   );
 
-  return new ExpectedError(expectedTypeMatch[1], expectedMessageMatch[1]);
+  return new ExpectedError(
+    expectedTypeMatch && expectedTypeMatch[1],
+    expectedMessageMatch && expectedMessageMatch[1]
+  );
 };
 
 /**
