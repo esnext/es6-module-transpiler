@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+
+var Path = require('path');
+var exe = Path.basename(process.argv[1]);
+var getopt = require('posix-getopt');
+var parser = new getopt.BasicParser('h(help)v(version)', process.argv);
+var option;
+
+function usage(puts) {
+  puts(exe + ' [--help] [--version] <command> [<args>]');
+  puts();
+  puts('Commands');
+  puts();
+  puts('  convert  Converts modules from `import`/`export` to an ES5 equivalent.');
+  puts('  help     Display help for a given command.');
+}
+
+function makeWriteLine(stream) {
+  return function(line) {
+    if (!line || line[line.length - 1] !== '\n') {
+      line = (line || '') + '\n';
+    }
+    stream.write(line);
+  };
+}
+
+var puts = makeWriteLine(process.stdout);
+var eputs = makeWriteLine(process.stderr);
+
+while ((option = parser.getopt()) !== undefined) {
+  if (option.error) {
+    usage(eputs);
+    process.exit(1);
+  }
+
+  switch (option.option) {
+    case 'h':
+      usage(puts);
+      process.exit(0);
+      break;
+
+    case 'v':
+      puts(exe + ' v' + require(Path.join(__dirname, '../package.json')).version);
+      process.exit(0);
+      break;
+  }
+}
+
+var args = process.argv;
+var offset = parser.optind();
+
+var commandName = args[offset];
+if (commandName === 'help') {
+  commandName = args[offset + 1];
+  args = ['--help'].concat(args.slice(offset + 2 /* skip 'help' and command name */));
+} else {
+  args = args.slice(offset + 1);
+}
+
+if (typeof commandName !== 'string') {
+  usage(puts);
+  process.exit(1);
+}
+
+var command;
+
+try {
+  command = require(Path.join('../lib/cli', commandName));
+} catch (ex) {
+  usage(eputs);
+  process.exit(1);
+}
+
+try {
+  var exitCode = command.run(args, puts, eputs);
+  process.exit(exitCode);
+} catch (ex) {
+  if (ex.constructor.name === 'AssertionError') {
+    eputs('error: ' + exe + ' ' + commandName + ' -- ' + ex.message);
+    process.exit(1);
+  } else {
+    throw ex;
+  }
+}

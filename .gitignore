@@ -1,6 +1,2 @@
-/node_modules/
-tmp/
-test/index.html
-test/.generated
-bin/
-dist/
+node_modules/
+test/results

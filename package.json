@@ -1,7 +1,7 @@
 {
   "name": "es6-module-transpiler",
   "version": "0.4.0",
-  "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript using a subset of the current ES6 module syntax, and compile it into AMD, CommonJS, and globals styles.",
+  "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript using a subset of the current ES6 module syntax, and compile it into various formats.",
   "homepage": "http://square.github.com/es6-module-transpiler",
   "keywords": [
     "es6",
@@ -15,35 +15,29 @@
     "compile-modules": "./bin/compile-modules"
   },
   "directories": {
-    "lib": "./lib"
+    "lib": "./lib",
+    "test": "test"
   },
-  "main": "./dist/es6-module-transpiler",
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/square/es6-module-transpiler.git"
   },
-  "dependencies": {
-    "optimist": "~0.3.5",
-    "through": "~2.3.4"
-  },
   "scripts": {
-    "test": "grunt build && grunt test",
-    "prepublish": "grunt build && grunt test"
+    "test": "npm run test-bundle && npm run test-commonjs",
+    "test-bundle": "node test/runner.js -f bundle",
+    "test-commonjs": "node test/runner.js -f commonjs"
+  },
+  "author": "Square, Inc.",
+  "license": "Apache 2",
+  "dependencies": {
+    "recast": "^0.5.17",
+    "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
+    "ast-util": "^0.1.2",
+    "mkdirp": "^0.5.0",
+    "posix-getopt": "^1.0.0"
   },
   "devDependencies": {
-    "es6ify": "~0.2.0",
-    "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
-    "grunt": "~0.4.1",
-    "grunt-browserify": "~1.2.0",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-es6-module-transpiler": "~0.4.1",
-    "grunt-simple-mocha": "~0.4.0",
-    "matchdep": "~0.1.2",
-    "mocha": "~1.12.0",
-    "qunit-mocha-ui": "0.0.4",
-    "uglify-js": "~2.2.4",
-    "grunt-contrib-jshint": "~0.6.2"
+    "example-runner": "^0.1.0"
   }
 }
