@@ -21,13 +21,14 @@ See the [CHANGELOG](./CHANGELOG.md) for the latest updates.
 
 ### Build tools
 
-The easiest way to use the transpiler is from an existing build tool. There several plugins developed for different build tools:
+The easiest way to use the transpiler is from an existing build tool. There
+several plugins developed for different build tools:
 
-* **Grunt:** [grunt-es6-module-transpiler](https://github.com/joefiorini/grunt-es6-module-transpiler), maintained by @joefiorini
-* **Gulp:** [gulp-es6-module-transpiler](https://github.com/ryanseddon/gulp-es6-module-transpiler), maintained by @ryanseddon
-* **Brunch:** [es6-module-transpiler-brunch](https://github.com/gcollazo/es6-module-transpiler-brunch), maintained by @gcollazo *(CommonJS only)*
-* **Broccoli:** [broccoli-es6-concatenator](https://github.com/joliss/broccoli-es6-concatenator), maintained by @joliss
-* **Mimosa:** [mimosa-es6-module-transpiler](https://github.com/dbashford/mimosa-es6-module-transpiler), maintained by @dbashford
+* **Grunt:** [grunt-es6-module-transpiler](https://github.com/joefiorini/grunt-es6-module-transpiler), maintained by @joefiorini (not yet compatible with v0.5.x)
+* **Gulp:** [gulp-es6-module-transpiler](https://github.com/ryanseddon/gulp-es6-module-transpiler), maintained by @ryanseddon (not yet compatible with v0.5.x)
+* **Brunch:** [es6-module-transpiler-brunch](https://github.com/gcollazo/es6-module-transpiler-brunch), maintained by @gcollazo *(CommonJS only)* (not yet compatible with v0.5.x)
+* **Broccoli:** [broccoli-es6-concatenator](https://github.com/joliss/broccoli-es6-concatenator), maintained by @joliss (not yet compatible with v0.5.x)
+* **Mimosa:** [mimosa-es6-module-transpiler](https://github.com/dbashford/mimosa-es6-module-transpiler), maintained by @dbashford (not yet compatible with v0.5.x)
 
 ### Executable
 
@@ -35,48 +36,13 @@ The transpiler can be used directly from the command line:
 
 ```
 $ npm install -g es6-module-transpiler
-$ compile-modules foo.js --to compiled
+$ compile-modules convert < foo.js
 ```
 
 Here is the basic usage:
 
 ```
-compile-modules FILE [FILE…] --to OUTPUT [--type=TYPE]
-  [--infer-name] [--module-name=NAME]
-  [--global=GLOBAL] [--imports=IMPORTS]
-
-FILE
-  An input file relative to the current directory to process.
-
-OUTPUT
-  An output directory relative to the current directory.  If it does not exist,
-  it will be created.
-
-TYPE
-  One of `amd` (for AMD output), `cjs` (for CommonJS output), `yui` (for YUI
-  output).
-
-INFER-NAME
-  If you use the --infer-name flag with the AMD or YUI type, the transpiler will
-  generate a name for the module from its file path. The default is to output
-  anonymous modules.
-
-NAME
-  You can supply a name to use as the module name.  By default, the transpiler
-  will use the name of the file (without the ending `.js`) as the module name.
-  You may not use this option if you provided multiple FILEs.
-
-GLOBAL
-  This option is only supported when the type is `globals`. By default, the
-  `globals` option will attach all of the exports to `window`. This option will
-  attach the exports to a single named variable on `window` instead.
-
-IMPORTS
-  This option is only supported when the type is
-  `globals`. It is a hash option. If your module
-  includes imports, you must use this option to
-  map the import names onto globals. For example,
-  `--imports ember:Ember underscore:_`
+compile-modules convert -I lib -o out FILE [FILE…]
 ```
 
 ### Library
@@ -84,32 +50,19 @@ IMPORTS
 You can also use the transpiler as a library:
 
 ```javascript
-var Compiler = require("es6-module-transpiler").Compiler;
+var transpiler = require('es6-module-transpiler');
+var Container = transpiler.Container;
+var FileResolver = transpiler.FileResolver;
+var BundleFormatter = transpiler.formatters.bundle;
 
-var compiler = new Compiler(inputString, moduleName);
-var output = compiler.toAMD(); // AMD output as a string
+var container = new Container({
+  resolvers: [new FileResolver(['lib/'])],
+  formatter: new BundleFormatter()
+});
+
+container.getModule('index');
+container.write('out/mylib.js');
 ```
-
-If you want to emit globals output, and your module has imports, you must
-supply an `imports` hash. You can also use the `global` option to specify that
-exports should be added to a single global instead of `window`.
-
-```javascript
-var Compiler = require("es6-module-transpiler").Compiler;
-
-var imports = { underscore: "_", ember: "Ember" };
-var options = { imports: imports, global: "RSVP" };
-
-var compiler = new Compiler(string, name, options);
-compiler.toGlobals() // window global output
-```
-
-The `string` parameter is a string of JavaScript written using the declarative
-module syntax.
-
-The `name` parameter is an optional name that should be used as the name of the
-module if appropriate (for AMD, this maps onto the first parameter to the
-`define` function).
 
 ## Supported ES6 Module Syntax
 
@@ -122,7 +75,7 @@ There are two types of exports. *Named exports* like the following:
 
 ```javascript
 // foobar.js
-var foo = "foo", bar = "bar";
+var foo = 'foo', bar = 'bar';
 
 export { foo, bar };
 ```
@@ -133,16 +86,16 @@ You can also write this form as:
 
 ```javascript
 // foobar.js
-export var foo = "foo";
-export var bar = "bar";
+export var foo = 'foo';
+export var bar = 'bar';
 ```
 
 Either way, another module can then import your exports like so:
 
 ```js
-import { foo, bar } from "foobar";
+import { foo, bar } from 'foobar';
 
-console.log(foo);  // "foo"
+console.log(foo);  // 'foo'
 ```
 
 ### Default Exports
@@ -158,13 +111,13 @@ jQuery.prototype = {
   // ...
 };
 
-export default = jQuery;
+export default jQuery;
 ```
 
 Then, an app that uses jQuery could import it with:
 
 ```javascript
-import $ from "jquery";
+import $ from 'jquery';
 ```
 
 The default export of the "jquery" module is now aliased to `$`.
@@ -186,7 +139,8 @@ console.log(foobar.foo);  // "foo"
 ```
 
 In ES6, this created object is *read-only*, so don't treat it like a mutable
-namespace!
+namespace! **NOTE:** This syntax especially may be removed or modified before
+ES6 is finalized!
 
 #### `import "foo";`
 
@@ -211,95 +165,10 @@ This is super important:
 
 Internally, the transpiler will use this default identifer when importing, but
 any outside consumer needs to be aware that it should use the `default` key and
-not the module itself. For example, an AMD consumer should look like this:
+not the module itself. For example, a CommonJS consumer should look like this:
 
 ```js
-define(["jquery"],
-  function(jQuery) {
-    var $ = jQuery['default'];
-  });
-```
-
-In general, if your project wants to create a "native" module for AMD, YUI, CJS,
-or globals, you should wrap modules with default exports like so:
-
-```js
-// AMD wrapper
-define("jquery-amd",
-  ["jquery"],
-  function(jQuery) {
-    return jQuery['default'];
-  });
-
-// consumer
-define(["jquery-amd"],
-  function($) {
-    // $ is now bound to jQuery['default']
-  });
-```
-
-The reason for all of this extra boilerplate is that ES6 modules support
-a module having both default and named exports, whereas AMD, YUI and CJS do not.
-
-### Individual Exports
-
-This input (ember.js):
-
-```javascript
-var get = function(obj, key) {
-  return obj[key];
-};
-
-var set = function(obj, key, value) {
-  obj[key] = value;
-  return obj;
-};
-
-export { get, set };
-```
-
-will compile into this AMD output:
-
-```javascript
-define(
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-    var get = function(obj, key) {
-      return obj[key];
-    };
-
-    var set = function(obj, key, value) {
-      obj[key] = value;
-      return obj;
-    };
-
-    __exports__.get = get;
-    __exports__.set = set;
-  });
-```
-
-The output is the same whether you use the single-line export (`export { get,
-set }`) or multiple export lines, as above.
-
-### Individual Imports
-
-This input:
-
-```javascript
-import { get, set } from "ember";
-```
-
-will compile into this AMD output:
-
-```javascript
-define(
-  ["ember"],
-  function(__dependency1__) {
-    "use strict";
-    var get = __dependency1__.get;
-    var set = __dependency1__.set;
-  });
+var $ = require('jquery')['default'];
 ```
 
 ## Installation
@@ -310,7 +179,7 @@ Add this project to your application's package.json by running this:
 
 Or install it globally:
 
-    $ sudo npm install -g es6-module-transpiler
+    $ npm install -g es6-module-transpiler
 
 ## Acknowledgements
 

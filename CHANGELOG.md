@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.5.0 (Tuesday, June 24, 2014)
+
+* Completely re-written using [recast](https://github.com/benjamn/recast).
+* Removed YUI support, to be re-added as a plugin.
+* Removed AMD support, to be re-added as a plugin.
+* Added "bundle" formatter for concatenating all modules together.
+* Assert on various invalid module syntax usage.
+
 ## v0.4.0 (Thursday, April 3, 2014)
 
 * Remove trailing whitespace after AMD define (#93)
