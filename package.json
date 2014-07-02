@@ -30,9 +30,10 @@
     "url": "https://github.com/square/es6-module-transpiler.git"
   },
   "scripts": {
-    "test": "npm run test-bundle && npm run test-commonjs",
+    "test": "npm run test-bundle && npm run test-commonjs && npm run test-unit",
     "test-bundle": "node test/runner.js -f bundle",
-    "test-commonjs": "node test/runner.js -f commonjs"
+    "test-commonjs": "node test/runner.js -f commonjs",
+    "test-unit": "mocha -R spec test/unit"
   },
   "author": "Square, Inc.",
   "license": "Apache 2",
@@ -44,6 +45,7 @@
     "posix-getopt": "^1.0.0"
   },
   "devDependencies": {
-    "example-runner": "^0.1.0"
+    "example-runner": "^0.1.0",
+    "mocha": "^1.20.1"
   }
 }
