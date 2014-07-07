@@ -116,7 +116,9 @@ function runTestDir(testDir) {
     var testAssert = wrappedAssert();
     if (fs.statSync(resultPath).isDirectory()) {
       fs.readdirSync(resultPath).forEach(function(child) {
-        requireTestFile('./' + child, resultPath, testAssert);
+        if (Path.extname(child) === '.js') {
+          requireTestFile('./' + child, resultPath, testAssert);
+        }
       });
     } else {
       requireTestFile(resultPath, process.cwd(), testAssert);
@@ -181,7 +183,7 @@ function requireTestFile(path, relativeTo, assert) {
   };
 
   // Hack to work around an issue where vm does not set `this` to the context.
-  code = '(function(){' + code + '}).call(global);';
+  code = '(function(){' + code + '\n}).call(global);';
   vm.runInNewContext(code, testFileGlobal, path);
 
   testFileCache[path] = mod.exports;
