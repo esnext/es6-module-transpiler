@@ -30,6 +30,7 @@ several plugins developed for different build tools:
 * **Broccoli:** [broccoli-es6-concatenator](https://github.com/joliss/broccoli-es6-concatenator), maintained by @joliss (not yet compatible with v0.5.x)
 * **Mimosa:** [mimosa-es6-module-transpiler](https://github.com/dbashford/mimosa-es6-module-transpiler), maintained by @dbashford (not yet compatible with v0.5.x)
 * **AMD Formatter:** [es6-module-transpiler-amd-formatter](https://github.com/caridy/es6-module-transpiler-amd-formatter), maintained by @caridy (compatible with v0.5.x+ only)
+
 ### Executable
 
 The transpiler can be used directly from the command line:
