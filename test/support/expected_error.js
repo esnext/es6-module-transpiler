@@ -16,7 +16,7 @@ function ExpectedError(type, message) {
  * Builds an ExpectedError from the given source code.
  *
  * @param {string} source
- * @returns {?ExpectedError}
+ * @return {?ExpectedError}
  */
 ExpectedError.getFromSource = function(source) {
   var errorMatch = source.match(/\/\*\s*error:\s*(.+?)\*\//);
@@ -44,7 +44,7 @@ ExpectedError.getFromSource = function(source) {
  * Determines whether the given error matches the expected error type.
  *
  * @param {!Error} error
- * @returns {boolean}
+ * @return {boolean}
  */
 ExpectedError.prototype.matchesType = function(error) {
   return !this.type ||
@@ -57,7 +57,7 @@ ExpectedError.prototype.matchesType = function(error) {
  * Determines whether the given error matches the expected error message.
  *
  * @param {!Error} error
- * @returns {boolean}
+ * @return {boolean}
  */
 ExpectedError.prototype.matchesMessage = function(error) {
   return !this.message ||
@@ -81,7 +81,7 @@ ExpectedError.prototype.assertMatch = function(error) {
  * Gets the error to throw if the given error does not match.
  *
  * @param {?Error} error
- * @returns {?AssertionError}
+ * @return {?AssertionError}
  */
 ExpectedError.prototype.matchError = function(error) {
   var matchesType = error && this.matchesType(error);
