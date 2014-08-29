@@ -128,21 +128,6 @@ A default export makes the most sense as a module's "main" export, like the
 
 ### Other Syntax
 
-#### `module`
-
-Whereas the `import` keyword imports specific identifiers from a module,
-the `module` keyword creates an object that contains all of a module's
-exports:
-
-```js
-module foobar from "foobar";
-console.log(foobar.foo);  // "foo"
-```
-
-In ES6, this created object is *read-only*, so don't treat it like a mutable
-namespace! **NOTE:** This syntax especially may be removed or modified before
-ES6 is finalized!
-
 #### `import "foo";`
 
 A "bare import" that doesn't import any identifiers is useful for executing
