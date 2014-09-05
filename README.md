@@ -1,4 +1,4 @@
-# ES6 Module Transpiler [![Build Status](https://travis-ci.org/square/es6-module-transpiler.png)](https://travis-ci.org/square/es6-module-transpiler)
+# ES6 Module Transpiler [![Build Status](https://travis-ci.org/esnext/es6-module-transpiler.png)](https://travis-ci.org/esnext/es6-module-transpiler)
 
 ES6 Module Transpiler is an experimental compiler that allows you to write your
 JavaScript using a subset of the current ES6 module syntax, and compile it into
