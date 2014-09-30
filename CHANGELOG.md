@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## v0.8.0 (Tuesday, September 30, 2014)
+
+* Simplify the CommonJS formatter output to use ES3.
+
+## v0.7.0 (Tuesday, September 30, 2014)
+
+* Use a common base class for all built-in formatters.
+* Various internal cleanups.
+
+## v0.6.2 (Wednesday, August 20, 2014)
+
+* Prevent all instances of export reassignment, not just those at the top level.
+
+## v0.6.1 (Wednesday, August 20, 2014)
+
+* Reference a custom fork of esprima.
+* Allow resolvers to set the `Module#src` property to prevent direct file system access.
+
+## v0.6.0 (Monday, July 28, 2014)
+
+* Add support for source maps.
+* Allow formatters to handle export reassignment.
+* Update recast to v0.6.6.
+
+## v0.5.1 (Wednesday, June 25, 2014)
+
+* Fix the file list to be included in npm.
+
 ## v0.5.0 (Tuesday, June 24, 2014)
 
 * Completely re-written using [recast](https://github.com/benjamn/recast).
