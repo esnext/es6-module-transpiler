@@ -1,6 +1,4 @@
 var sort = require('../../lib/sorting').sort;
-var Module = require('../../lib/module');
-var Container = require('../../lib/container');
 var assert = require('assert');
 var util = require('util');
 
