@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "example-runner": "^0.1.0",
-    "mocha": "^1.20.1"
+    "mocha": "^1.20.1",
+    "tmp": "0.0.24"
   }
 }
