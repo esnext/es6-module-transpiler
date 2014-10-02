@@ -10,6 +10,11 @@ var extend = require('../../lib/utils').extend;
  */
 function TestFormatter() {
   Formatter.call(this);
+  this.processedExportDeclarationCount = 0;
+  this.processedExportReassignmentCount = 0;
+  this.processedImportDeclarationCount = 0;
+  this.processedFunctionDeclarationCount = 0;
+  this.processedVariableDeclarationCount = 0;
 }
 extend(TestFormatter, Formatter);
 
@@ -27,6 +32,7 @@ TestFormatter.prototype.build = function(modules) {
  * @override
  */
 TestFormatter.prototype.processExportDeclaration = function() {
+  this.processedExportDeclarationCount++;
   return null;
 };
 
@@ -34,6 +40,7 @@ TestFormatter.prototype.processExportDeclaration = function() {
  * @override
  */
 TestFormatter.prototype.processExportReassignment = function() {
+  this.processedExportReassignmentCount++;
   return null;
 };
 
@@ -41,6 +48,7 @@ TestFormatter.prototype.processExportReassignment = function() {
  * @override
  */
 TestFormatter.prototype.processImportDeclaration = function() {
+  this.processedImportDeclarationCount++;
   return null;
 };
 
@@ -48,6 +56,7 @@ TestFormatter.prototype.processImportDeclaration = function() {
  * @override
  */
 TestFormatter.prototype.processFunctionDeclaration = function() {
+  this.processedFunctionDeclarationCount++;
   return null;
 };
 
@@ -55,6 +64,7 @@ TestFormatter.prototype.processFunctionDeclaration = function() {
  * @override
  */
 TestFormatter.prototype.processVariableDeclaration = function() {
+  this.processedVariableDeclarationCount++;
   return null;
 };
 
