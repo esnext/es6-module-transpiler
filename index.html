@@ -123,8 +123,8 @@ export Segment;</textarea>
 <textarea id="output" class="code" rows="20" readonly></textarea>
 
 <div>
-  Transpile to <label><input type="radio" name="type" value="cjs" checked /> CommonJS</label>
-  <label><input type="radio" name="type" value="amd" selected /> AMD</label>
+  Transpile to <label><input type="radio" name="type" value="cjs" class="output-type" checked /> CommonJS</label>
+  <label><input type="radio" name="type" value="amd" class="output-type" selected /> AMD</label>
 </div>
 
 <pre id="command"></pre>
@@ -152,38 +152,39 @@ export { sqrt, Point };             // Export multiple objects as module propert
 <a href="https://github.com/square/es6-module-transpiler"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
 <script type="text/javascript" charset="utf-8" src="es6-module-transpiler.js"></script>
-<script type="text/javascript" charset="utf-8" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript" charset="utf-8">
-  jQuery(function($) {
-    var Compiler = ModuleTranspiler.Compiler,
-        $input = $('#input'),
-        $output = $('#output'),
-        $command = $('#command'),
-        $types = $('input[type=radio][name=type]'),
-        waitTimeout;
+  (function() {
+    var Compiler = ModuleTranspiler.Compiler;
+    var inputEl = document.getElementById('input');
+    var outputEl = document.getElementById('output');
+    var commandEl = document.getElementById('command');
+    var typeEls = [].slice.call(document.getElementsByClassName('output-type'));
+    var waitTimeout;
 
-    $input.keyup(function() {
+    inputEl.addEventListener('keyup', function() {
       if (waitTimeout) clearTimeout(waitTimeout);
       waitTimeout = setTimeout(transpile, 100);
+    }, false);
+
+    typeEls.forEach(function(typeEl) {
+      typeEl.addEventListener('change', transpile, false);
     });
 
-    $types.change(transpile);
-
     function transpile() {
-      var output,
-          type = $types.filter(':checked').attr('value');
+      var output;
+      var type = typeEls.filter(function(typeEl) { return typeEl.checked; })[0].value;
 
       try {
-        var compiler = new Compiler($input.val(), 'segment', {imports: []});
+        var compiler = new Compiler(inputEl.value, 'segment', {imports: []});
         output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
       } catch (ex) {
         output = ex.message + "\n" + ex.backtrace.join("\n");
       }
 
-      $command.text('$ compile-modules --type ' + type + ' --to output input');
-      $output.val(output);
+      commandEl.textContent = '$ compile-modules --type ' + type + ' --to output input';
+      outputEl.value = output;
     }
 
     transpile();
-  });
+  })();
 </script>
