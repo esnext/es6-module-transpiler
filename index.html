@@ -113,41 +113,20 @@ aside {
 <textarea id="input" class="code" rows="20">
 // Edit me!
 
-import { Point, pow, sqrt } from "math";
-
-function Segment(start, end) {
+export function Segment(start, end) {
   this.start = start;
   this.end = end;
 
-  this.distance = sqrt(
-    pow(start.x - end.x, 2) +
-    pow(start.y - end.y, 2)
+  this.distance = Math.sqrt(
+    Math.pow(start.x - end.x, 2) +
+    Math.pow(start.y - end.y, 2)
   );
 }
-
-export Segment;</textarea>
+</textarea>
 </div>
 <div class="editor-container">
 <textarea id="output" class="code" rows="20" readonly></textarea>
 </div>
-
-<div class="clear">
-  Transpile to <label><input type="radio" name="type" value="cjs" class="output-type" checked /> CommonJS</label>
-  <label><input type="radio" name="type" value="amd" class="output-type" selected /> AMD</label>
-</div>
-
-<pre id="command"></pre>
-
-<h3>Things to try</h3>
-
-<pre>
-import "jquery" as jQuery;          // Import module as a variable
-import Point from "math";           // Import one part of a module
-import { sqrt, Point } from "math"; // Import multiple parts of a module
-export = jQuery;                    // Export an object as the module
-export Point;                       // Export an object as a module property
-export { sqrt, Point };             // Export multiple objects as module properties
-</pre>
 
 <footer>
   <span style="float:right;">
@@ -173,13 +152,17 @@ export { sqrt, Point };             // Export multiple objects as module propert
       theme: 'default'
     };
 
-    var Compiler = ModuleTranspiler.Compiler;
+    var fs = ModuleTranspiler.fs;
+    var Container = ModuleTranspiler.Container;
+    var FileResolver = ModuleTranspiler.FileResolver;
+    var CommonJSFormatter = ModuleTranspiler.formatters.commonjs;
+
+    fs.dir('/out');
+
     var inputEl = document.getElementById('input');
     var inputEditor = CodeMirror.fromTextArea(inputEl, CODE_MIRROR_OPTIONS);
     var outputEl = document.getElementById('output');
     var outputEditor = CodeMirror.fromTextArea(outputEl, CODE_MIRROR_OPTIONS);
-    var commandEl = document.getElementById('command');
-    var typeEls = [].slice.call(document.getElementsByClassName('output-type'));
     var waitTimeout;
 
     inputEditor.on('change', function() {
@@ -187,22 +170,24 @@ export { sqrt, Point };             // Export multiple objects as module propert
       waitTimeout = setTimeout(transpile, 100);
     }, false);
 
-    typeEls.forEach(function(typeEl) {
-      typeEl.addEventListener('change', transpile, false);
-    });
-
     function transpile() {
       var output;
-      var type = typeEls.filter(function(typeEl) { return typeEl.checked; })[0].value;
 
       try {
-        var compiler = new Compiler(inputEditor.getValue(), 'segment', {imports: []});
-        output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
+        var container = new Container({
+          formatter: new CommonJSFormatter(),
+          resolvers: [new FileResolver(['/'])]
+        });
+
+        fs.file('/input.js', inputEditor.getValue());
+        container.getModule('input.js');
+        container.write('/out');
+        outputEditor.setValue(fs.readFileSync('/out/input.js', 'utf8'));
       } catch (ex) {
-        output = ex.message + "\n" + ex.backtrace.join("\n");
+        output = ex.message + "\n" + ex.stack;
+        console.error(ex);
       }
 
-      commandEl.textContent = '$ compile-modules --type ' + type + ' --to output input';
       outputEditor.setValue(output);
     }
 
