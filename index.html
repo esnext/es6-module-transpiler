@@ -57,7 +57,7 @@ h1, h2, h3 {
 }
 
 #labels span {
-  width: 304px;
+  width: 470px;
   margin-left: 2px;
   display: inline-block;
 }
@@ -72,10 +72,8 @@ pre, .code {
   width: 300px;
 }
 
-.reset {
-  padding-left: 1em;
-  font-size: smaller;
-  color: #ccc;
+.clear {
+  clear: both;
 }
 
 aside {
@@ -84,7 +82,14 @@ aside {
   font-size: smaller;
   width: 220px;
 }
+
+.editor-container {
+  width: 480px;
+  margin-bottom: 20px;
+  float: left;
+}
 </style>
+<link rel="stylesheet" type="text/css" href="vendor/codemirror.css" />
 
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 <div id="body">
@@ -104,6 +109,7 @@ aside {
   <span class="output">output/segment.js</span>
 </div>
 
+<div class="editor-container">
 <textarea id="input" class="code" rows="20">
 // Edit me!
 
@@ -120,9 +126,12 @@ function Segment(start, end) {
 }
 
 export Segment;</textarea>
+</div>
+<div class="editor-container">
 <textarea id="output" class="code" rows="20" readonly></textarea>
+</div>
 
-<div>
+<div class="clear">
   Transpile to <label><input type="radio" name="type" value="cjs" class="output-type" checked /> CommonJS</label>
   <label><input type="radio" name="type" value="amd" class="output-type" selected /> AMD</label>
 </div>
@@ -152,16 +161,28 @@ export { sqrt, Point };             // Export multiple objects as module propert
 <a href="https://github.com/square/es6-module-transpiler"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
 <script type="text/javascript" charset="utf-8" src="es6-module-transpiler.js"></script>
+<script type="text/javascript" charset="utf-8" src="vendor/codemirror.js"></script>
+<script type="text/javascript" charset="utf-8" src="vendor/codemirror-mode-javascript.js"></script>
 <script type="text/javascript" charset="utf-8">
   (function() {
+    var CODE_MIRROR_OPTIONS = {
+      lineNumbers: true,
+      smartIndent: false,
+      indentWithTabs: false,
+      tabSize: 2,
+      theme: 'default'
+    };
+
     var Compiler = ModuleTranspiler.Compiler;
     var inputEl = document.getElementById('input');
+    var inputEditor = CodeMirror.fromTextArea(inputEl, CODE_MIRROR_OPTIONS);
     var outputEl = document.getElementById('output');
+    var outputEditor = CodeMirror.fromTextArea(outputEl, CODE_MIRROR_OPTIONS);
     var commandEl = document.getElementById('command');
     var typeEls = [].slice.call(document.getElementsByClassName('output-type'));
     var waitTimeout;
 
-    inputEl.addEventListener('keyup', function() {
+    inputEditor.on('change', function() {
       if (waitTimeout) clearTimeout(waitTimeout);
       waitTimeout = setTimeout(transpile, 100);
     }, false);
@@ -175,14 +196,14 @@ export { sqrt, Point };             // Export multiple objects as module propert
       var type = typeEls.filter(function(typeEl) { return typeEl.checked; })[0].value;
 
       try {
-        var compiler = new Compiler(inputEl.value, 'segment', {imports: []});
+        var compiler = new Compiler(inputEditor.getValue(), 'segment', {imports: []});
         output = (type === 'amd') ? compiler.toAMD() : compiler.toCJS();
       } catch (ex) {
         output = ex.message + "\n" + ex.backtrace.join("\n");
       }
 
       commandEl.textContent = '$ compile-modules --type ' + type + ' --to output input';
-      outputEl.value = output;
+      outputEditor.setValue(output);
     }
 
     transpile();
