@@ -34,7 +34,7 @@
     "test-bundle": "node test/runner.js -f bundle",
     "test-commonjs": "node test/runner.js -f commonjs",
     "test-unit": "mocha -R spec test/unit",
-    "build-standalone": "browserify -s transpiler -e lib/index.js -o es6-module-transpiler.js"
+    "build-standalone": "browserify -s ModuleTranspiler -e lib/index.js -o es6-module-transpiler.js"
   },
   "author": "Square, Inc.",
   "license": "Apache 2",
