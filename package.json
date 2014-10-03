@@ -1,0 +1,30 @@
+{
+  "name": "es6-module-transpiler-pages",
+  "version": "1.0.0",
+  "description": "Web site for the es6-module-transpiler project.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/esnext/es6-module-transpiler.git"
+  },
+  "keywords": [
+    "es6",
+    "modules"
+  ],
+  "author": "Square, Inc.",
+  "license": "Apache 2",
+  "bugs": {
+    "url": "https://github.com/esnext/es6-module-transpiler/issues"
+  },
+  "homepage": "https://github.com/esnext/es6-module-transpiler",
+  "devDependencies": {
+    "broccoli": "^0.13.0",
+    "broccoli-es6-module-transpiler": "^0.2.3"
+  }
+}

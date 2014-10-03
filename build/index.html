@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ES6 Module Transpiler &mdash; Online Editor</title>
+  <link rel="stylesheet" href="../vendor/codemirror.css" />
+  <style type="text/css">
+    @import url(//fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+
+    body {
+      font-family: "Helvetica Neue";
+    }
+
+    h1 {
+      font-size: 56px;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    h1 + h2 {
+      margin-top: 0;
+    }
+
+    h2 {
+      font-weight: 400;
+      font-size: 28px;
+    }
+
+    h3 {
+      font-weight: 400;
+      font-size: 20px;
+    }
+
+    h1, h2, h3 {
+      font-family: "Yanone Kaffeesatz";
+      text-rendering: optimizeLegibility;
+    }
+
+    h1 .editor-suffix {
+      font-weight: lighter;
+      color: #ccc;
+    }
+
+    .input {
+      position: absolute;
+      left: 0;
+      right: 50%;
+      top: 80px;
+      bottom: 0;
+    }
+
+    .output {
+      position: absolute;
+      left: 50%;
+      right: 0;
+      top: 80px;
+      bottom: 0;
+    }
+
+    .CodeMirror {
+      height: 100%;
+    }
+
+    .error-message {
+      background-color: #dd978b;
+      color: #780000;
+      font-weight: bold;
+      font-family: Menlo, Monaco, "Courier New";
+      position: absolute;
+      bottom: 0;
+      left: 28px;
+      right: 50%;
+      padding: 2px 8px;
+      font-size: 12px;
+    }
+
+    .options {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      right: 0;
+    }
+
+    .options label {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+<div id="body"></div>
+<script type="application/javascript" src="../vendor/react.js"></script>
+<script type="application/javascript" src="../vendor/codemirror.js"></script>
+<script type="application/javascript" src="../vendor/codemirror-mode-javascript.js"></script>
+<script type="application/javascript" src="../es6-module-transpiler.js"></script>
+<script type="application/javascript" src="../build/editor.js"></script>
+</body>
+</html>

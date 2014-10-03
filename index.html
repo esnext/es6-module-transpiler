@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>ES6 Module Transpiler</title>
+<link rel="stylesheet" type="text/css" href="./vendor/solarized_light.css" />
 <style>
-
 @import url(//fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
 
 body {
@@ -52,18 +52,8 @@ h1, h2, h3 {
   text-rendering: optimizeLegibility;
 }
 
-#labels {
-  font-weight: bold;
-}
-
-#labels span {
-  width: 470px;
-  margin-left: 2px;
-  display: inline-block;
-}
-
 pre, .code {
-  font-size: 12px;
+  font-size: 14px;
   font-family: Menlo, Monaco, "Courier New";
 }
 
@@ -72,26 +62,12 @@ pre, .code {
   width: 300px;
 }
 
-.clear {
-  clear: both;
-}
-
-aside {
-  position: absolute;
-  left: 740px;
-  font-size: smaller;
-  width: 220px;
-}
-
-.editor-container {
-  width: 480px;
-  margin-bottom: 20px;
-  float: left;
+.hljs {
+  background-color: transparent;
 }
 </style>
-<link rel="stylesheet" type="text/css" href="vendor/codemirror.css" />
-
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+
 <div id="body">
 
 <a href="https://github.com/square"><img src="logotype.png" width="122" height="31"></a>
@@ -100,18 +76,20 @@ aside {
 
 <h2>Tomorrow&rsquo;s JavaScript module syntax today</h2>
 
-<p><b>ES6 Module Transpiler</b> is a <a href="//github.com/square/es6-module-transpiler">JavaScript library</a> for converting JavaScript files written using the ES6 draft specification module syntax to existing library-based module systems such as AMD, CommonJS, or simply globals.
+<p>
+  <b>ES6 Module Transpiler</b> is a <a href="//github.com/square/es6-module-transpiler">JavaScript library</a>
+  for converting JavaScript files written using the ES6 draft specification module syntax for use in existing
+  JavaScript environments. Try out the <a href="./editor"><strong>online editor demo</strong></a> to see it in action.
+</p>
 
-<h2>Demo</h2>
+<h3>Module Syntax</h3>
 
-<div id="labels">
-  <span class="input">input/segment.js</span>
-  <span class="output">output/segment.js</span>
-</div>
+<p>
+  ES6 modules are similar to existing module systems such as CommonJS, but are a syntax built into the language.
+  Check out this example:
+</p>
 
-<div class="editor-container">
-<textarea id="input" class="code" rows="20">
-// Edit me!
+<pre><code class="javascript">// segment.js
 
 export function Segment(start, end) {
   this.start = start;
@@ -122,75 +100,69 @@ export function Segment(start, end) {
     Math.pow(start.y - end.y, 2)
   );
 }
-</textarea>
-</div>
-<div class="editor-container">
-<textarea id="output" class="code" rows="20" readonly></textarea>
-</div>
+
+// point.js
+
+export function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+// index.js
+
+import { Point } from './point';
+import { Segment } from './segment';
+
+var start = new Point(0, 0);
+var end = new Point(4, 5);
+
+console.log(
+  'Distance from origin to (4, 5) is',
+  new Segment(start, end).distance
+);
+</code></pre>
+
+You can read more about the syntax at <a href="http://jsmodules.io/">jsmodules.io</a>, or play with the example
+above in the <a href="./editor">interactive editor demo</a>.
+
+
+<h3>Installing</h3>
+
+<p>
+  Install the transpiler via npm:
+</p>
+
+<pre>$ npm install -g es6-module-transpiler</pre>
+
+<p>
+  Use <code>compile-modules</code> to transpile your project:
+</p>
+
+<pre>$ compile-modules convert -I lib -f bundle -o out.js index.js</pre>
+
+<p>
+  Or use the transpiler with your build tool of choice, such as
+  <a href="https://github.com/joefiorini/grunt-es6-module-transpiler">Grunt</a>,
+  <a href="https://github.com/ryanseddon/gulp-es6-module-transpiler">Gulp</a>, or
+  <a href="https://github.com/mmun/broccoli-es6-module-transpiler">Broccoli</a>.
+</p>
 
 <footer>
   <span style="float:right;">
     Released under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a>.
   </span>
-  Copyright 2013 <a href="http://squareup.com">Square, Inc.</a>
+  Copyright 2014 <a href="http://squareup.com">Square, Inc.</a>
 </footer>
 
 </div>
 
 <a href="https://github.com/square/es6-module-transpiler"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
-<script type="text/javascript" charset="utf-8" src="es6-module-transpiler.js"></script>
-<script type="text/javascript" charset="utf-8" src="vendor/codemirror.js"></script>
-<script type="text/javascript" charset="utf-8" src="vendor/codemirror-mode-javascript.js"></script>
-<script type="text/javascript" charset="utf-8">
-  (function() {
-    var CODE_MIRROR_OPTIONS = {
-      lineNumbers: true,
-      smartIndent: false,
-      indentWithTabs: false,
-      tabSize: 2,
-      theme: 'default'
-    };
-
-    var fs = ModuleTranspiler.fs;
-    var Container = ModuleTranspiler.Container;
-    var FileResolver = ModuleTranspiler.FileResolver;
-    var CommonJSFormatter = ModuleTranspiler.formatters.commonjs;
-
-    fs.dir('/out');
-
-    var inputEl = document.getElementById('input');
-    var inputEditor = CodeMirror.fromTextArea(inputEl, CODE_MIRROR_OPTIONS);
-    var outputEl = document.getElementById('output');
-    var outputEditor = CodeMirror.fromTextArea(outputEl, CODE_MIRROR_OPTIONS);
-    var waitTimeout;
-
-    inputEditor.on('change', function() {
-      if (waitTimeout) clearTimeout(waitTimeout);
-      waitTimeout = setTimeout(transpile, 100);
-    }, false);
-
-    function transpile() {
-      var output;
-
-      try {
-        var container = new Container({
-          formatter: new CommonJSFormatter(),
-          resolvers: [new FileResolver(['/'])]
-        });
-
-        fs.file('/input.js', inputEditor.getValue());
-        container.getModule('input.js');
-        container.write('/out');
-        outputEditor.setValue(fs.readFileSync('/out/input.js', 'utf8'));
-      } catch (ex) {
-        output = ex.message + "\n" + ex.stack;
-        console.error(ex);
-      }
-
-      outputEditor.setValue(output);
+<script type="application/javascript" src="./vendor/highlight.pack.js"></script>
+<script type="application/javascript">
+  [].forEach.call(document.getElementsByTagName('code'), function(code) {
+    if (code.className) {
+      hljs.highlightBlock(code);
     }
-
-    transpile();
-  })();
+  });
 </script>

@@ -2891,6 +2891,7 @@ var b = types.builders;
 var astUtil = require('ast-util');
 
 var utils = require('./utils');
+var extend = utils.extend;
 var sourcePosition = utils.sourcePosition;
 var Replacement = require('./replacement');
 
@@ -2900,6 +2901,7 @@ var Replacement = require('./replacement');
  *
  * @constructor
  * @param {Formatter} formatter
+ * @extends types.PathVisitor
  */
 function Rewriter(formatter) {
   types.PathVisitor.call(this);
@@ -2910,7 +2912,7 @@ function Rewriter(formatter) {
     }
   });
 }
-utils.extend(Rewriter, types.PathVisitor);
+extend(Rewriter, types.PathVisitor);
 
 /**
  * Rewrites references to all imported and exported bindings according to the
@@ -2955,8 +2957,12 @@ Rewriter.prototype.rewrite = function(modules) {
   this.replacements = replacements;
   for (var i = 0, length = modules.length; i < length; i++) {
     var mod = modules[i];
-    this.currentModule = mod;
-    types.visit(mod.ast.program, this);
+    if (mod.exports.declarations.length > 0 || mod.imports.declarations.length > 0) {
+      this.currentModule = mod;
+      types.visit(mod.ast.program, this);
+    } else {
+      types.visit(mod.ast.program, new DeclarationLinterVisitor(mod));
+    }
   }
   this.currentModule = null;
   this.replacements = null;
@@ -3051,7 +3057,7 @@ Rewriter.prototype.visitFunctionDeclaration = function(nodePath) {
  * @private
  */
 Rewriter.prototype.visitExportDeclaration = function(nodePath) {
-  this.assertStatementIsTopLevel(this.currentModule, nodePath);
+  assertStatementIsTopLevel(this.currentModule, nodePath);
 
   var replacement;
   if (nodePath.node.default) {
@@ -3096,7 +3102,7 @@ Rewriter.prototype.visitExportDeclaration = function(nodePath) {
  * @private
  */
 Rewriter.prototype.visitImportDeclaration = function(nodePath) {
-  this.assertStatementIsTopLevel(this.currentModule, nodePath);
+  assertStatementIsTopLevel(this.currentModule, nodePath);
   var replacement = this.formatter.processImportDeclaration(this.currentModule, nodePath);
   if (replacement) {
     this.replacements.push(replacement);
@@ -3160,23 +3166,6 @@ Rewriter.prototype.assertImportIsNotReassigned = function(mod, identifierPath) {
 };
 
 /**
- * We need to ensure that all imports/exports are only at the top level. Esprima
- * should perhaps take care of this for us, but it does not.
- *
- * @param {Module} mod
- * @param {NodePath} nodePath
- * @private
- */
-Rewriter.prototype.assertStatementIsTopLevel = function(mod, nodePath) {
-  if (!nodePath.scope.isGlobal) {
-    throw new SyntaxError(
-      'Unexpected non-top level ' + nodePath.node.type +
-      ' found at ' + sourcePosition(mod, nodePath.node)
-    );
-  }
-};
-
-/**
  * @private
  */
 Rewriter.prototype.getExportReferenceForReference = function(mod, referencePath) {
@@ -3206,6 +3195,55 @@ Rewriter.prototype.getExportReferenceForReference = function(mod, referencePath)
     this.formatter.importedReference(mod, referencePath) ||
     this.formatter.localReference(mod, referencePath);
 };
+
+/**
+ * Traverses ASTs only checking for invalid import/export declaration semantics.
+ *
+ * @constructor
+ * @extends types.PathVisitor
+ * @param {Module} mod
+ * @private
+ */
+function DeclarationLinterVisitor(mod) {
+  this.module = mod;
+  types.PathVisitor.call(this);
+}
+extend(DeclarationLinterVisitor, types.PathVisitor);
+
+/**
+ * Checks that the import declaration is at the top level.
+ *
+ * @param {NodePath} nodePath
+ */
+DeclarationLinterVisitor.prototype.visitImportDeclaration = function(nodePath) {
+  assertStatementIsTopLevel(this.module, nodePath);
+};
+
+/**
+ * Checks that the export declaration is at the top level.
+ *
+ * @param {NodePath} nodePath
+ */
+DeclarationLinterVisitor.prototype.visitExportDeclaration = function(nodePath) {
+  assertStatementIsTopLevel(this.module, nodePath);
+};
+
+/**
+ * We need to ensure that all imports/exports are only at the top level. Esprima
+ * should perhaps take care of this for us, but it does not.
+ *
+ * @param {Module} mod
+ * @param {NodePath} nodePath
+ * @private
+ */
+function assertStatementIsTopLevel(mod, nodePath) {
+  if (!nodePath.scope.isGlobal) {
+    throw new SyntaxError(
+      'Unexpected non-top level ' + nodePath.node.type +
+      ' found at ' + sourcePosition(mod, nodePath.node)
+    );
+  }
+}
 
 module.exports = Rewriter;
 
@@ -3393,7 +3431,16 @@ Writer.prototype.writeFile = function(file, filename) {
   var code = rendered.code;
   assert.ok(filename, 'missing filename for file: ' + code);
 
-  mkdirp.sync(Path.dirname(filename));
+  var dirname = Path.dirname(filename);
+  var parts = dirname.split('/');
+  var dir = '';
+
+  parts.forEach(function(part) {
+    dir += '/' + part;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+  });
 
   if (rendered.map) {
     code += '\n\n//# sourceMappingURL=' + Path.basename(sourceMapFilename);
