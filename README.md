@@ -1,15 +1,8 @@
 # ES6 Module Transpiler [![Build Status](https://travis-ci.org/esnext/es6-module-transpiler.png)](https://travis-ci.org/esnext/es6-module-transpiler)
 
 ES6 Module Transpiler is an experimental compiler that allows you to write your
-JavaScript using a subset of the current ES6 module syntax, and compile it into
+JavaScript using a subset of the ES6 module syntax, and compile it into
 AMD or CommonJS modules.
-
-**WARNING: The ES6 module syntax is still undergoing a lot of churn, and will
-likely change before final approval.**
-
-**ES6 Module Transpiler will track ES6 syntax, and not attempt to maintain
-backwards compatibility with syntax that ultimately did not succeed as part of
-ES6.**
 
 This compiler provides a way to experiment with ES6 syntax in real world
 scenarios to see how the syntax holds up. It also provides a nicer, more
@@ -66,9 +59,6 @@ container.write('out/mylib.js');
 ```
 
 ## Supported ES6 Module Syntax
-
-Again, this syntax is in flux and is closely tracking the module work being
-done by TC39.
 
 ### Named Exports
 
