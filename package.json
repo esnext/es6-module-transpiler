@@ -41,7 +41,6 @@
   "dependencies": {
     "ast-util": "^0.1.2",
     "esprima": "git://github.com/esnext/esprima#harmony-esnext",
-    "mkdirp": "^0.5.0",
     "posix-getopt": "^1.0.0",
     "recast": "^0.6.6"
   },
