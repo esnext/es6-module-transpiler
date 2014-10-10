@@ -1,6 +1,6 @@
 /* jshint esnext:true */
 
 function foo() {
-  /* error: type=SyntaxError message="Unexpected non-top level ImportDeclaration found at index.js:5:3" */
+  /* error: type=Error message="Line 5: Unexpected reserved word" */
   import foo from './index';
 }
