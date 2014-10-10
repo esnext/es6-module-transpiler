@@ -1,6 +1,6 @@
 /* jshint esnext:true */
 
 function foo() {
-  /* error: type=SyntaxError message="Unexpected non-top level ExportDeclaration found at index.js:5:3" */
+  /* error: type=Error message="Line 5: Unexpected reserved word" */
   export { foo };
 }

@@ -38,11 +38,11 @@
   "author": "Square, Inc.",
   "license": "Apache 2",
   "dependencies": {
-    "ast-util": "^0.1.2",
-    "esprima": "git://github.com/esnext/esprima#harmony-esnext",
+    "ast-util": "^0.5.0",
+    "esprima-fb": "^7001.1.0-dev-harmony-fb",
     "mkdirp": "^0.5.0",
     "posix-getopt": "^1.0.0",
-    "recast": "^0.6.6"
+    "recast": "^0.8.0"
   },
   "devDependencies": {
     "example-runner": "^0.1.0",
