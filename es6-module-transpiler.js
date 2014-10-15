@@ -1,10 +1,87 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.ModuleTranspiler=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var DEFAULT_STACK_TRACE_LIMIT = 10;
+
+// Polyfill Error.captureStackTrace, which exists only in v8 (Chrome). This is
+// used in depd, which is used by ast-types.
+if (!Error.captureStackTrace) {
+  /**
+   * Adds a 'stack' property to the given object with stack info.
+   *
+   * @param obj
+   * @returns {Error.stack|*}
+   */
+  Error.captureStackTrace = function(obj) {
+    var stack = new Error().stack;
+    var prepare = Error.prepareStackTrace;
+
+    if (prepare) {
+      stack = prepare(stack, parseStack(stack));
+    }
+
+    obj.stack = stack;
+  };
+}
+
+if (typeof Error.stackTraceLimit === 'undefined') {
+  Error.stackTraceLimit = DEFAULT_STACK_TRACE_LIMIT;
+}
+
+/**
+ * Parse a formatted stack string into an array of call sites.
+ *
+ * @param {string} stack
+ * @returns {Array.<CallSite>}
+ */
+function parseStack(stack) {
+  return stack.split('\n').slice(0, Error.stackTraceLimit).map(CallSite.parse);
+}
+
+/**
+ * Represents a call site in a stack trace.
+ *
+ * @param {string} fnName
+ * @param {string} fileName
+ * @param {number} lineNumber
+ * @param {number} columnNumber
+ * @param {boolean} isEval
+ * @param {string} evalOrigin
+ * @constructor
+ */
+function CallSite(fnName, fileName, lineNumber, columnNumber, isEval, evalOrigin) {
+  this.getFunctionName = function() { return fnName; };
+  this.getFileName = function() { return fileName; };
+  this.getLineNumber = function() { return lineNumber; };
+  this.getColumnNumber = function() { return columnNumber; };
+  this.isEval = function() { return isEval; };
+  this.getEvalOrigin = function() { return evalOrigin; };
+}
+
+/**
+ * Parses a line in a formatted stack trace and returns call site info.
+ *
+ * @param {string} stackTraceLine
+ * @returns {CallSite}
+ */
+CallSite.parse = function(stackTraceLine) {
+  var fnNameAndLocation = stackTraceLine.split('@');
+  var fnName = fnNameAndLocation[0];
+  var location = fnNameAndLocation[1];
+
+  var fileAndLineAndColumn = location ? location.split(':') : [];
+  var fileName = fileAndLineAndColumn[0];
+  var lineNumber = parseInt(fileAndLineAndColumn[1], 10);
+  var columnNumber = parseInt(fileAndLineAndColumn[2], 10);
+
+  return new CallSite(fnName, fileName, lineNumber, columnNumber, fnName === 'eval', '');
+};
+
+},{}],2:[function(require,module,exports){
 var Fs = require('fake-fs');
 var fs = new Fs();
 fs.patch();
 module.exports = fs;
 
-},{"fake-fs":60}],2:[function(require,module,exports){
+},{"fake-fs":61}],3:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -215,7 +292,7 @@ function noop() {}
 
 module.exports = Container;
 
-},{"./rewriter":17,"./writer":20,"assert":48}],3:[function(require,module,exports){
+},{"./rewriter":18,"./writer":21,"assert":49}],4:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var recast = require('recast');
@@ -299,7 +376,7 @@ DeclarationInfo.forIdentifierPath = function(identifierPath) {
 
 module.exports = DeclarationInfo;
 
-},{"recast":73}],4:[function(require,module,exports){
+},{"recast":74}],5:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -639,7 +716,7 @@ DefaultExportSpecifier.prototype.moduleDeclaration = null;
 
 module.exports = ExportDeclarationList;
 
-},{"./declaration_info":3,"./module_binding_declaration":13,"./module_binding_list":14,"./module_binding_specifier":15,"./utils":19,"assert":48,"recast":73}],5:[function(require,module,exports){
+},{"./declaration_info":4,"./module_binding_declaration":14,"./module_binding_list":15,"./module_binding_specifier":16,"./utils":20,"assert":49,"recast":74}],6:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -722,14 +799,14 @@ FileResolver.prototype.resolvePath = function(importedPath, fromModule) {
 
 module.exports = FileResolver;
 
-},{"./module":12,"assert":48,"fs":1,"path":55}],6:[function(require,module,exports){
+},{"./module":13,"assert":49,"fs":2,"path":56}],7:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 exports.DEFAULT = 'bundle';
 exports.bundle = require('./formatters/bundle_formatter');
 exports.commonjs = require('./formatters/commonjs_formatter');
 
-},{"./formatters/bundle_formatter":7,"./formatters/commonjs_formatter":8}],7:[function(require,module,exports){
+},{"./formatters/bundle_formatter":8,"./formatters/commonjs_formatter":9}],8:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var recast = require('recast');
@@ -1084,7 +1161,7 @@ BundleFormatter.prototype.reference = function(mod, identifier) {
 
 module.exports = BundleFormatter;
 
-},{"../replacement":16,"../sorting":18,"../utils":19,"./formatter":9,"recast":73}],8:[function(require,module,exports){
+},{"../replacement":17,"../sorting":19,"../utils":20,"./formatter":10,"recast":74}],9:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -1597,7 +1674,7 @@ CommonJSFormatter.prototype.reference = function(mod, identifier) {
 
 module.exports = CommonJSFormatter;
 
-},{"../replacement":16,"../utils":19,"./formatter":9,"assert":48,"ast-util":45,"recast":73}],9:[function(require,module,exports){
+},{"../replacement":17,"../utils":20,"./formatter":10,"assert":49,"ast-util":46,"recast":74}],10:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -1786,7 +1863,7 @@ Formatter.prototype.processImportDeclaration = function(mod, nodePath) {
 
 module.exports = Formatter;
 
-},{"../replacement":16,"assert":48,"recast":73}],10:[function(require,module,exports){
+},{"../replacement":17,"assert":49,"recast":74}],11:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -1923,8 +2000,15 @@ memo(ImportSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */f
 
 module.exports = ImportDeclarationList;
 
-},{"./module_binding_declaration":13,"./module_binding_list":14,"./module_binding_specifier":15,"./utils":19,"assert":48,"recast":73}],11:[function(require,module,exports){
+},{"./module_binding_declaration":14,"./module_binding_list":15,"./module_binding_specifier":16,"./utils":20,"assert":49,"recast":74}],12:[function(require,module,exports){
 (function (process){
+// Polyfill process.umask() since browserify doesn't add it (yet).
+// Remove it once https://github.com/defunctzombie/node-process/pull/22 is
+// merged and included in browserify.
+process.umask = function() { return 0; };
+
+require('./capture_stack_trace_polyfill');
+
 var Container = require('../container');
 var FileResolver = require('../file_resolver');
 var formatters = require('../formatters');
@@ -1938,20 +2022,9 @@ exports.Module = Module;
 // Export the fake filesystem so someone can get stuff in and out.
 exports.fs = require('./fs');
 
-// Polyfill process.umask() since browserify doesn't add it (yet).
-// Remove it once https://github.com/defunctzombie/node-process/pull/22 is
-// merged and included in browserify.
-process.umask = function() { return 0; };
-
-// Polyfill Error.captureStackTrace, which exists only in v8 (Chrome).
-if (!Error.captureStackTrace) {
-  Error.captureStackTrace = function(obj) {
-    obj.stack = new Error().stack;
-  };
-}
 
 }).call(this,require('_process'))
-},{"../container":2,"../file_resolver":5,"../formatters":6,"../module":12,"./fs":1,"_process":56}],12:[function(require,module,exports){
+},{"../container":3,"../file_resolver":6,"../formatters":7,"../module":13,"./capture_stack_trace_polyfill":1,"./fs":2,"_process":57}],13:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -2145,7 +2218,7 @@ Module.prototype.toString = Module.prototype.inspect;
 
 module.exports = Module;
 
-},{"./exports":4,"./imports":10,"./utils":19,"assert":48,"esprima-fb":59,"fs":1,"path":55,"recast":73}],13:[function(require,module,exports){
+},{"./exports":5,"./imports":11,"./utils":20,"assert":49,"esprima-fb":60,"fs":2,"path":56,"recast":74}],14:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -2280,7 +2353,7 @@ ModuleBindingDeclaration.prototype.toString = ModuleBindingDeclaration.prototype
 
 module.exports = ModuleBindingDeclaration;
 
-},{"./utils":19,"assert":48,"recast":73}],14:[function(require,module,exports){
+},{"./utils":20,"assert":49,"recast":74}],15:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -2526,7 +2599,7 @@ memo(ModuleBindingList.prototype, 'names', /** @this ModuleBindingList */functio
 
 module.exports = ModuleBindingList;
 
-},{"./utils":19,"assert":48}],15:[function(require,module,exports){
+},{"./utils":20,"assert":49}],16:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -2767,7 +2840,7 @@ ModuleBindingSpecifier.prototype.toString = ModuleBindingSpecifier.prototype.ins
 
 module.exports = ModuleBindingSpecifier;
 
-},{"./utils":19,"assert":48,"recast":73}],16:[function(require,module,exports){
+},{"./utils":20,"assert":49,"recast":74}],17:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var recast = require('recast');
@@ -2864,7 +2937,7 @@ Replacement.map = function(nodePaths, callback) {
 
 module.exports = Replacement;
 
-},{"recast":73}],17:[function(require,module,exports){
+},{"recast":74}],18:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -3233,7 +3306,7 @@ function assertStatementIsTopLevel(mod, nodePath) {
 
 module.exports = Rewriter;
 
-},{"./replacement":16,"./utils":19,"assert":48,"ast-util":45,"recast":73}],18:[function(require,module,exports){
+},{"./replacement":17,"./utils":20,"assert":49,"ast-util":46,"recast":74}],19:[function(require,module,exports){
 /**
  * Determines the execution order of the given modules. This function resolves
  * cycles by preserving the order in which the modules are visited.
@@ -3280,7 +3353,7 @@ function visit(mod, result, state) {
   result.push(mod);
 }
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var recast = require('recast');
@@ -3372,7 +3445,7 @@ function mkdirpSync(path) {
 }
 exports.mkdirpSync = mkdirpSync;
 
-},{"esprima-fb":59,"fs":1,"recast":73}],20:[function(require,module,exports){
+},{"esprima-fb":60,"fs":2,"recast":74}],21:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
@@ -3448,7 +3521,7 @@ Writer.prototype.writeFile = function(file, filename) {
 
 module.exports = Writer;
 
-},{"./utils":19,"assert":48,"fs":1,"path":55,"recast":73}],21:[function(require,module,exports){
+},{"./utils":20,"assert":49,"fs":2,"path":56,"recast":74}],22:[function(require,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -3751,7 +3824,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,require('_process'),"/node_modules/amdefine/amdefine.js")
-},{"_process":56,"path":55}],22:[function(require,module,exports){
+},{"_process":57,"path":56}],23:[function(require,module,exports){
 var types = require("../lib/types");
 var Type = types.Type;
 var def = Type.def;
@@ -4099,7 +4172,7 @@ def("Literal")
         isRegExp
     ));
 
-},{"../lib/shared":33,"../lib/types":35}],23:[function(require,module,exports){
+},{"../lib/shared":34,"../lib/types":36}],24:[function(require,module,exports){
 require("./core");
 var types = require("../lib/types");
 var def = types.Type.def;
@@ -4188,7 +4261,7 @@ def("XMLProcessingInstruction")
     .field("target", isString)
     .field("contents", or(isString, null));
 
-},{"../lib/types":35,"./core":22}],24:[function(require,module,exports){
+},{"../lib/types":36,"./core":23}],25:[function(require,module,exports){
 require("./core");
 var types = require("../lib/types");
 var def = types.Type.def;
@@ -4405,7 +4478,7 @@ def("TemplateElement")
     .field("value", {"cooked": isString, "raw": isString})
     .field("tail", isBoolean);
 
-},{"../lib/shared":33,"../lib/types":35,"./core":22}],25:[function(require,module,exports){
+},{"../lib/shared":34,"../lib/types":36,"./core":23}],26:[function(require,module,exports){
 require("./core");
 var types = require("../lib/types");
 var def = types.Type.def;
@@ -4442,7 +4515,7 @@ def("AwaitExpression")
     .field("argument", or(def("Expression"), null))
     .field("all", isBoolean, defaults["false"]);
 
-},{"../lib/shared":33,"../lib/types":35,"./core":22}],26:[function(require,module,exports){
+},{"../lib/shared":34,"../lib/types":36,"./core":23}],27:[function(require,module,exports){
 require("./core");
 var types = require("../lib/types");
 var def = types.Type.def;
@@ -4563,7 +4636,7 @@ def("TypeAnnotation")
     .field("unionType", or(def("TypeAnnotation"), null))
     .field("nullable", isBoolean);
 
-},{"../lib/shared":33,"../lib/types":35,"./core":22}],27:[function(require,module,exports){
+},{"../lib/shared":34,"../lib/types":36,"./core":23}],28:[function(require,module,exports){
 require("./core");
 var types = require("../lib/types");
 var def = types.Type.def;
@@ -4604,7 +4677,7 @@ def("GraphIndexExpression")
     .build("index")
     .field("index", geq(0));
 
-},{"../lib/shared":33,"../lib/types":35,"./core":22}],28:[function(require,module,exports){
+},{"../lib/shared":34,"../lib/types":36,"./core":23}],29:[function(require,module,exports){
 var assert = require("assert");
 var types = require("../main");
 var getFieldNames = types.getFieldNames;
@@ -4784,7 +4857,7 @@ function objectsAreEquivalent(a, b, problemPath) {
 
 module.exports = astNodesAreEquivalent;
 
-},{"../main":36,"assert":48}],29:[function(require,module,exports){
+},{"../main":37,"assert":49}],30:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var n = types.namedTypes;
@@ -5163,7 +5236,7 @@ function firstInStatement(path) {
 
 module.exports = NodePath;
 
-},{"./path":31,"./scope":32,"./types":35,"assert":48,"util":58}],30:[function(require,module,exports){
+},{"./path":32,"./scope":33,"./types":36,"assert":49,"util":59}],31:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var NodePath = require("./node-path");
@@ -5410,7 +5483,7 @@ function traverse(path, newVisitor) {
 
 module.exports = PathVisitor;
 
-},{"./node-path":29,"./types":35,"assert":48}],31:[function(require,module,exports){
+},{"./node-path":30,"./types":36,"assert":49}],32:[function(require,module,exports){
 var assert = require("assert");
 var Op = Object.prototype;
 var hasOwn = Op.hasOwnProperty;
@@ -5760,7 +5833,7 @@ Pp.replace = function replace(replacement) {
 
 module.exports = Path;
 
-},{"./types":35,"assert":48}],32:[function(require,module,exports){
+},{"./types":36,"assert":49}],33:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var Type = types.Type;
@@ -6010,7 +6083,7 @@ Sp.getGlobalScope = function() {
 
 module.exports = Scope;
 
-},{"./node-path":29,"./types":35,"assert":48}],33:[function(require,module,exports){
+},{"./node-path":30,"./types":36,"assert":49}],34:[function(require,module,exports){
 var types = require("../lib/types");
 var Type = types.Type;
 var builtin = types.builtInTypes;
@@ -6053,7 +6126,7 @@ exports.isPrimitive = new Type(function(value) {
              type === "function");
 }, naiveIsPrimitive.toString());
 
-},{"../lib/types":35}],34:[function(require,module,exports){
+},{"../lib/types":36}],35:[function(require,module,exports){
 var visit = require("./path-visitor").visit;
 var deprecate = require("depd")('require("ast-types").traverse');
 
@@ -6078,7 +6151,7 @@ var deprecatedWrapper = deprecate.function(
 deprecatedWrapper.fast = deprecatedWrapper;
 module.exports = deprecatedWrapper;
 
-},{"./path-visitor":30,"depd":37}],35:[function(require,module,exports){
+},{"./path-visitor":31,"depd":38}],36:[function(require,module,exports){
 var assert = require("assert");
 var Ap = Array.prototype;
 var slice = Ap.slice;
@@ -6804,7 +6877,7 @@ exports.finalize = function() {
     });
 };
 
-},{"assert":48}],36:[function(require,module,exports){
+},{"assert":49}],37:[function(require,module,exports){
 var types = require("./lib/types");
 
 // This core module of AST types captures ES5 as it is parsed today by
@@ -6838,7 +6911,7 @@ exports.NodePath = require("./lib/node-path");
 exports.PathVisitor = require("./lib/path-visitor");
 exports.visit = exports.PathVisitor.visit;
 
-},{"./def/core":22,"./def/e4x":23,"./def/es6":24,"./def/es7":25,"./def/fb-harmony":26,"./def/mozilla":27,"./lib/equiv":28,"./lib/node-path":29,"./lib/path-visitor":30,"./lib/traverse":34,"./lib/types":35}],37:[function(require,module,exports){
+},{"./def/core":23,"./def/e4x":24,"./def/es6":25,"./def/es7":26,"./def/fb-harmony":27,"./def/mozilla":28,"./lib/equiv":29,"./lib/node-path":30,"./lib/path-visitor":31,"./lib/traverse":35,"./lib/types":36}],38:[function(require,module,exports){
 (function (process){
 /*!
  * depd
@@ -7364,7 +7437,7 @@ function DeprecationError(namespace, message, stack) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/compat":40,"_process":56,"events":53,"path":55}],38:[function(require,module,exports){
+},{"./lib/compat":41,"_process":57,"events":54,"path":56}],39:[function(require,module,exports){
 (function (Buffer){
 /*!
  * depd
@@ -7401,7 +7474,7 @@ function bufferConcat(bufs) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":49}],39:[function(require,module,exports){
+},{"buffer":50}],40:[function(require,module,exports){
 /*!
  * depd
  * Copyright(c) 2014 Douglas Christopher Wilson
@@ -7504,7 +7577,7 @@ function getConstructorName(obj) {
   return (receiver.constructor && receiver.constructor.name) || null
 }
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (Buffer){
 /*!
  * depd
@@ -7577,7 +7650,7 @@ function toString(obj) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./buffer-concat":38,"./callsite-tostring":39,"buffer":49}],41:[function(require,module,exports){
+},{"./buffer-concat":39,"./callsite-tostring":40,"buffer":50}],42:[function(require,module,exports){
 var b = require('ast-types').builders;
 module.exports = function(scope) {
   return b.functionExpression(
@@ -7739,7 +7812,7 @@ module.exports = function(scope) {
   false
 )};
 
-},{"ast-types":36}],42:[function(require,module,exports){
+},{"ast-types":37}],43:[function(require,module,exports){
 var b = require('ast-types').builders;
 module.exports = function(scope) {
   return b.functionExpression(
@@ -7831,7 +7904,7 @@ module.exports = function(scope) {
   false
 )};
 
-},{"ast-types":36}],43:[function(require,module,exports){
+},{"ast-types":37}],44:[function(require,module,exports){
 var b = require('ast-types').builders;
 module.exports = function(scope) {
   var getArrayIterator = require('..').getArrayIterator;
@@ -7940,7 +8013,7 @@ module.exports = function(scope) {
   false
 )};
 
-},{"..":45,"ast-types":36}],44:[function(require,module,exports){
+},{"..":46,"ast-types":37}],45:[function(require,module,exports){
 var b = require('ast-types').builders;
 module.exports = function(scope) {
   return b.functionExpression(
@@ -8092,7 +8165,7 @@ module.exports = function(scope) {
   false
 )};
 
-},{"ast-types":36}],45:[function(require,module,exports){
+},{"ast-types":37}],46:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var types = require('ast-types');
@@ -8682,7 +8755,7 @@ function uniqueIdentifier(scope, name) {
 }
 exports.uniqueIdentifier = uniqueIdentifier;
 
-},{"./helpers/get":41,"./helpers/getArrayIterator":42,"./helpers/getIterator":43,"./helpers/getIteratorRange":44,"./replacement":46,"assert":48,"ast-types":36,"private":62}],46:[function(require,module,exports){
+},{"./helpers/get":42,"./helpers/getArrayIterator":43,"./helpers/getIterator":44,"./helpers/getIteratorRange":45,"./replacement":47,"assert":49,"ast-types":37,"private":63}],47:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 /**
@@ -8779,9 +8852,9 @@ Replacement.map = function(nodePaths, callback) {
 
 module.exports = Replacement;
 
-},{}],47:[function(require,module,exports){
-
 },{}],48:[function(require,module,exports){
+
+},{}],49:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -9143,7 +9216,7 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":58}],49:[function(require,module,exports){
+},{"util/":59}],50:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -10195,7 +10268,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":50,"ieee754":51,"is-array":52}],50:[function(require,module,exports){
+},{"base64-js":51,"ieee754":52,"is-array":53}],51:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -10317,7 +10390,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -10403,7 +10476,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 
 /**
  * isArray
@@ -10438,7 +10511,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10741,7 +10814,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -10766,7 +10839,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10994,7 +11067,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":56}],56:[function(require,module,exports){
+},{"_process":57}],57:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -11059,14 +11132,14 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11656,7 +11729,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":57,"_process":56,"inherits":54}],59:[function(require,module,exports){
+},{"./support/isBuffer":58,"_process":57,"inherits":55}],60:[function(require,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -18414,9 +18487,9 @@ parseYieldExpression: true, parseAwaitExpression: true
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 module.exports = require('./lib/fake-fs')
-},{"./lib/fake-fs":61}],61:[function(require,module,exports){
+},{"./lib/fake-fs":62}],62:[function(require,module,exports){
 (function (Buffer){
 var PATH = require('path')
 var normalize = PATH.normalize
@@ -18805,7 +18878,7 @@ function mix(t, src) {
   return t
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":49,"fs":47,"path":55}],62:[function(require,module,exports){
+},{"buffer":50,"fs":48,"path":56}],63:[function(require,module,exports){
 "use strict";
 
 var originalObject = Object;
@@ -18930,7 +19003,7 @@ function makeAccessor(secretCreatorFn) {
 
 defProp(exports, "makeAccessor", makeAccessor);
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var isArray = types.builtInTypes.array;
@@ -19238,7 +19311,7 @@ exports.printComments = function(comments, innerLines, options) {
     return concat(parts);
 };
 
-},{"./lines":64,"./types":70,"./util":71,"assert":48}],64:[function(require,module,exports){
+},{"./lines":65,"./types":71,"./util":72,"assert":49}],65:[function(require,module,exports){
 var assert = require("assert");
 var sourceMap = require("source-map");
 var normalizeOptions = require("./options").normalize;
@@ -20070,7 +20143,7 @@ Lp.concat = function(other) {
 // Lines.prototype will be fully populated.
 var emptyLines = fromString("");
 
-},{"./mapping":65,"./options":66,"./types":70,"./util":71,"assert":48,"private":62,"source-map":75}],65:[function(require,module,exports){
+},{"./mapping":66,"./options":67,"./types":71,"./util":72,"assert":49,"private":63,"source-map":76}],66:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var isString = types.builtInTypes.string;
@@ -20349,7 +20422,7 @@ function skipChars(
     return sourceCursor;
 }
 
-},{"./lines":64,"./types":70,"./util":71,"assert":48}],66:[function(require,module,exports){
+},{"./lines":65,"./types":71,"./util":72,"assert":49}],67:[function(require,module,exports){
 var defaults = {
     // If you want to use a different branch of esprima, or any other
     // module that supports a .parse function, pass that module object to
@@ -20429,7 +20502,7 @@ exports.normalize = function(options) {
     };
 };
 
-},{"esprima-fb":59}],67:[function(require,module,exports){
+},{"esprima-fb":60}],68:[function(require,module,exports){
 var assert = require("assert");
 var types = require("./types");
 var n = types.namedTypes;
@@ -20605,7 +20678,7 @@ function copyAst(node) {
     return node;
 }
 
-},{"./comments":63,"./lines":64,"./options":66,"./patcher":68,"./types":70,"assert":48}],68:[function(require,module,exports){
+},{"./comments":64,"./lines":65,"./options":67,"./patcher":69,"./types":71,"assert":49}],69:[function(require,module,exports){
 var assert = require("assert");
 var linesModule = require("./lines");
 var types = require("./types");
@@ -20926,7 +20999,7 @@ function findChildReprints(newPath, oldPath, reprints) {
     return true;
 }
 
-},{"./lines":64,"./types":70,"./util":71,"assert":48}],69:[function(require,module,exports){
+},{"./lines":65,"./types":71,"./util":72,"assert":49}],70:[function(require,module,exports){
 var assert = require("assert");
 var sourceMap = require("source-map");
 var printComments = require("./comments").printComments;
@@ -22150,7 +22223,7 @@ function maybeAddSemicolon(lines) {
     return lines;
 }
 
-},{"./comments":63,"./lines":64,"./options":66,"./patcher":68,"./types":70,"./util":71,"assert":48,"source-map":75}],70:[function(require,module,exports){
+},{"./comments":64,"./lines":65,"./options":67,"./patcher":69,"./types":71,"./util":72,"assert":49,"source-map":76}],71:[function(require,module,exports){
 var types = require("ast-types");
 var def = types.Type.def;
 
@@ -22163,7 +22236,7 @@ types.finalize();
 
 module.exports = types;
 
-},{"ast-types":36}],71:[function(require,module,exports){
+},{"ast-types":37}],72:[function(require,module,exports){
 var assert = require("assert");
 var getFieldValue = require("./types").getFieldValue;
 var sourceMap = require("source-map");
@@ -22306,7 +22379,7 @@ exports.composeSourceMaps = function(formerMap, latterMap) {
     return smg.toJSON();
 };
 
-},{"./types":70,"assert":48,"source-map":75}],72:[function(require,module,exports){
+},{"./types":71,"assert":49,"source-map":76}],73:[function(require,module,exports){
 var assert = require("assert");
 var Class = require("cls");
 var Node = require("./types").namedTypes.Node;
@@ -22426,7 +22499,7 @@ var Visitor = exports.Visitor = Class.extend({
     }
 });
 
-},{"./types":70,"assert":48,"cls":74}],73:[function(require,module,exports){
+},{"./types":71,"assert":49,"cls":75}],74:[function(require,module,exports){
 (function (process){
 var types = require("./lib/types");
 var parse = require("./lib/parser").parse;
@@ -22557,7 +22630,7 @@ Object.defineProperties(exports, {
 });
 
 }).call(this,require('_process'))
-},{"./lib/parser":67,"./lib/printer":69,"./lib/types":70,"./lib/visitor":72,"_process":56,"fs":47}],74:[function(require,module,exports){
+},{"./lib/parser":68,"./lib/printer":70,"./lib/types":71,"./lib/visitor":73,"_process":57,"fs":48}],75:[function(require,module,exports){
 // Sentinel value passed to base constructors to skip invoking this.init.
 var populating = {};
 
@@ -22683,7 +22756,7 @@ function extend(newProps) {
 
 module.exports = extend.call(function(){});
 
-},{}],75:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -22693,7 +22766,7 @@ exports.SourceMapGenerator = require('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = require('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":80,"./source-map/source-map-generator":81,"./source-map/source-node":82}],76:[function(require,module,exports){
+},{"./source-map/source-map-consumer":81,"./source-map/source-map-generator":82,"./source-map/source-node":83}],77:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -22792,7 +22865,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":83,"amdefine":21}],77:[function(require,module,exports){
+},{"./util":84,"amdefine":22}],78:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -22938,7 +23011,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":78,"amdefine":21}],78:[function(require,module,exports){
+},{"./base64":79,"amdefine":22}],79:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -22982,7 +23055,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}],79:[function(require,module,exports){
+},{"amdefine":22}],80:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -23065,7 +23138,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}],80:[function(require,module,exports){
+},{"amdefine":22}],81:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -23545,7 +23618,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":76,"./base64-vlq":77,"./binary-search":79,"./util":83,"amdefine":21}],81:[function(require,module,exports){
+},{"./array-set":77,"./base64-vlq":78,"./binary-search":80,"./util":84,"amdefine":22}],82:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -23927,7 +24000,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":76,"./base64-vlq":77,"./util":83,"amdefine":21}],82:[function(require,module,exports){
+},{"./array-set":77,"./base64-vlq":78,"./util":84,"amdefine":22}],83:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -24300,7 +24373,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./source-map-generator":81,"./util":83,"amdefine":21}],83:[function(require,module,exports){
+},{"./source-map-generator":82,"./util":84,"amdefine":22}],84:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -24507,5 +24580,5 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":21}]},{},[11])(11)
+},{"amdefine":22}]},{},[12])(12)
 });
