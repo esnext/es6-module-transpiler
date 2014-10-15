@@ -39,7 +39,7 @@
   "author": "Square, Inc.",
   "license": "Apache 2",
   "dependencies": {
-    "ast-util": "^0.5.0",
+    "ast-util": "^0.5.1",
     "esprima-fb": "^7001.1.0-dev-harmony-fb",
     "posix-getopt": "^1.0.0",
     "recast": "^0.8.0"
