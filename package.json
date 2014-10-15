@@ -2,7 +2,7 @@
   "name": "es6-module-transpiler",
   "version": "0.8.1",
   "description": "es6-module-transpiler is an experimental compiler that allows you to write your JavaScript using a subset of the current ES6 module syntax, and compile it into various formats.",
-  "homepage": "http://square.github.com/es6-module-transpiler",
+  "homepage": "http://esnext.github.io/es6-module-transpiler",
   "keywords": [
     "es6",
     "module",
