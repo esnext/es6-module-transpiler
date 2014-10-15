@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.8.2 (Wednesday, October 15, 2014)
+
+* Fixed bundle formatter renaming of function or class declarations in export default. Previously they were not properly renamed to prevent collision with other modules.
+
 ## v0.8.1 (Wednesday, October 15, 2014)
 
 * Fixed bundle formatter rewriting identifiers inside named function expressions if the identifier shared a name with a module-scope binding. For example, in this code sample the `a` in `return a` would be rewritten as `mod$$a` when it should have remained `a` (the [fix](https://github.com/benjamn/ast-types/pull/68) was in ast-types).
