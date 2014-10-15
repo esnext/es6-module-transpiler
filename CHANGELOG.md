@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.8.1 (Wednesday, October 15, 2014)
+
+* Fixed bundle formatter rewriting identifiers inside named function expressions if the identifier shared a name with a module-scope binding. For example, in this code sample the `a` in `return a` would be rewritten as `mod$$a` when it should have remained `a` (the [fix](https://github.com/benjamn/ast-types/pull/68) was in ast-types).
+
+```js
+// mod.js
+var a;
+var fn = function f() { var a; return a; };
+```
+
 ## v0.8.0 (Tuesday, September 30, 2014)
 
 * Simplify the CommonJS formatter output to use ES3.
