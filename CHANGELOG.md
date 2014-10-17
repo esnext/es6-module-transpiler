@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.8.3 (Friday, October 17, 2014)
+
+* Fixed internal helper `mkdirpSync` that could cause `Container#write` to fail on some machines.
+
 ## v0.8.2 (Wednesday, October 15, 2014)
 
 * Fixed bundle formatter renaming of function or class declarations in export default. Previously they were not properly renamed to prevent collision with other modules.
