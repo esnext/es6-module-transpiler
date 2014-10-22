@@ -37,7 +37,7 @@ The transpiler can be used directly from the command line:
 
 ```
 $ npm install -g es6-module-transpiler
-$ compile-modules convert < foo.js
+$ compile-modules convert foo.js
 ```
 
 Here is the basic usage:
