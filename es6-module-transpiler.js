@@ -867,6 +867,17 @@ extend(BundleFormatter, Formatter);
  */
 BundleFormatter.prototype.beforeConvert = function(container) {
   container.findImportedModules();
+
+  // Cache all the import and export specifier names.
+  container.getModules().forEach(function(mod) {
+    [mod.imports, mod.exports].forEach(function(bindingList) {
+      bindingList.declarations.forEach(function (declaration) {
+        declaration.specifiers.forEach(function (specifier) {
+          specifier.name;
+        });
+      });
+    });
+  });
 };
 
 /**
@@ -876,12 +887,106 @@ BundleFormatter.prototype.build = function(modules) {
   modules = sort(modules);
   return [b.file(b.program([b.expressionStatement(IFFE(
     b.expressionStatement(b.literal('use strict')),
+      this.buildNamespaceImportObjects(modules),
       modules.length === 1 ?
       modules[0].ast.program.body :
       modules.reduce(function(statements, mod) {
         return statements.concat(mod.ast.program.body);
       }, [])
   ))]))];
+};
+
+/**
+ * Builds a variable declaration that contains declarations of all the namespace
+ * objects required by `import * as foo from 'foo'` statements.
+ *
+ * @private
+ * @param {Module[]} modules
+ * @return {?AST.VariableDeclaration}
+ */
+BundleFormatter.prototype.buildNamespaceImportObjects = function(modules) {
+  var self = this;
+  var namespaceImportedModules = [];
+
+  // Collect all the modules imported using a namespace import declaration.
+  modules.forEach(function(mod) {
+    mod.imports.namespaceImports.forEach(function(namespaceImportDeclaration) {
+      var namespaceImportedModule = namespaceImportDeclaration.source;
+      if (namespaceImportedModules.indexOf(namespaceImportedModule) < 0) {
+        namespaceImportedModules.push(namespaceImportedModule);
+      }
+    });
+  });
+
+  if (namespaceImportedModules.length === 0) {
+    return null;
+  }
+
+  /**
+   * Builds a variable declarator for the given module whose initial value is an
+   * object with properties for each export from the module being imported. For
+   * example, given a module "foo" with exports "a" and "b" this object will be
+   * created:
+   *
+   *   foo$$ = {
+   *     get a() {
+   *       return foo$$a;
+   *     },
+   *
+   *     get b() {
+   *       return foo$$b;
+   *     }
+   *   }
+   *
+   * @param {Module} mod
+   * @returns {AST.VariableDeclarator}
+   */
+  function createDeclaratorForModule(mod) {
+    return b.variableDeclarator(
+      b.identifier(mod.id),
+      b.objectExpression(
+        mod.exports.declarations.reduce(function(props, exportDeclaration) {
+          exportDeclaration.specifiers.forEach(function(specifier) {
+            props.push(createGetterForSpecifier(mod, specifier));
+          });
+
+          return props;
+        }, [])
+      )
+    );
+  }
+
+  /**
+   * Builds a getter property for retrieving the value of the given export
+   * specifier at the time it is accessed. For example, given a module "foo"
+   * with export specifier "a" this property will be created:
+   *
+   *   get a() {
+   *     return foo$$a;
+   *   }
+   *
+   * @param {Module} mod
+   * @param {ExportSpecifier} specifier
+   * @returns {AST.Property}
+   */
+  function createGetterForSpecifier(mod, specifier) {
+    return b.property(
+      'get',
+      b.identifier(specifier.name),
+      b.functionExpression(
+        null,
+        [],
+        b.blockStatement([
+          b.returnStatement(self.reference(mod, specifier.name))
+        ])
+      )
+    );
+  }
+
+  return b.variableDeclaration(
+    'var',
+    namespaceImportedModules.map(createDeclaratorForModule)
+  );
 };
 
 /**
@@ -986,11 +1091,16 @@ BundleFormatter.prototype.exportedReference = function(mod, referencePath) {
  */
 BundleFormatter.prototype.importedReference = function(mod, referencePath) {
   var specifier = mod.imports.findSpecifierForReference(referencePath);
-  if (specifier) {
+
+  if (!specifier) {
+    return null;
+  }
+
+  if (specifier.from) {
     specifier = specifier.terminalExportSpecifier;
     return this.reference(specifier.module, specifier.name);
   } else {
-    return null;
+    return b.identifier(specifier.declaration.source.id);
   }
 };
 
@@ -1174,7 +1284,6 @@ var util = require('ast-util');
 var extend = require('../utils').extend;
 var Replacement = require('../replacement');
 var Formatter = require('./formatter');
-var sourcePosition = require('../utils').sourcePosition;
 
 /**
  * The 'commonjs' setting for referencing exports aims to produce code that can
@@ -1197,14 +1306,25 @@ CommonJSFormatter.prototype.build = function(modules) {
   var self = this;
   return modules.map(function(mod) {
     var body = mod.ast.program.body;
-    body.unshift(
-      b.expressionStatement(b.literal('use strict')),
-      self.buildEarlyExports(mod),
-      self.buildRequires(mod)
-    );
-    body.push(
-      self.buildLateExports(mod)
-    );
+
+    var requiresDeclaration = self.buildRequires(mod);
+    var earlyExportsStatement = self.buildEarlyExports(mod);
+    var lateExports = self.buildLateExports(mod);
+
+    if (requiresDeclaration) {
+      body.unshift(requiresDeclaration);
+    }
+
+    if (earlyExportsStatement) {
+      body.unshift(earlyExportsStatement);
+    }
+
+    body.unshift(b.expressionStatement(b.literal('use strict')));
+
+    if (lateExports) {
+      body.push(lateExports);
+    }
+
     mod.ast.filename = mod.relativePath;
     return mod.ast;
   });
@@ -1215,11 +1335,10 @@ CommonJSFormatter.prototype.build = function(modules) {
  * actually run, i.e. function declarations.
  *
  * @param {Module} mod
- * @returns {AST.Statement}
+ * @returns {?AST.Statement}
  * @private
  */
 CommonJSFormatter.prototype.buildEarlyExports = function(mod) {
-  var self = this;
   var assignments = [];
   var exportObject = b.identifier('exports');
 
@@ -1240,9 +1359,13 @@ CommonJSFormatter.prototype.buildEarlyExports = function(mod) {
     ));
   });
 
-  return b.expressionStatement(
-    b.sequenceExpression(assignments)
-  );
+  if (assignments.length > 0) {
+    return b.expressionStatement(
+      b.sequenceExpression(assignments)
+    );
+  } else {
+    return null;
+  }
 };
 
 /**
@@ -1250,7 +1373,7 @@ CommonJSFormatter.prototype.buildEarlyExports = function(mod) {
  * module, i.e. everything except function declarations.
  *
  * @param {Module} mod
- * @returns {AST.Statement}
+ * @returns {?AST.Statement}
  * @private
  */
 CommonJSFormatter.prototype.buildLateExports = function(mod) {
@@ -1288,9 +1411,13 @@ CommonJSFormatter.prototype.buildLateExports = function(mod) {
     ));
   });
 
-  return b.expressionStatement(
-    b.sequenceExpression(assignments)
-  );
+  if (assignments.length > 0) {
+    return b.expressionStatement(
+      b.sequenceExpression(assignments)
+    );
+  } else {
+    return null;
+  }
 };
 
 /**
@@ -1325,7 +1452,7 @@ CommonJSFormatter.prototype.forEachExportBinding = function(mod, iterator) {
  *
  * @private
  * @param {Module} mod
- * @return {AST.VariableDeclaration|AST.EmptyStatement}
+ * @return {?AST.VariableDeclaration}
  */
 CommonJSFormatter.prototype.buildRequires = function(mod) {
   var declarators = [];
@@ -1365,7 +1492,7 @@ CommonJSFormatter.prototype.buildRequires = function(mod) {
   if (declarators.length > 0) {
     return b.variableDeclaration('var', declarators);
   } else {
-    return b.emptyStatement();
+    return null;
   }
 };
 
@@ -1455,13 +1582,20 @@ CommonJSFormatter.prototype.exportedReference = function(mod, referencePath) {
 CommonJSFormatter.prototype.importedReference = function(mod, referencePath) {
   var specifier = mod.imports.findSpecifierForReference(referencePath);
 
-  if (specifier) {
+  if (!specifier) {
+    return null;
+  }
+
+  if (specifier.from) {
+    // import { value } from './a';
+    // import a from './a';
     return this.reference(
       specifier.declaration.source,
       specifier.from
     );
   } else {
-    return null;
+    // import * as a from './a'
+    return b.identifier(specifier.declaration.source.id);
   }
 };
 
@@ -1913,6 +2047,19 @@ ImportDeclarationList.prototype.declarationForNode = function(node) {
 };
 
 /**
+ * Gets the namespace imports from the list of imports.
+ *
+ * @private
+ * @type {ImportDeclaration[]}
+ * @name ImportDeclaration#namespaceImports
+ */
+memo(ImportDeclarationList.prototype, 'namespaceImports', /** @this ImportDeclarationList */function() {
+  return this.declarations.filter(function(declaration) {
+    return declaration.hasNamespaceImport;
+  });
+});
+
+/**
  * Contains information about an import declaration.
  *
  *   ```js
@@ -1947,17 +2094,23 @@ extend(ImportDeclaration, ModuleBindingDeclaration);
  */
 memo(ImportDeclaration.prototype, 'specifiers', /** @this ImportDeclaration */function() {
   var self = this;
-  return this.node.specifiers.map(function(s) {
-    var specifier = new ImportSpecifier(self, s);
-    if (n.ImportDefaultSpecifier.check(s)) {
-      specifier.from = 'default';
-    } else if (n.ImportNamespaceSpecifier.check(s)) {
-      // TODO: implement import * as ...
-      specifier.from = '*';
-    } else {
-      specifier = new ImportSpecifier(self, s);
+  return this.node.specifiers.map(function(specifier) {
+    if (n.ImportDefaultSpecifier.check(specifier)) {
+      return new ImportDefaultSpecifier(self, specifier);
+    } else if (n.ImportNamespaceSpecifier.check(specifier)) {
+      return new ImportNamespaceSpecifier(self, specifier);
     }
-    return specifier;
+    return new ImportNamedSpecifier(self, specifier);
+  });
+});
+
+/**
+ * @type {boolean}
+ * @name ImportDeclaration#hasNamespaceImport
+ */
+memo(ImportDeclaration.prototype, 'hasNamespaceImport', /** @this ImportDeclaration */function() {
+  return this.specifiers.some(function(specifier) {
+    return specifier instanceof ImportNamespaceSpecifier;
   });
 });
 
@@ -1970,22 +2123,22 @@ memo(ImportDeclaration.prototype, 'specifiers', /** @this ImportDeclaration */fu
  * @constructor
  * @extends ModuleBindingSpecifier
  * @param {ImportDeclaration} declaration
- * @param {AST.ImportSpecifier} node
+ * @param {AST.ImportNamedSpecifier} node
  */
-function ImportSpecifier(declaration, node) {
+function ImportNamedSpecifier(declaration, node) {
   assert.ok(
     declaration instanceof ImportDeclaration,
     'expected an instance of ImportDeclaration'
   );
   ModuleBindingSpecifier.call(this, declaration, node);
 }
-extend(ImportSpecifier, ModuleBindingSpecifier);
+extend(ImportNamedSpecifier, ModuleBindingSpecifier);
 
 /**
  * @type {ExportSpecifier}
  * @name ImportSpecifier#exportSpecifier
  */
-memo(ImportSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */function() {
+memo(ImportNamedSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */function() {
   var source = this.declaration.source;
   assert.ok(source, 'import specifiers must have a valid source');
   var exportSpecifier = source.exports.findSpecifierByName(this.from);
@@ -1996,6 +2149,73 @@ memo(ImportSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */f
     ' has no matching export in ' + source.relativePath
   );
   return exportSpecifier;
+});
+
+
+/**
+ * Represents a default import specifier. The "a" in the following import statement.
+ *
+ *   import a from "a";
+ *
+ * @constructor
+ * @extends ModuleBindingSpecifier
+ * @param {ImportDeclaration} declaration
+ * @param {AST.ImportDefaultSpecifier} node
+ */
+function ImportDefaultSpecifier(declaration, node) {
+  assert.ok(
+    declaration instanceof ImportDeclaration,
+    'expected an instance of ImportDeclaration'
+  );
+  ModuleBindingSpecifier.call(this, declaration, node);
+}
+extend(ImportDefaultSpecifier, ModuleBindingSpecifier);
+
+memo(ImportDefaultSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */function() {
+  var source = this.declaration.source;
+  assert.ok(source, 'import specifiers must have a valid source');
+  var exportSpecifier = source.exports.findSpecifierByName(this.from);
+  assert.ok(
+    exportSpecifier,
+    'import `default` at ' +
+    sourcePosition(this.module, this.node) +
+    ' has no matching export in ' + source.relativePath
+  );
+  return exportSpecifier;
+});
+
+memo(ImportDefaultSpecifier.prototype, 'from', function() {
+  return 'default';
+});
+
+/**
+ * Represents a namespace import specifier. The "a" in the following import
+ * statement.
+ *
+ *   import * as a from "a";
+ *
+ * @constructor
+ * @extends ModuleBindingSpecifier
+ * @param {ImportDeclaration} declaration
+ * @param {AST.ImportNamespaceSpecifier} node
+ */
+function ImportNamespaceSpecifier(declaration, node) {
+  assert.ok(
+    declaration instanceof ImportDeclaration,
+    'expected an instance of ImportDeclaration'
+  );
+  ModuleBindingSpecifier.call(this, declaration, node);
+}
+extend(ImportNamespaceSpecifier, ModuleBindingSpecifier);
+
+memo(ImportNamespaceSpecifier.prototype, 'exportSpecifier', /** @this ImportSpecifier */function() {
+  var source = this.declaration.source;
+  assert.ok(source, 'import specifiers must have a valid source');
+  return null;
+});
+
+memo(ImportNamespaceSpecifier.prototype, 'from', function() {
+  return null;
 });
 
 module.exports = ImportDeclarationList;
@@ -3195,33 +3415,65 @@ Rewriter.prototype.visitUpdateExpression = function(nodePath) {
  *
  * @private
  * @param {Module} mod
- * @param {Identifier} identifierPath
+ * @param {Identifier} nodePath
  */
-Rewriter.prototype.assertImportIsNotReassigned = function(mod, identifierPath) {
-  if (!n.Identifier.check(identifierPath.node) || !mod.imports.findDeclarationForReference(identifierPath)) {
+Rewriter.prototype.assertImportIsNotReassigned = function(mod, nodePath) {
+  var declarationPath;
+  var identifierPath;
+  var bindingDescription;
+
+  if (n.Identifier.check(nodePath.node)) {
+    // Do we have a named import…
+    //
+    //   import { foo } from 'foo';
+    //
+    // …that we then try to assign or update?
+    //
+    //   foo++;
+    //   foo = 1;
+    //
+    declarationPath = mod.imports.findDeclarationForReference(nodePath);
+    if (!declarationPath || !n.ImportSpecifier.check(declarationPath.parent.node)) {
+      return;
+    }
+
+    bindingDescription = '`' + declarationPath.node.name + '`';
+  } else if (n.MemberExpression.check(nodePath.node)) {
+    // Do we have a namespace import…
+    //
+    //   import * as foo from 'foo';
+    //
+    // …with a property that we then try to assign or update?
+    //
+    //   foo.a++;
+    //   foo.a = 1;
+    //   foo['a'] = 1;
+    //
+    var objectPath = nodePath.get('object');
+
+    if (!n.Identifier.check(objectPath.node)) {
+      return;
+    }
+
+    declarationPath = mod.imports.findDeclarationForReference(objectPath);
+    if (!declarationPath || !n.ImportNamespaceSpecifier.check(declarationPath.parent.node)) {
+      return;
+    }
+
+    var propertyPath = nodePath.get('property');
+    if (n.Identifier.check(propertyPath.node)) {
+      bindingDescription = '`' + propertyPath.node.name + '`';
+    } else {
+      bindingDescription = 'of namespace `' + objectPath.node.name + '`';
+    }
+  } else {
     return;
   }
 
-  var identifier = identifierPath.node;
-  var name = identifier.name;
-  var declarationScope = identifierPath.scope.lookup(name);
-  if (declarationScope && declarationScope.isGlobal) {
-    var declarationPaths = declarationScope.getBindings()[name];
-    assert.ok(
-      declarationPaths.length === 1,
-      'expected exactly one declaration for `' + name +
-      '`, found ' + declarationPaths.length
-    );
-    var declarationPath = declarationPaths[0];
-    if (n.ImportSpecifier.check(declarationPath.parent.node) ||
-        n.ImportDefaultSpecifier.check(declarationPath.parent.node) ||
-        n.ImportNamespaceSpecifier.check(declarationPath.parent.node)) {
-      throw new SyntaxError(
-        'Cannot reassign imported binding `' + name +
-        '` at ' + sourcePosition(mod, identifier)
-      );
-    }
-  }
+  throw new SyntaxError(
+    'Cannot reassign imported binding ' + bindingDescription +
+    ' at ' + sourcePosition(mod, nodePath.node)
+  );
 };
 
 /**
@@ -3358,7 +3610,8 @@ function visit(mod, result, state) {
 
 var recast = require('recast');
 var esprima = require('esprima-fb');
-var fs = require('fs');
+var realFS = require('fs');
+var Path = require('path');
 
 var proto = '__proto__';
 
@@ -3432,12 +3685,26 @@ function IFFE() {
 }
 exports.IFFE = IFFE;
 
-function mkdirpSync(path) {
-  var parts = path.split('/');
-  var dir = '';
+/**
+ * Create a hierarchy of directories of it does not already exist.
+ *
+ * @param {string} path
+ * @param {{fs: object=}} options
+ */
+function mkdirpSync(path, options) {
+  var fs = options && options.fs || realFS;
 
-  parts.forEach(function(part) {
-    dir += '/' + part;
+  var ancestors = [];
+  var ancestor = path;
+
+  while (true) {
+    var nextAncestor = Path.dirname(ancestor);
+    if (nextAncestor === ancestor) { break; }
+    ancestors.unshift(ancestor);
+    ancestor = nextAncestor;
+  }
+
+  ancestors.forEach(function(dir) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
@@ -3445,7 +3712,7 @@ function mkdirpSync(path) {
 }
 exports.mkdirpSync = mkdirpSync;
 
-},{"esprima-fb":60,"fs":2,"recast":74}],21:[function(require,module,exports){
+},{"esprima-fb":60,"fs":2,"path":56,"recast":74}],21:[function(require,module,exports){
 /* jshint node:true, undef:true, unused:true */
 
 var assert = require('assert');
