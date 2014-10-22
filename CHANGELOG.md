@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.9.0 (Wednesday, October 22, 2014)
+
+* Add support for namespace imports (e.g. `import * as foo from 'foo'`).
+
 ## v0.8.3 (Friday, October 17, 2014)
 
 * Fixed internal helper `mkdirpSync` that could cause `Container#write` to fail on some machines.
