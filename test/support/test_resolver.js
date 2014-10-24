@@ -23,6 +23,11 @@ TestResolver.prototype.resolveModule = function(path, mod, container) {
     path = Path.normalize(Path.join(mod.relativePath, '..', path));
   }
 
+  var cachedModule = container.getCachedModule(path);
+  if (cachedModule) {
+    return cachedModule;
+  }
+
   var resolved = new Module(path, path, container);
   resolved.src = this.sources[path] || '';
   return resolved;
