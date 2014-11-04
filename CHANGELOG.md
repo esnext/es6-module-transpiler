@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.9.1 (Monday, November 3, 2014)
+
+* Clarify README to indicate that ES6 module syntax is now stable.
+* Add `Container#transform` to get transformed code without writing to the file system.
+
 ## v0.9.0 (Wednesday, October 22, 2014)
 
 * Add support for namespace imports (e.g. `import * as foo from 'foo'`).
