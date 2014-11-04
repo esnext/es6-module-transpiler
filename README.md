@@ -165,10 +165,10 @@ library on which this one is based. Thanks to [Dave
 Herman](https://twitter.com/littlecalculist) for his work on ES6 modules.
 Thanks to [Erik Bryn](https://twitter.com/ebryn) for providing the initial push
 to write this library. Thanks to [Domenic
-Denicola](https://twitter.com/domenic) & [Thomas
-Boyt](https://twitter.com/thomasaboyt) for their efforts to make this project
-even better. And finally thanks to the JavaScript community at Square for
-helping to write and release this library.
+Denicola](https://twitter.com/domenic), [Jo Liss](https://twitter.com/jo_liss),
+& [Thomas Boyt](https://twitter.com/thomasaboyt) for their efforts to make this
+project even better. And finally thanks to the JavaScript community at Square
+for helping to write and release this library.
 
 ## Contributing
 
