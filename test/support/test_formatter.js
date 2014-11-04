@@ -28,6 +28,7 @@ TestFormatter.prototype.build = function(modules) {
     return ast;
   });
 };
+
 /**
  * @override
  */

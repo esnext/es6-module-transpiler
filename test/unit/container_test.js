@@ -97,4 +97,24 @@ describe('Container', function() {
       });
     });
   });
+
+  describe('#transform', function() {
+    var formatter = new TestFormatter();
+    var source = 'export var a = 1;';
+    var container = new Container({
+      formatter: formatter,
+      resolvers: [new TestResolver({
+        'a.js': source
+      })]
+    });
+
+    // Ensure we have a module to write at all.
+    container.getModule('a.js');
+
+    var files = container.transform();
+    assert.strictEqual(files.length, 1);
+    assert.strictEqual(files[0].filename, 'a.js');
+    assert.strictEqual(files[0].code, source);
+    assert.strictEqual(typeof files[0].map, 'object');
+  });
 });
