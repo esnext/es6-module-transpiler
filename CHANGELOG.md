@@ -1,10 +1,3 @@
-<style type="text/css">
-.release-date {
-  font-size: 60%;
-  color: #666;
-}
-</style>
-
 # Release Notes
 
 ## v0.9.1 <span class="release-date">(2014-11-03)</span>
