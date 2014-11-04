@@ -1,5 +1,9 @@
 # Release Notes
 
+## v0.9.2 <span class="release-date">(2014-11-03)</span>
+
+* Add support for exporting ES6 class declarations and expressions.
+
 ## v0.9.1 <span class="release-date">(2014-11-03)</span>
 
 * Clarify README to indicate that ES6 module syntax is now stable.
