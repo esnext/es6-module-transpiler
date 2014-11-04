@@ -6,6 +6,7 @@ var fs = require('fs');
 var Path = require('path');
 var vm = require('vm');
 var assert = require('assert');
+var es6class = require('es6-class');
 
 var modules = require('../lib');
 var utils = require('../lib/utils');
@@ -183,7 +184,7 @@ function requireTestFile(path, relativeTo, assert) {
   };
 
   // Hack to work around an issue where vm does not set `this` to the context.
-  code = '(function(){' + code + '\n}).call(global);';
+  code = '(function(){' + es6class.compile(code).code + '\n}).call(global);';
   vm.runInNewContext(code, testFileGlobal, path);
 
   testFileCache[path] = mod.exports;
