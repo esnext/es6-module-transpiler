@@ -1,5 +1,9 @@
 # Release Notes
 
+## v0.9.3 <span class="release-date">(2014-11-03)</span>
+
+* Fix bundle format support for named exports of class declarations.
+
 ## v0.9.2 <span class="release-date">(2014-11-03)</span>
 
 * Add support for exporting ES6 class declarations and expressions.
