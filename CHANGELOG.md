@@ -1,5 +1,9 @@
 # Release Notes
 
+## v0.9.4 <span class="release-date">(2014-11-14)</span>
+
+* Fix re-exporting module objects created by namespace imports (e.g. `import * as foo from 'foo'; export { foo }`).
+
 ## v0.9.3 <span class="release-date">(2014-11-03)</span>
 
 * Fix bundle format support for named exports of class declarations.
