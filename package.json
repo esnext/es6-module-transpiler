@@ -37,7 +37,7 @@
     "build-standalone": "browserify -s ModuleTranspiler -e lib/index.js -o es6-module-transpiler.js"
   },
   "author": "Square, Inc.",
-  "license": "Apache 2",
+  "license": "Apache-2.0",
   "dependencies": {
     "ast-util": "^0.5.1",
     "esprima-fb": "^7001.1.0-dev-harmony-fb",
