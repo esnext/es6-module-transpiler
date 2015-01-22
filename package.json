@@ -42,7 +42,8 @@
     "ast-util": "^0.5.1",
     "esprima-fb": "^7001.1.0-dev-harmony-fb",
     "posix-getopt": "^1.0.0",
-    "recast": "^0.9.5"
+    "recast": "^0.9.5",
+    "reserved": "^0.1.2"
   },
   "devDependencies": {
     "browserify": "^6.3.2",
