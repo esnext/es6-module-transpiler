@@ -1,8 +1,19 @@
 # ES6 Module Transpiler [![Build Status](https://travis-ci.org/esnext/es6-module-transpiler.png)](https://travis-ci.org/esnext/es6-module-transpiler)
 
+## NOTE: This project been deprecated in favor of Babel & Esperanto.
+
+This project is part of esnext, which has merged with [Babel]. All the features
+of esnext are supported by Babel, and more. All the tests from esnext have been
+ported over to Babel to ensure that switchers will have minimal code changes to
+make. The maintainers of esnext will continue working on Babel to bring better
+spec compliance, ES6 feature support, and performance. If you want a fast tool
+with bundling support as found in this project, you should check out [Esperanto] or [Rollup].
+
+---
+
 ES6 Module Transpiler is an experimental compiler that allows you to write your
-JavaScript using a subset of the ES6 module syntax, and compile it into
-AMD or CommonJS modules.
+JavaScript using a subset of the ES6 module syntax, and compile it into AMD or
+CommonJS modules.
 
 This compiler provides a way to experiment with ES6 syntax in real world
 scenarios to see how the syntax holds up. It also provides a nicer, more
@@ -190,3 +201,7 @@ your request, we'll make sure you're in the list of people who have signed a
 CLA.
 
 Thanks, and enjoy living in the ES6 future!
+
+[Babel]: https://babeljs.io/
+[Esperanto]: https://github.com/esperantojs/esperanto
+[Rollup]: https://github.com/rollup/rollup
