@@ -1,13 +1,13 @@
 # ES6 Module Transpiler [![Build Status](https://travis-ci.org/esnext/es6-module-transpiler.png)](https://travis-ci.org/esnext/es6-module-transpiler)
 
-## NOTE: This project been deprecated in favor of Babel & Esperanto.
+## NOTE: This project been deprecated in favor of Babel & Rollup.
 
 This project is part of esnext, which has merged with [Babel]. All the features
 of esnext are supported by Babel, and more. All the tests from esnext have been
 ported over to Babel to ensure that switchers will have minimal code changes to
 make. The maintainers of esnext will continue working on Babel to bring better
 spec compliance, ES6 feature support, and performance. If you want a fast tool
-with bundling support as found in this project, you should check out [Esperanto] or [Rollup].
+with bundling support as found in this project, you should check out [Rollup].
 
 ---
 
@@ -203,5 +203,4 @@ CLA.
 Thanks, and enjoy living in the ES6 future!
 
 [Babel]: https://babeljs.io/
-[Esperanto]: https://github.com/esperantojs/esperanto
 [Rollup]: https://github.com/rollup/rollup
